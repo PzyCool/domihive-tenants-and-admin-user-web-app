@@ -115,6 +115,17 @@ const PropertyDetailsPage = ({ propertyId, listingType, onBookInspection, onClos
       )}
 
       <div className="container max-w-[1200px] mx-auto px-4">
+        <div className="mb-6">
+          <button
+            type="button"
+            onClick={onClose}
+            className="inline-flex items-center gap-2 text-[#0e1f42] hover:text-[#9f7539] transition-colors"
+          >
+            <i className="fas fa-arrow-left"></i>
+            <span>Return to Properties</span>
+          </button>
+        </div>
+
         {!isOverview && (
           <div className="mb-6">
             <button

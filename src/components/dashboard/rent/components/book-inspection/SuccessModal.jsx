@@ -1,7 +1,19 @@
 // src/dashboards/rent/components/book-inspection/SuccessModal.jsx
 import React from 'react';
+import { useNavigate } from 'react-router-dom';
 
 const SuccessModal = ({ isOpen, onClose, bookingData }) => {
+  const navigate = useNavigate();
+
+  React.useEffect(() => {
+    if (!isOpen) return undefined;
+    const previousOverflow = document.body.style.overflow;
+    document.body.style.overflow = 'hidden';
+    return () => {
+      document.body.style.overflow = previousOverflow || '';
+    };
+  }, [isOpen]);
+
   if (!isOpen) return null;
 
   const booking = bookingData || {
@@ -34,11 +46,16 @@ const SuccessModal = ({ isOpen, onClose, bookingData }) => {
     ? '1 person' 
     : `${booking.numberOfPeople} people`;
 
+  const handleViewApplication = () => {
+    onClose?.();
+    navigate('/dashboard/rent/applications');
+  };
+
   return (
-    <div className="fixed inset-0 bg-black/70 flex items-center justify-center p-4 z-50">
-      <div className="bg-white rounded-xl w-full max-w-lg border border-[#e2e8f0] shadow-[0_20px_25px_rgba(0,0,0,0.25)]">
+    <div className="fixed inset-0 bg-black/70 flex items-center justify-center p-4 z-[1400]">
+      <div className="bg-white rounded-xl overflow-hidden w-full max-w-lg border border-[#e2e8f0] shadow-[0_20px_25px_rgba(0,0,0,0.25)]">
         {/* Modal Header - Compact */}
-        <div className="relative p-4 border-b border-[#e2e8f0] bg-gradient-to-r from-[#10b981] to-[#34d399]">
+        <div className="relative p-4 border-b border-[#e2e8f0] bg-gradient-to-r from-[#10b981] to-[#34d399] rounded-t-xl">
           <div className="flex items-center justify-center gap-3">
             <div className="w-8 h-8 bg-white rounded-full flex items-center justify-center">
               <i className="fas fa-check-circle text-[#10b981] text-lg"></i>
@@ -128,7 +145,10 @@ const SuccessModal = ({ isOpen, onClose, bookingData }) => {
             Back to Browse
             <i className="fas fa-arrow-right text-xs"></i>
           </button>
-          <button className="px-4 py-2 bg-[#f8fafc] border border-[#e2e8f0] text-[#0e1f42] font-semibold rounded-lg hover:bg-[#e2e8f0] transition-colors flex-1 flex items-center justify-center gap-2 text-sm">
+          <button
+            onClick={handleViewApplication}
+            className="px-4 py-2 bg-[#f8fafc] border border-[#e2e8f0] text-[#0e1f42] font-semibold rounded-lg hover:bg-[#e2e8f0] transition-colors flex-1 flex items-center justify-center gap-2 text-sm"
+          >
             View Application
             <i className="fas fa-file-alt text-xs"></i>
           </button>

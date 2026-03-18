@@ -1,13 +1,11 @@
 // src/dashboards/rent/components/overview/UnifiedActionsPanel.jsx
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { useAuth } from '../../../../../context/AuthContext';
 import { useDashboard } from '../../../../../context/DashboardContext';
 
-const UnifiedActionsPanel = () => {
+const UnifiedActionsPanel = ({ rentOnlyMode = true }) => {
   const navigate = useNavigate();
-  const { user, logout } = useAuth();
-  const { currentDashboard, switchDashboard, getAvailableDashboards } = useDashboard();
+  const { currentDashboard, switchDashboard } = useDashboard();
   
   // State for notifications and quick actions
   const [notifications, setNotifications] = useState([]);
@@ -28,6 +26,28 @@ const UnifiedActionsPanel = () => {
 
   // Load unified data
   useEffect(() => {
+    const loadStatusData = () => {
+      const savedFavorites = JSON.parse(localStorage.getItem('domihive_user_favorites') || '[]');
+      const applications = JSON.parse(localStorage.getItem('domihive_user_applications') || '[]');
+
+      setStatusData({
+        browse: '80+ verified properties',
+        applications: `${applications.length} active applications`,
+        applicationsBadge: applications.length,
+        inspections: '0 upcoming inspections',
+        inspectionsBadge: 0,
+        favorites: `${savedFavorites.length} saved properties`,
+        favoritesBadge: savedFavorites.length,
+        messages: '0 unread messages',
+        messagesBadge: 0
+      });
+    };
+
+    if (rentOnlyMode) {
+      loadStatusData();
+      return undefined;
+    }
+
     // Load notifications (cross-dashboard)
     const loadNotifications = () => {
       const mockNotifications = [
@@ -50,25 +70,7 @@ const UnifiedActionsPanel = () => {
       ];
       setDashboardShortcuts(shortcuts);
     };
-    
-    // Load Rental Journey Status data
-    const loadStatusData = () => {
-      const savedFavorites = JSON.parse(localStorage.getItem('domihive_user_favorites') || '[]');
-      const applications = JSON.parse(localStorage.getItem('domihive_user_applications') || '[]');
-      
-      setStatusData({
-        browse: '80+ verified properties',
-        applications: `${applications.length} active applications`,
-        applicationsBadge: applications.length,
-        inspections: '0 upcoming inspections',
-        inspectionsBadge: 0,
-        favorites: `${savedFavorites.length} saved properties`,
-        favoritesBadge: savedFavorites.length,
-        messages: '0 unread messages',
-        messagesBadge: 0
-      });
-    };
-    
+
     loadNotifications();
     loadDashboardShortcuts();
     loadStatusData();
@@ -94,7 +96,7 @@ const UnifiedActionsPanel = () => {
     }, 60000);
 
     return () => clearInterval(interval);
-  }, []);
+  }, [rentOnlyMode]);
   
   // Handle notification click
   const handleNotificationClick = (notification) => {
@@ -181,163 +183,156 @@ const UnifiedActionsPanel = () => {
   
   return (
     <section className="unified-actions-panel bg-white rounded-lg shadow-md border border-[#e2e8f0] p-6">
-      {/* Header - Updated colors */}
-      <div className="flex items-center justify-between mb-8">
-        <div>
-          <h2 className="text-2xl font-bold text-[#0e1f42] mb-2">Unified Actions</h2>
-          <p className="text-[#64748b]">Quick access across all dashboards</p>
-        </div>
-        <div className="text-sm font-medium text-[#9f7539] bg-[#9f7539]/10 px-3 py-1.5 rounded-full">
-          <i className="fas fa-bolt mr-1"></i> QUICK ACCESS
-        </div>
-      </div>
-      
-      {/* Notifications Section - Updated colors */}
-      <div className="mb-8">
-        <div className="flex items-center justify-between mb-4">
-          <h3 className="font-bold text-[#0e1f42] flex items-center gap-2">
-            <i className="fas fa-bell text-[#9f7539]"></i>
-            Cross-Dashboard Notifications
-            {unreadCount > 0 && (
-              <span className="bg-red-500 text-white text-xs font-bold px-2 py-0.5 rounded-full">
-                {unreadCount} new
-              </span>
-            )}
-          </h3>
-          <button 
-            onClick={markAllAsRead}
-            className="text-sm text-[#0e1f42] hover:text-[#9f7539] font-medium transition-colors"
-          >
-            Mark all as read
-          </button>
-        </div>
-        
-        <div className="space-y-3 max-h-60 overflow-y-auto pr-2">
-          {notifications.map(notification => (
-            <div 
-              key={notification.id}
-              onClick={() => handleNotificationClick(notification)}
-              className={`p-4 rounded-lg border cursor-pointer transition-all duration-300 hover:translate-x-2 hover:shadow-md ${
-                notification.read ? 'bg-gray-50' : 'bg-blue-50'
-              } ${getPriorityColor(notification.priority)}`}
-            >
-              <div className="flex items-start gap-3">
-                <div className={`w-10 h-10 rounded-lg flex items-center justify-center ${
-                  notification.read ? 'bg-gray-200' : 'bg-blue-100'
-                }`}>
-                  <i className={`fas fa-${
-                    notification.type === 'payment' ? 'credit-card' :
-                    notification.type === 'maintenance' ? 'tools' :
-                    notification.type === 'application' ? 'file-alt' :
-                    notification.type === 'message' ? 'comments' :
-                    'bell'
-                  } ${notification.read ? 'text-gray-600' : 'text-blue-600'}`}></i>
-                </div>
-                
-                <div className="flex-1 min-w-0">
-                  <div className="flex items-center justify-between mb-1">
-                    <span className={`font-medium ${notification.read ? 'text-[#64748b]' : 'text-[#0e1f42]'}`}>
-                      {notification.title}
-                    </span>
-                    <span className="text-xs text-[#64748b]">{notification.time}</span>
-                  </div>
-                  <p className="text-sm text-[#64748b] mb-1">{notification.message}</p>
-                  <div className="flex items-center gap-2">
-                    <span className="text-xs px-2 py-0.5 bg-gray-100 rounded text-[#64748b]">
-                      {notification.dashboard === 'all' ? 'All Dashboards' : `${notification.dashboard} Dashboard`}
-                    </span>
-                    {!notification.read && (
-                      <span className="w-2 h-2 bg-blue-500 rounded-full animate-pulse"></span>
-                    )}
-                  </div>
-                </div>
-              </div>
-            </div>
-          ))}
-        </div>
-        
-        <button 
-          onClick={() => navigate('/dashboard/settings?tab=notifications')}
-          className="mt-3 w-full py-2 text-sm font-medium text-[#0e1f42] hover:text-[#9f7539] hover:bg-gray-50 rounded-lg transition-colors hover:translate-x-1"
-        >
-          <i className="fas fa-cog mr-2"></i>
-          Configure Notification Preferences
-        </button>
-      </div>
-      
-      {/* Dashboard Switcher Shortcuts - Updated colors and added hover effects */}
-      <div className="mb-8">
-        <h3 className="font-bold text-[#0e1f42] mb-4 flex items-center gap-2">
-          <i className="fas fa-th-large text-[#9f7539]"></i>
-          Dashboard Shortcuts
-        </h3>
-        
-        <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-          {dashboardShortcuts.map(dashboard => (
-            <div
-              key={dashboard.id}
-              onClick={() => handleDashboardSwitch(dashboard)}
-              className={`rounded-xl p-4 border cursor-pointer transition-all duration-300 hover:translate-x-2 hover:shadow-md ${
-                dashboard.id === currentDashboard
-                  ? 'bg-gradient-to-br from-[#0e1f42] to-[#1a2d5f] border-[#0e1f42] text-white'
-                  : dashboard.enabled
-                  ? 'bg-white border-[#e2e8f0] hover:border-[#9f7539]/30'
-                  : 'bg-gray-100 border-gray-300 opacity-60'
-              }`}
-            >
-              <div className="flex items-center justify-between mb-3">
-                <div className={`w-10 h-10 rounded-lg flex items-center justify-center ${
-                  dashboard.id === currentDashboard
-                    ? 'bg-white/20'
-                    : dashboard.enabled
-                    ? 'bg-[#f8fafc]'
-                    : 'bg-gray-200'
-                }`}>
-                  <i className={`fas fa-${dashboard.icon} ${
-                    dashboard.id === currentDashboard ? 'text-white' : 'text-[#64748b]'
-                  }`}></i>
-                </div>
-                
-                {dashboard.notifications > 0 && (
-                  <span className={`text-xs font-bold px-1.5 py-0.5 rounded-full ${
-                    dashboard.id === currentDashboard
-                      ? 'bg-white/30 text-white'
-                      : 'bg-red-100 text-red-800'
-                  }`}>
-                    {dashboard.notifications}
+      {!rentOnlyMode && (
+        <>
+          {/* Notifications Section - Updated colors */}
+          <div className="mb-8">
+            <div className="flex items-center justify-between mb-4">
+              <h3 className="font-bold text-[#0e1f42] flex items-center gap-2">
+                <i className="fas fa-bell text-[#9f7539]"></i>
+                Cross-Dashboard Notifications
+                {unreadCount > 0 && (
+                  <span className="bg-red-500 text-white text-xs font-bold px-2 py-0.5 rounded-full">
+                    {unreadCount} new
                   </span>
                 )}
-              </div>
-              
-              <div className={`font-medium mb-1 ${
-                dashboard.id === currentDashboard ? 'text-white' : 'text-[#0e1f42]'
-              }`}>
-                {dashboard.name}
-              </div>
-              
-              <div className={`text-xs ${
-                dashboard.id === currentDashboard ? 'text-white/80' : 'text-[#64748b]'
-              }`}>
-                {dashboard.description}
-              </div>
-              
-              {!dashboard.enabled && (
-                <div className="mt-2 text-xs bg-amber-100 text-amber-800 px-2 py-1 rounded">
-                  Coming Soon
-                </div>
-              )}
+              </h3>
+              <button
+                onClick={markAllAsRead}
+                className="text-sm text-[#0e1f42] hover:text-[#9f7539] font-medium transition-colors"
+              >
+                Mark all as read
+              </button>
             </div>
-          ))}
-        </div>
-        
-        <button 
-          onClick={() => navigate('/dashboard/settings?tab=dashboards')}
-          className="mt-4 w-full py-2 text-sm font-medium text-[#0e1f42] hover:text-[#9f7539] hover:bg-gray-50 rounded-lg transition-colors hover:translate-x-1"
-        >
-          <i className="fas fa-sliders-h mr-2"></i>
-          Manage Dashboard Preferences
-        </button>
-      </div>
+
+            <div className="space-y-3 max-h-60 overflow-y-auto pr-2">
+              {notifications.map(notification => (
+                <div
+                  key={notification.id}
+                  onClick={() => handleNotificationClick(notification)}
+                  className={`p-4 rounded-lg border cursor-pointer transition-all duration-300 hover:translate-x-2 hover:shadow-md ${
+                    notification.read ? 'bg-gray-50' : 'bg-blue-50'
+                  } ${getPriorityColor(notification.priority)}`}
+                >
+                  <div className="flex items-start gap-3">
+                    <div className={`w-10 h-10 rounded-lg flex items-center justify-center ${
+                      notification.read ? 'bg-gray-200' : 'bg-blue-100'
+                    }`}>
+                      <i className={`fas fa-${
+                        notification.type === 'payment' ? 'credit-card' :
+                        notification.type === 'maintenance' ? 'tools' :
+                        notification.type === 'application' ? 'file-alt' :
+                        notification.type === 'message' ? 'comments' :
+                        'bell'
+                      } ${notification.read ? 'text-gray-600' : 'text-blue-600'}`}></i>
+                    </div>
+
+                    <div className="flex-1 min-w-0">
+                      <div className="flex items-center justify-between mb-1">
+                        <span className={`font-medium ${notification.read ? 'text-[#64748b]' : 'text-[#0e1f42]'}`}>
+                          {notification.title}
+                        </span>
+                        <span className="text-xs text-[#64748b]">{notification.time}</span>
+                      </div>
+                      <p className="text-sm text-[#64748b] mb-1">{notification.message}</p>
+                      <div className="flex items-center gap-2">
+                        <span className="text-xs px-2 py-0.5 bg-gray-100 rounded text-[#64748b]">
+                          {notification.dashboard === 'all' ? 'All Dashboards' : `${notification.dashboard} Dashboard`}
+                        </span>
+                        {!notification.read && (
+                          <span className="w-2 h-2 bg-blue-500 rounded-full animate-pulse"></span>
+                        )}
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              ))}
+            </div>
+
+            <button
+              onClick={() => navigate('/dashboard/settings?tab=notifications')}
+              className="mt-3 w-full py-2 text-sm font-medium text-[#0e1f42] hover:text-[#9f7539] hover:bg-gray-50 rounded-lg transition-colors hover:translate-x-1"
+            >
+              <i className="fas fa-cog mr-2"></i>
+              Configure Notification Preferences
+            </button>
+          </div>
+
+          {/* Dashboard Switcher Shortcuts */}
+          <div className="mb-8">
+            <h3 className="font-bold text-[#0e1f42] mb-4 flex items-center gap-2">
+              <i className="fas fa-th-large text-[#9f7539]"></i>
+              Dashboard Shortcuts
+            </h3>
+
+            <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+              {dashboardShortcuts.map(dashboard => (
+                <div
+                  key={dashboard.id}
+                  onClick={() => handleDashboardSwitch(dashboard)}
+                  className={`rounded-xl p-4 border cursor-pointer transition-all duration-300 hover:translate-x-2 hover:shadow-md ${
+                    dashboard.id === currentDashboard
+                      ? 'bg-gradient-to-br from-[#0e1f42] to-[#1a2d5f] border-[#0e1f42] text-white'
+                      : dashboard.enabled
+                      ? 'bg-white border-[#e2e8f0] hover:border-[#9f7539]/30'
+                      : 'bg-gray-100 border-gray-300 opacity-60'
+                  }`}
+                >
+                  <div className="flex items-center justify-between mb-3">
+                    <div className={`w-10 h-10 rounded-lg flex items-center justify-center ${
+                      dashboard.id === currentDashboard
+                        ? 'bg-white/20'
+                        : dashboard.enabled
+                        ? 'bg-[#f8fafc]'
+                        : 'bg-gray-200'
+                    }`}>
+                      <i className={`fas fa-${dashboard.icon} ${
+                        dashboard.id === currentDashboard ? 'text-white' : 'text-[#64748b]'
+                      }`}></i>
+                    </div>
+
+                    {dashboard.notifications > 0 && (
+                      <span className={`text-xs font-bold px-1.5 py-0.5 rounded-full ${
+                        dashboard.id === currentDashboard
+                          ? 'bg-white/30 text-white'
+                          : 'bg-red-100 text-red-800'
+                      }`}>
+                        {dashboard.notifications}
+                      </span>
+                    )}
+                  </div>
+
+                  <div className={`font-medium mb-1 ${
+                    dashboard.id === currentDashboard ? 'text-white' : 'text-[#0e1f42]'
+                  }`}>
+                    {dashboard.name}
+                  </div>
+
+                  <div className={`text-xs ${
+                    dashboard.id === currentDashboard ? 'text-white/80' : 'text-[#64748b]'
+                  }`}>
+                    {dashboard.description}
+                  </div>
+
+                  {!dashboard.enabled && (
+                    <div className="mt-2 text-xs bg-amber-100 text-amber-800 px-2 py-1 rounded">
+                      Coming Soon
+                    </div>
+                  )}
+                </div>
+              ))}
+            </div>
+
+            <button
+              onClick={() => navigate('/dashboard/settings?tab=dashboards')}
+              className="mt-4 w-full py-2 text-sm font-medium text-[#0e1f42] hover:text-[#9f7539] hover:bg-gray-50 rounded-lg transition-colors hover:translate-x-1"
+            >
+              <i className="fas fa-sliders-h mr-2"></i>
+              Manage Dashboard Preferences
+            </button>
+          </div>
+        </>
+      )}
 
       {/* REPLACEMENT: Rental Journey Status Section (instead of Quick Actions) */}
       <div>
@@ -346,38 +341,9 @@ const UnifiedActionsPanel = () => {
           Your Rental Journey Status
         </h3>
         
-        <div className="status-grid grid grid-cols-1 md:grid-cols-3 gap-6">
-          {/* MAIN Section */}
-          <div className="status-category border-r border-[#e2e8f0] pr-6">
-            <h4 className="category-title text-xs font-semibold text-[#64748b] uppercase tracking-wider mb-6 pb-2 border-b-2 border-[#9f7539]">
-              MAIN
-            </h4>
-            
-            <div 
-              className="status-item flex items-center gap-4 p-4 rounded-lg cursor-pointer transition-all duration-300 hover:translate-x-2 hover:shadow-md"
-              onClick={() => handleNavigate('browse')}
-            >
-              <div className="status-icon w-12 h-12 bg-[#f8fafc] rounded-lg flex items-center justify-center text-[#9f7539] text-lg">
-                <i className="fas fa-search"></i>
-              </div>
-              
-              <div className="status-content flex-1 min-w-0">
-                <span className="status-label block font-semibold text-[#0e1f42] mb-1">
-                  Browse Properties
-                </span>
-                <span className="status-value text-sm text-[#64748b]" id="browseStatus">
-                  {statusData.browse}
-                </span>
-              </div>
-              
-              <div className="status-badge new bg-[#0e1f42] text-white text-xs font-bold px-3 py-1.5 rounded" id="browseBadge">
-                LIVE
-              </div>
-            </div>
-          </div>
-
+        <div className="status-grid grid grid-cols-1 md:grid-cols-2 gap-6">
           {/* APPLICATIONS Section */}
-          <div className="status-category border-r border-[#e2e8f0] px-6">
+          <div className="status-category border-r border-[#e2e8f0] pr-6">
             <h4 className="category-title text-xs font-semibold text-[#64748b] uppercase tracking-wider mb-6 pb-2 border-b-2 border-[#9f7539]">
               APPLICATIONS
             </h4>

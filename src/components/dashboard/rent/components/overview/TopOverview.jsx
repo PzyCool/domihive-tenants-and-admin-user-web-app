@@ -15,8 +15,10 @@ const TopOverview = () => {
 
   // ========== RECENTLY VIEWED PROPERTY SECTION ==========
   const [isFavorite, setIsFavorite] = useState(false);
+  const [recentProperty, setRecentProperty] = useState(null);
+  const [hasBookingIntent, setHasBookingIntent] = useState(false);
 
-  const property = {
+  const fallbackProperty = {
     id: 'recent_001',
     title: '3 Bedroom Luxury Apartment',
     location: 'Lekki Phase 1, Lagos',
@@ -27,6 +29,58 @@ const TopOverview = () => {
     image: 'https://images.unsplash.com/photo-1545323157-f6f63c0d66a7?w=800&h=600&fit=crop',
     viewedAt: '2 hours ago'
   };
+
+  useEffect(() => {
+    const normalize = (raw) => {
+      if (!raw) return null;
+      return {
+        id: raw.id || raw.propertyId || fallbackProperty.id,
+        title: raw.title || raw.name || fallbackProperty.title,
+        location: raw.location || raw.address || fallbackProperty.location,
+        price: raw.price || raw.rent || fallbackProperty.price,
+        bedrooms: raw.bedrooms || raw.beds || fallbackProperty.bedrooms,
+        bathrooms: raw.bathrooms || raw.baths || fallbackProperty.bathrooms,
+        size: raw.size || raw.area || fallbackProperty.size,
+        image: raw.image || raw.images?.[0] || fallbackProperty.image,
+        viewedAt: raw.viewedAt || raw.updatedAt || fallbackProperty.viewedAt
+      };
+    };
+
+    try {
+      const pending = localStorage.getItem('domihive_pending_booking');
+      if (pending) {
+        const parsedPending = JSON.parse(pending);
+        setRecentProperty(normalize(parsedPending));
+        setHasBookingIntent(true);
+        return;
+      }
+
+      const bookingProperty = localStorage.getItem('domihive_booking_property');
+      if (bookingProperty) {
+        const parsedBooking = JSON.parse(bookingProperty);
+        setRecentProperty(normalize(parsedBooking));
+        setHasBookingIntent(true);
+        return;
+      }
+
+      const recent = localStorage.getItem('domihive_recent_properties');
+      if (recent) {
+        const parsedRecent = JSON.parse(recent);
+        if (Array.isArray(parsedRecent) && parsedRecent.length > 0) {
+          setRecentProperty(normalize(parsedRecent[0]));
+          setHasBookingIntent(false);
+          return;
+        }
+      }
+    } catch (error) {
+      console.error('Failed to load recent property data:', error);
+    }
+
+    setRecentProperty(fallbackProperty);
+    setHasBookingIntent(false);
+  }, []);
+
+  const property = recentProperty || fallbackProperty;
 
   const features = [
     { icon: 'bed', label: 'Bedrooms', value: property.bedrooms },
@@ -141,15 +195,19 @@ const TopOverview = () => {
         </div>
       </div>
 
-      {/* 3 Columns Grid with Equal Heights */}
-      <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+      {/* Top Row: 2 Columns */}
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
 
         {/* COLUMN 1: Recently Viewed Property */}
         <div className="flex flex-col h-full">
           <div className="flex items-center justify-between mb-4">
-            <h3 className="font-bold text-[var(--text-color,#0e1f42)]">Recently Viewed</h3>
-            <div className="text-xs px-3 py-1.5 bg-blue-100 text-blue-800 rounded-full font-medium overview-pill">
-              VIEWED {property.viewedAt.toUpperCase()}
+            <h3 className="font-bold text-[var(--text-color,#0e1f42)]">
+              {hasBookingIntent ? 'Continue Booking' : 'Recently Viewed'}
+            </h3>
+            <div className={`text-xs px-3 py-1.5 rounded-full font-medium overview-pill ${
+              hasBookingIntent ? 'bg-[#9f7539]/10 text-[#9f7539]' : 'bg-blue-100 text-blue-800'
+            }`}>
+              {hasBookingIntent ? 'PENDING BOOKING' : `VIEWED ${String(property.viewedAt).toUpperCase()}`}
             </div>
           </div>
 
@@ -206,67 +264,24 @@ const TopOverview = () => {
                   Details
                 </button>
                 <button
-                  onClick={() => navigate('/dashboard/rent/applications')}
+                  onClick={() => navigate(hasBookingIntent ? `/dashboard/rent/applications?property=${property.id}` : '/dashboard/rent/applications')}
                   className="flex-1 bg-gradient-to-r from-[#9f7539] to-[#b58a4a] text-white font-medium py-2 text-sm rounded-lg hover:opacity-90 transition-opacity flex items-center justify-center gap-1"
                 >
                   <i className="fas fa-calendar-check text-xs"></i>
-                  Book
+                  {hasBookingIntent ? 'Continue Booking' : 'Book'}
                 </button>
               </div>
+              {hasBookingIntent && (
+                <div className="mt-2 text-[11px] font-medium text-[#9f7539] flex items-center gap-1">
+                  <i className="fas fa-bolt"></i>
+                  Booking intent detected from marketplace
+                </div>
+              )}
             </div>
           </div>
         </div>
 
-        {/* COLUMN 2: Combined Stats Card */}
-        <div className="flex flex-col h-full">
-          <div className="flex items-center justify-between mb-4">
-            <h3 className="font-bold text-[var(--text-color,#0e1f42)]">Property Statistics</h3>
-          </div>
-
-          <div
-            className="overview-card stats-card bg-[#f8fafc] rounded-xl p-4 border border-[#e2e8f0] hover:border-[#9f7539]/30 cursor-pointer transition-all duration-300 hover:translate-x-2 hover:shadow-md group flex flex-col gap-4 flex-1"
-            onClick={() => navigate('/dashboard/rent/my-properties')}
-          >
-            <div className="flex items-center gap-3">
-              <div className="w-10 h-10 rounded-lg bg-gradient-to-br from-[#0e1f42] to-[#1a2d5f] flex items-center justify-center">
-                <i className="fas fa-home text-white"></i>
-              </div>
-              <div>
-                <h3 className="font-semibold text-[var(--text-color,#0e1f42)] group-hover:text-[#9f7539]">Active Properties</h3>
-                <p className="text-xs text-[var(--text-muted,#64748b)]">Currently renting</p>
-              </div>
-              <div className="ml-auto bg-[#0e1f42] text-white text-xs font-semibold px-3 py-1.5 rounded-full">
-                {stats.occupancyRate}
-              </div>
-            </div>
-            <div className="flex items-center justify-between">
-              <div className="text-2xl font-semibold text-[var(--text-color,#0e1f42)]">{stats.activeProperties}</div>
-              <div className="text-right">
-                <div className="text-xs text-[var(--text-muted,#64748b)] mb-1">Occupancy</div>
-                <div className="w-24 bg-gray-200 rounded-full h-2">
-                  <div className="h-2 rounded-full bg-gradient-to-r from-[#0e1f42] to-[#1a2d5f]" style={{ width: '85%' }}></div>
-                </div>
-              </div>
-            </div>
-            <div className="border-t border-[#e2e8f0] pt-12 mt-6 flex items-center justify-between">
-              <div className="flex items-center gap-2">
-                <div className="w-8 h-8 rounded-lg bg-gradient-to-br from-[#0e1f42] to-[#1a2d5f] flex items-center justify-center">
-                  <i className="fas fa-credit-card text-white text-sm"></i>
-                </div>
-                <div>
-                  <div className="font-semibold text-[var(--text-color,#0e1f42)]">Next Payment</div>
-                  <div className="text-xs text-[var(--text-muted,#64748b)]">Due in {stats.daysUntilPayment} days</div>
-                </div>
-              </div>
-              <div className="text-right">
-                <div className="text-lg font-bold text-[var(--text-color,#0e1f42)]">NGN {stats.nextPaymentAmount}</div>
-                <div className="text-xs text-green-600 font-semibold">On Track</div>
-              </div>
-            </div>
-          </div>
-        </div>
-
-        {/* COLUMN 3: Timeline Calendar */}
+        {/* COLUMN 2: Timeline Calendar */}
         <div className="flex flex-col h-full">
           <div className="flex items-center justify-between mb-4">
             <h3 className="font-bold text-[var(--text-color,#0e1f42)]">Rental Timeline</h3>
@@ -438,6 +453,56 @@ const TopOverview = () => {
                 </div>
               </div>
             )}
+          </div>
+        </div>
+      </div>
+
+      {/* Property Statistics (Moved Down) */}
+      <div className="mt-6">
+        <div className="flex items-center justify-between mb-4">
+          <h3 className="font-bold text-[var(--text-color,#0e1f42)]">Property Statistics</h3>
+        </div>
+
+        <div
+          className="overview-card stats-card bg-[#f8fafc] rounded-xl p-4 border border-[#e2e8f0] hover:border-[#9f7539]/30 cursor-pointer transition-all duration-300 hover:translate-x-2 hover:shadow-md group flex flex-col gap-4"
+          onClick={() => navigate('/dashboard/rent/my-properties')}
+        >
+          <div className="flex items-center gap-3">
+            <div className="w-10 h-10 rounded-lg bg-gradient-to-br from-[#0e1f42] to-[#1a2d5f] flex items-center justify-center">
+              <i className="fas fa-home text-white"></i>
+            </div>
+            <div>
+              <h3 className="font-semibold text-[var(--text-color,#0e1f42)] group-hover:text-[#9f7539]">Active Properties</h3>
+              <p className="text-xs text-[var(--text-muted,#64748b)]">Currently renting</p>
+              <div className="mt-1 flex items-end gap-2">
+                <div className="text-2xl leading-none font-semibold text-[var(--text-color,#0e1f42)]">{stats.activeProperties}</div>
+                <div className="text-xs text-[var(--text-muted,#64748b)]">active units</div>
+              </div>
+            </div>
+          </div>
+          <div>
+            <div className="flex items-center justify-between text-xs text-[var(--text-muted,#64748b)] mb-1">
+              <span>Occupancy</span>
+              <span className="font-semibold text-[var(--text-color,#0e1f42)]">{stats.occupancyRate}</span>
+            </div>
+            <div className="w-full bg-gray-200 rounded-full h-2">
+              <div className="h-2 rounded-full bg-gradient-to-r from-[#0e1f42] to-[#1a2d5f]" style={{ width: '85%' }}></div>
+            </div>
+          </div>
+          <div className="border-t border-[#e2e8f0] pt-8 mt-2 flex items-center justify-between">
+            <div className="flex items-center gap-2">
+              <div className="w-8 h-8 rounded-lg bg-gradient-to-br from-[#0e1f42] to-[#1a2d5f] flex items-center justify-center">
+                <i className="fas fa-credit-card text-white text-sm"></i>
+              </div>
+              <div>
+                <div className="font-semibold text-[var(--text-color,#0e1f42)]">Next Payment</div>
+                <div className="text-xs text-[var(--text-muted,#64748b)]">Due in {stats.daysUntilPayment} days</div>
+              </div>
+            </div>
+            <div className="text-right">
+              <div className="text-lg font-bold text-[var(--text-color,#0e1f42)]">NGN {stats.nextPaymentAmount}</div>
+              <div className="text-xs text-green-600 font-semibold">On Track</div>
+            </div>
           </div>
         </div>
       </div>
