@@ -2,7 +2,6 @@
 import React from 'react';
 import RoomGallery from './RoomGallery';
 import VideoSection from './VideoSection';
-import ActionSection from '../../ActionSection/ActionSection';
 
 const MediaTab = ({ property, listingType, onBookInspection }) => {
   return (
@@ -21,14 +20,6 @@ const MediaTab = ({ property, listingType, onBookInspection }) => {
       
       {/* Video Section */}
       <VideoSection property={property} />
-
-      {/* Action Section */}
-      <div className="mt-8">
-        <ActionSection 
-          property={property}
-          onBookInspection={onBookInspection}
-        />
-      </div>
       
       <div className="bg-[#f8fafc] p-6 rounded-xl border border-[#e2e8f0]">
         <div className="flex items-center gap-3">

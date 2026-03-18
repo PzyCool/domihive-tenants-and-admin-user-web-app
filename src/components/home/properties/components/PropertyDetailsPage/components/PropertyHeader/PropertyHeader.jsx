@@ -1,7 +1,30 @@
 // src/dashboards/rent/components/property-details/components/PropertyHeader/PropertyHeader.jsx
-import React from 'react';
+import React, { useMemo, useState } from 'react';
 
 const PropertyHeader = ({ property }) => {
+  const [showFullSpecs, setShowFullSpecs] = useState(false);
+
+  const specificationSections = useMemo(() => {
+    const defaults = {
+      building: ['New construction (2023)', '6-floor building with elevator', 'Modern architectural design'],
+      interior: ['Marble flooring', 'Fitted wardrobes', 'Central air conditioning'],
+      exterior: ['Swimming pool', 'Landscaped gardens', 'Secure parking'],
+      utilities: ['Constant water supply', 'Backup generator', 'High-speed fiber internet']
+    };
+
+    return property?.specifications || defaults;
+  }, [property]);
+
+  const compactHighlights = useMemo(() => {
+    const source = [
+      ...(specificationSections.building || []),
+      ...(specificationSections.interior || []),
+      ...(specificationSections.exterior || []),
+      ...(specificationSections.utilities || [])
+    ];
+    return source.slice(0, 6);
+  }, [specificationSections]);
+
   return (
     <div className="property-header mb-8">
       {/* Property Title, Price and ID */}
@@ -59,89 +82,102 @@ const PropertyHeader = ({ property }) => {
 
       {/* Detailed Specifications - Compact Accordion Style */}
       <div className="bg-[#f8fafc] p-5 rounded-xl border border-[#e2e8f0]">
-        <h2 className="text-xl font-bold text-[#0e1f42] mb-4">Specifications</h2>
-        
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
-          {/* Building Details */}
-          <div>
-            <div className="flex items-center gap-2 mb-3">
-              <div className="w-8 h-8 rounded-lg bg-[#9f7539]/10 flex items-center justify-center">
-                <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4 text-[#9f7539]" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4" />
-                </svg>
-              </div>
-              <h3 className="font-semibold text-[#0e1f42]">Building</h3>
-            </div>
-            <div className="space-y-2 pl-10">
-              {['New construction (2023)', '6-floor building with elevator', 'Modern architectural design', 'Energy efficient windows', 'Fire safety system'].map((item, index) => (
-                <div key={index} className="flex items-center gap-2 text-sm">
-                  <i className="fas fa-check text-[#9f7539] text-xs"></i>
-                  <span className="text-[#64748b]">{item}</span>
-                </div>
-              ))}
-            </div>
-          </div>
-
-          {/* Interior Features */}
-          <div>
-            <div className="flex items-center gap-2 mb-3">
-              <div className="w-8 h-8 rounded-lg bg-[#9f7539]/10 flex items-center justify-center">
-                <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4 text-[#9f7539]" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 6a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2H6a2 2 0 01-2-2V6zM14 6a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2h-2a2 2 0 01-2-2V6zM4 16a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2H6a2 2 0 01-2-2v-2zM14 16a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2h-2a2 2 0 01-2-2v-2z" />
-                </svg>
-              </div>
-              <h3 className="font-semibold text-[#0e1f42]">Interior</h3>
-            </div>
-            <div className="space-y-2 pl-10">
-              {['Marble flooring in living areas', 'Fitted wardrobes in all bedrooms', 'Modern ceiling lights', 'Central air conditioning', 'Smart home ready'].map((item, index) => (
-                <div key={index} className="flex items-center gap-2 text-sm">
-                  <i className="fas fa-check text-[#9f7539] text-xs"></i>
-                  <span className="text-[#64748b]">{item}</span>
-                </div>
-              ))}
-            </div>
-          </div>
-
-          {/* Exterior & Outdoor */}
-          <div>
-            <div className="flex items-center gap-2 mb-3">
-              <div className="w-8 h-8 rounded-lg bg-[#9f7539]/10 flex items-center justify-center">
-                <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4 text-[#9f7539]" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3.055 11H5a2 2 0 012 2v1a2 2 0 002 2 2 2 0 012 2v2.945M8 3.935V5.5A2.5 2.5 0 0010.5 8h.5a2 2 0 012 2 2 2 0 104 0 2 2 0 012-2h1.064M15 20.488V18a2 2 0 012-2h3.064M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
-                </svg>
-              </div>
-              <h3 className="font-semibold text-[#0e1f42]">Exterior</h3>
-            </div>
-            <div className="space-y-2 pl-10">
-              {['Swimming pool', 'Children\'s playground', 'Landscaped gardens', 'Secure parking space', '24/7 security guard'].map((item, index) => (
-                <div key={index} className="flex items-center gap-2 text-sm">
-                  <i className="fas fa-check text-[#9f7539] text-xs"></i>
-                  <span className="text-[#64748b]">{item}</span>
-                </div>
-              ))}
-            </div>
-          </div>
-
-          {/* Utilities & Services */}
-          <div>
-            <div className="flex items-center gap-2 mb-3">
-              <div className="w-8 h-8 rounded-lg bg-[#9f7539]/10 flex items-center justify-center">
-                <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4 text-[#9f7539]" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 10V3L4 14h7v7l9-11h-7z" />
-                </svg>
-              </div>
-              <h3 className="font-semibold text-[#0e1f42]">Utilities</h3>
-            </div>
-            <div className="space-y-2 pl-10">
-              {['Constant water supply', 'Backup generator', 'High-speed fiber internet', 'CCTV surveillance', 'Waste management'].map((item, index) => (
-                <div key={index} className="flex items-center gap-2 text-sm">
-                  <i className="fas fa-check text-[#9f7539] text-xs"></i>
-                  <span className="text-[#64748b]">{item}</span>
-                </div>
-              ))}
-            </div>
-          </div>
+        <div className="flex items-center justify-between gap-3 mb-3">
+          <h2 className="text-lg font-bold text-[#0e1f42]">Specifications</h2>
+          <button
+            type="button"
+            onClick={() => setShowFullSpecs((prev) => !prev)}
+            className="text-sm font-medium text-[#9f7539] hover:text-[#b58a4a] transition-colors"
+          >
+            {showFullSpecs ? 'Hide Details' : 'View Full Specs'}
+          </button>
         </div>
+
+        {!showFullSpecs && (
+          <div>
+            <div className="grid grid-cols-2 md:grid-cols-4 gap-2 mb-3">
+              <div className="bg-white border border-[#e2e8f0] rounded-lg px-3 py-2 text-sm">
+                <span className="text-[#64748b]">Building</span>
+                <div className="font-semibold text-[#0e1f42]">{(specificationSections.building || []).length} items</div>
+              </div>
+              <div className="bg-white border border-[#e2e8f0] rounded-lg px-3 py-2 text-sm">
+                <span className="text-[#64748b]">Interior</span>
+                <div className="font-semibold text-[#0e1f42]">{(specificationSections.interior || []).length} items</div>
+              </div>
+              <div className="bg-white border border-[#e2e8f0] rounded-lg px-3 py-2 text-sm">
+                <span className="text-[#64748b]">Exterior</span>
+                <div className="font-semibold text-[#0e1f42]">{(specificationSections.exterior || []).length} items</div>
+              </div>
+              <div className="bg-white border border-[#e2e8f0] rounded-lg px-3 py-2 text-sm">
+                <span className="text-[#64748b]">Utilities</span>
+                <div className="font-semibold text-[#0e1f42]">{(specificationSections.utilities || []).length} items</div>
+              </div>
+            </div>
+
+            <div className="flex flex-wrap gap-2">
+              {compactHighlights.map((item, index) => (
+                <span
+                  key={`${item}-${index}`}
+                  className="inline-flex items-center rounded-full border border-[#e2e8f0] bg-white px-3 py-1.5 text-xs text-[#475467]"
+                >
+                  {item}
+                </span>
+              ))}
+            </div>
+          </div>
+        )}
+
+        {showFullSpecs && (
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
+            <div>
+              <h3 className="font-semibold text-[#0e1f42] mb-2">Building</h3>
+              <div className="space-y-1.5">
+                {(specificationSections.building || []).map((item, index) => (
+                  <div key={index} className="flex items-center gap-2 text-sm">
+                    <i className="fas fa-check text-[#9f7539] text-xs"></i>
+                    <span className="text-[#64748b]">{item}</span>
+                  </div>
+                ))}
+              </div>
+            </div>
+
+            <div>
+              <h3 className="font-semibold text-[#0e1f42] mb-2">Interior</h3>
+              <div className="space-y-1.5">
+                {(specificationSections.interior || []).map((item, index) => (
+                  <div key={index} className="flex items-center gap-2 text-sm">
+                    <i className="fas fa-check text-[#9f7539] text-xs"></i>
+                    <span className="text-[#64748b]">{item}</span>
+                  </div>
+                ))}
+              </div>
+            </div>
+
+            <div>
+              <h3 className="font-semibold text-[#0e1f42] mb-2">Exterior</h3>
+              <div className="space-y-1.5">
+                {(specificationSections.exterior || []).map((item, index) => (
+                  <div key={index} className="flex items-center gap-2 text-sm">
+                    <i className="fas fa-check text-[#9f7539] text-xs"></i>
+                    <span className="text-[#64748b]">{item}</span>
+                  </div>
+                ))}
+              </div>
+            </div>
+
+            <div>
+              <h3 className="font-semibold text-[#0e1f42] mb-2">Utilities</h3>
+              <div className="space-y-1.5">
+                {(specificationSections.utilities || []).map((item, index) => (
+                  <div key={index} className="flex items-center gap-2 text-sm">
+                    <i className="fas fa-check text-[#9f7539] text-xs"></i>
+                    <span className="text-[#64748b]">{item}</span>
+                  </div>
+                ))}
+              </div>
+            </div>
+          </div>
+        )}
       </div>
     </div>
   );

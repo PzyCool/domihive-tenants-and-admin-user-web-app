@@ -68,6 +68,11 @@ const Sidebar = ({ sidebarState, toggleSidebar, closeMobileSidebar, isMobile, cu
       .sidebar-nav::-webkit-scrollbar {
         width: 6px;
       }
+
+      .sidebar-nav::-webkit-scrollbar:horizontal {
+        height: 0px;
+        display: none;
+      }
       
       .sidebar-nav::-webkit-scrollbar-track {
         background: rgba(255, 255, 255, 0.2);
@@ -81,6 +86,11 @@ const Sidebar = ({ sidebarState, toggleSidebar, closeMobileSidebar, isMobile, cu
       
       .sidebar-nav::-webkit-scrollbar-thumb:hover {
         background: rgba(159, 117, 57, 0.6);
+      }
+
+      .dashboard-sidebar::-webkit-scrollbar:horizontal {
+        height: 0px;
+        display: none;
       }
     `;
     document.head.appendChild(style);
@@ -198,11 +208,11 @@ const Sidebar = ({ sidebarState, toggleSidebar, closeMobileSidebar, isMobile, cu
         flex flex-col
         border-r border-white/30
         shadow-lg shadow-black/5
-        ${isCollapsed ? 'overflow-visible' : 'overflow-x-hidden'}
+        overflow-x-hidden overflow-y-hidden
       `}>
 
         {/* Sidebar Header with Logo */}
-        <div className={`sidebar-header px-6 py-5 flex items-center min-h-[80px] border-b border-white/30 bg-white/60 backdrop-blur-sm transition-all duration-300 ${isCollapsed ? 'justify-center' : 'justify-between'}`}>
+        <div className={`sidebar-header shrink-0 px-6 py-5 flex items-center min-h-[80px] border-b border-white/30 bg-white/60 backdrop-blur-sm transition-all duration-300 ${isCollapsed ? 'justify-center' : 'justify-between'}`}>
           {isCollapsed && !isMobile ? (
             <button
               onClick={toggleSidebar}
@@ -245,7 +255,7 @@ const Sidebar = ({ sidebarState, toggleSidebar, closeMobileSidebar, isMobile, cu
         {/* Sidebar Navigation - Scrollable */}
         <nav
           ref={sidebarNavRef}
-          className={`sidebar-nav flex-1 py-4 transition-all duration-300 ${isCollapsed ? 'overflow-visible' : 'overflow-y-auto'}`}
+          className="sidebar-nav flex-1 min-h-0 py-4 transition-all duration-300 overflow-y-auto overflow-x-hidden"
           style={{ scrollbarWidth: 'thin', scrollbarColor: '#9f7539 transparent' }}
         >
           {/* MAIN Section */}
@@ -262,6 +272,7 @@ const Sidebar = ({ sidebarState, toggleSidebar, closeMobileSidebar, isMobile, cu
                   key={item.path}
                   to={item.path}
                   onClick={handleNavClick}
+                  title={isCollapsed ? item.label : undefined}
                   className={({ isActive }) =>
                     `group relative flex items-center gap-3 ${isCollapsed ? 'px-0 py-3 justify-center' : 'px-4 py-3'} rounded-lg transition-all duration-200
                     ${isActive
@@ -278,13 +289,6 @@ const Sidebar = ({ sidebarState, toggleSidebar, closeMobileSidebar, isMobile, cu
                         <span className="nav-text font-medium text-sm">{item.label}</span>
                       )}
 
-                      {/* Premium Tooltip */}
-                      {isCollapsed && (
-                        <div className="absolute left-full ml-3 px-2.5 py-1.5 bg-[#0e1f42] text-white text-[11px] font-semibold rounded-md opacity-0 invisible group-hover:opacity-100 group-hover:visible transition-all duration-200 whitespace-nowrap z-100 pointer-events-none shadow-xl border border-white/10 translate-x-1 group-hover:translate-x-0">
-                          <div className="absolute left-[-4px] top-1/2 -translate-y-1/2 w-2 h-2 bg-[#0e1f42] rotate-45" />
-                          {item.label}
-                        </div>
-                      )}
                     </>
                   )}
                 </NavLink>
@@ -306,6 +310,7 @@ const Sidebar = ({ sidebarState, toggleSidebar, closeMobileSidebar, isMobile, cu
                   key={item.path}
                   to={item.path}
                   onClick={handleNavClick}
+                  title={isCollapsed ? item.label : undefined}
                   className={({ isActive }) =>
                     `group relative flex items-center gap-3 ${isCollapsed ? 'px-0 py-3 justify-center' : 'px-4 py-3'} rounded-lg transition-all duration-200
                     ${isActive
@@ -336,13 +341,6 @@ const Sidebar = ({ sidebarState, toggleSidebar, closeMobileSidebar, isMobile, cu
                         </span>
                       )}
 
-                      {/* Premium Tooltip */}
-                      {isCollapsed && (
-                        <div className="absolute left-full ml-3 px-2.5 py-1.5 bg-[#0e1f42] text-white text-[11px] font-semibold rounded-md opacity-0 invisible group-hover:opacity-100 group-hover:visible transition-all duration-200 whitespace-nowrap z-100 pointer-events-none shadow-xl border border-white/10 translate-x-1 group-hover:translate-x-0">
-                          <div className="absolute left-[-4px] top-1/2 -translate-y-1/2 w-2 h-2 bg-[#0e1f42] rotate-45" />
-                          {item.label}
-                        </div>
-                      )}
                     </>
                   )}
                 </NavLink>
@@ -364,6 +362,7 @@ const Sidebar = ({ sidebarState, toggleSidebar, closeMobileSidebar, isMobile, cu
                   key={item.path}
                   to={item.path}
                   onClick={handleNavClick}
+                  title={isCollapsed ? item.label : undefined}
                   className={({ isActive }) =>
                     `group relative flex items-center gap-3 ${isCollapsed ? 'px-0 py-3 justify-center' : 'px-4 py-3'} rounded-lg transition-all duration-200
                     ${isActive
@@ -380,13 +379,6 @@ const Sidebar = ({ sidebarState, toggleSidebar, closeMobileSidebar, isMobile, cu
                         <span className="nav-text font-medium text-sm">{item.label}</span>
                       )}
 
-                      {/* Premium Tooltip */}
-                      {isCollapsed && (
-                        <div className="absolute left-full ml-3 px-2.5 py-1.5 bg-[#0e1f42] text-white text-[11px] font-semibold rounded-md opacity-0 invisible group-hover:opacity-100 group-hover:visible transition-all duration-200 whitespace-nowrap z-100 pointer-events-none shadow-xl border border-white/10 translate-x-1 group-hover:translate-x-0">
-                          <div className="absolute left-[-4px] top-1/2 -translate-y-1/2 w-2 h-2 bg-[#0e1f42] rotate-45" />
-                          {item.label}
-                        </div>
-                      )}
                     </>
                   )}
                 </NavLink>
@@ -396,7 +388,7 @@ const Sidebar = ({ sidebarState, toggleSidebar, closeMobileSidebar, isMobile, cu
         </nav>
 
         {/* Sidebar Footer - User Profile */}
-        <div className="sidebar-footer p-5 border-t border-white/30 bg-white/60 backdrop-blur-sm">
+        <div className="sidebar-footer shrink-0 p-5 border-t border-white/30 bg-white/60 backdrop-blur-sm">
           {!isCollapsed ? (
             <>
               {/* Expanded View */}
@@ -452,24 +444,14 @@ const Sidebar = ({ sidebarState, toggleSidebar, closeMobileSidebar, isMobile, cu
                     )}
                   </div>
 
-                  {/* Avatar Tooltip */}
-                  <div className="absolute left-full ml-3 px-2.5 py-1.5 bg-[#0e1f42] text-white text-[11px] font-semibold rounded-md opacity-0 invisible group-hover:opacity-100 group-hover:visible transition-all duration-200 whitespace-nowrap z-100 pointer-events-none shadow-xl border border-white/10 translate-x-1 group-hover:translate-x-0">
-                    <div className="absolute left-[-4px] top-1/2 -translate-y-1/2 w-2 h-2 bg-[#0e1f42] rotate-45" />
-                    {user.name || 'Profile'}
-                  </div>
                 </div>
 
                 <button
                   onClick={handleLogout}
+                  title="Logout"
                   className="group relative p-2.5 rounded-lg bg-red-50 hover:bg-red-500 text-red-600 hover:text-white border border-red-100 hover:border-red-500 transition-all shadow-sm"
                 >
                   <i className="fas fa-sign-out-alt text-sm"></i>
-
-                  {/* Logout Tooltip */}
-                  <div className="absolute left-full ml-3 px-2.5 py-1.5 bg-red-600 text-white text-[11px] font-semibold rounded-md opacity-0 invisible group-hover:opacity-100 group-hover:visible transition-all duration-200 whitespace-nowrap z-100 pointer-events-none shadow-xl border border-white/10 translate-x-1 group-hover:translate-x-0">
-                    <div className="absolute left-[-4px] top-1/2 -translate-y-1/2 w-2 h-2 bg-red-600 rotate-45" />
-                    Logout
-                  </div>
                 </button>
               </div>
             </>
