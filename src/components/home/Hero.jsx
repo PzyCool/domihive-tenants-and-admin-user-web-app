@@ -19,7 +19,7 @@ export default function Hero() {
             Rent with Confidence on a Trusted Property Platform
           </p>
           <p className="text-white/90 text-sm md:text-lg/7 max-w-xl">
-            No agents. No stress. No palava. No caution fee. DomiHive gives you
+            No agents. No stress. No palava. DomiHive gives you
             verified listings, smooth applications, secure payments, and
             professional property management — all in one seamless experience.
           </p>
@@ -65,13 +65,6 @@ export default function Hero() {
             className="w-full md:w-auto h-64 md:h-120 rounded-2xl object-cover object-bottom-left shadow-2xl shadow-black/40 hover:shadow-black/60 hover:-translate-y-1 transition duration-500"
           />
 
-          {/* Floating card */}
-          <div className="absolute -bottom-4 left-3 md:-bottom-5 md:-left-5 bg-white shadow-2xl rounded-lg w-fit px-3 py-2 md:p-4 text-center animate-float">
-            <span className="text-[#0E1F42] font-semibold text-xs md:text-base">
-              Trusted Platform
-            </span>
-            <div className="text-[#9F7539] text-xs md:text-base">?~.?~.?~.?~.?~.</div>
-          </div>
         </div>
       </section>
     </div>

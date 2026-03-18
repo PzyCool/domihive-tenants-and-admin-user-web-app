@@ -63,7 +63,7 @@ const PrimaryRow = ({
       </div>
       
       {/* Right Section */}
-      <div className="flex items-center gap-2 lg:gap-3">
+      <div className="flex items-center gap-2 lg:gap-3 ml-3 lg:ml-5">
         {/* View Toggle */}
         <ViewToggle
           currentView={viewType}

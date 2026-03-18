@@ -30,7 +30,7 @@ const SecondaryRow = ({ filters, onFilterChange, onClearFilters }) => {
   };
   
   return (
-    <div className="secondary-row hidden md:block px-4 lg:px-6 py-4 bg-gray-50 border-t border-gray-200">
+    <div className="secondary-row relative z-50 hidden md:block px-4 lg:px-6 py-4 bg-gray-50 border-t border-gray-200">
       <div className="flex flex-col lg:flex-row gap-4">
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-5 gap-4 flex-1">
           <div>

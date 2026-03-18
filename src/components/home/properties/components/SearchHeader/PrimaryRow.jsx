@@ -35,16 +35,16 @@ const PrimaryRow = ({
   // Listing type stays on rent (for sale removed)
 
   return (
-    <div className="primary-row flex flex-col md:flex-row md:items-center md:justify-between px-4 lg:px-6 py-3 border-b border-[#0e1f42]/10 gap-3 md:gap-0">
-      <div className="flex flex-col md:flex-row md:items-center gap-3 lg:gap-4 flex-1 w-full">
-        <div className="flex-1 w-full md:max-w-md">
+    <div className="primary-row px-4 lg:px-6 py-3 border-b border-[#0e1f42]/10">
+      <div className="flex flex-col gap-3 md:grid md:grid-cols-[minmax(280px,1.35fr)_auto_auto] md:items-center md:gap-4">
+        <div className="w-full">
           <SearchBar
             value={filters.searchQuery || ''}
             onChange={handleSearch}
           />
         </div>
-        
-        <div className="flex items-center gap-3 flex-wrap">
+
+        <div className="flex items-center gap-3 flex-wrap md:flex-nowrap md:justify-center">
           <FilterBadge
             count={activeFiltersCount}
             onClick={onToggleExpand}
@@ -62,9 +62,8 @@ const PrimaryRow = ({
             onClick={onAdvancedToggle}
           />
         </div>
-      </div>
-      
-      <div className="hidden md:flex items-center gap-15">
+
+        <div className="hidden md:flex items-center gap-3 justify-end">
         {/* <ViewToggle
           currentView={viewType}
           onChange={handleViewChange}
@@ -79,6 +78,7 @@ const PrimaryRow = ({
           isExpanded={isExpanded}
           onClick={onToggleExpand}
         />
+        </div>
       </div>
     </div>
   );

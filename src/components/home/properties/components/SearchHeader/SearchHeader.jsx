@@ -1,4 +1,4 @@
-// src/components/home/properties/components/SearchHeader/SearchHeader.jsx
+﻿// src/components/home/properties/components/SearchHeader/SearchHeader.jsx
 import React, { useState, useEffect } from 'react';
 import PrimaryRow from './PrimaryRow';
 import SecondaryRow from './SecondaryRow';
@@ -64,7 +64,7 @@ const SearchHeader = ({
   };
   
   return (
-    <div className="search-header bg-white border-b-2 border-[#9f7539] shadow-sm transition-all duration-300 ease-in-out">
+    <div className="search-header relative z-50 bg-white border-b-2 border-[#9f7539] shadow-sm transition-all duration-300 ease-in-out">
       <PrimaryRow
         filters={filters}
         onFilterChange={handleFilterChange}

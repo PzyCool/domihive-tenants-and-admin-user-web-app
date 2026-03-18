@@ -7,7 +7,7 @@ const AdvancedFilterIcon = ({ isActive, onClick }) => {
       type="button"
       onClick={onClick}
       className={`
-        flex items-center justify-center w-10 h-10 rounded-lg
+        inline-flex items-center gap-2 px-3 py-2 rounded-lg text-sm font-medium
         transition-all duration-200
         ${isActive 
           ? 'bg-[#9f7539] text-white shadow-md' 
@@ -16,7 +16,8 @@ const AdvancedFilterIcon = ({ isActive, onClick }) => {
       `}
       title="Advanced Filters"
     >
-      <i className="fas fa-sliders-h text-lg"></i>
+      <i className="fas fa-sliders-h text-sm"></i>
+      <span>Advanced Filters</span>
     </button>
   );
 };

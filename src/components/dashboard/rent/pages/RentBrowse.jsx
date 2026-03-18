@@ -260,7 +260,10 @@ const RentBrowse = () => {
         // Original Browse Properties content
         <>
           {/* ADD THIS WRAPPER DIV */}
-          <div className="relative">
+          <div
+            className="bg-white w-full"
+            style={{ position: 'sticky', top: 0, zIndex: 1100 }}
+          >
             <SearchHeader 
               filters={filters}
               onFilterChange={handleFilterChange}
@@ -269,15 +272,8 @@ const RentBrowse = () => {
             />
           </div>
           
-          {/* DYNAMIC SPACER - ADD THIS LINE */}
-          <div 
-            className={`transition-all duration-300 ease-out ${
-              filters.isExpanded ? 'h-24' : 'h-0'
-            }`}
-          ></div>
-          
           {/* Main Content Area */}
-          <div className="mt-12 p-4 md:p-6 gap-6">
+          <div className="p-4 md:p-6 gap-6">
             <div className="bg-white rounded-lg shadow-md border border-[#e2e8f0] p-4 md:p-6">
               {/* Page Header Stats */}
               <div className="mb-6">

@@ -1,4 +1,4 @@
-// src/components/home/Properties.jsx
+﻿// src/components/home/Properties.jsx
 import React, { useState, useEffect, useRef } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useListingType } from '../../context/ListingTypeContext';
@@ -164,7 +164,7 @@ const Properties = () => {
     if (filters.priceRange !== 'all') {
       const [min, max] = filters.priceRange.split('-').map(str => {
         if (str.includes('+')) return parseInt(str.replace('+', '')) + 1;
-        const num = str.replace('₦', '').replace('M', '000000').replace('/year', '').trim();
+        const num = str.replace('â‚¦', '').replace('M', '000000').replace('/year', '').trim();
         return parseInt(num);
       });
       
@@ -263,7 +263,7 @@ const Properties = () => {
           ) : (
             <>
               <div className="relative mb-6 md:mb-8">
-                <div className="sticky top-0 z-40 -mx-3 md:mx-0 bg-white/95 backdrop-blur md:static md:bg-transparent">
+                <div className="sticky top-0 z-40 relative md:sticky md:top-0 md:z-40 -mx-3 md:mx-0 bg-white/95 backdrop-blur md:bg-white/95">
                   <SearchHeader 
                     filters={filters}
                     onFilterChange={handleFilterChange}
@@ -365,3 +365,4 @@ const Properties = () => {
 };
 
 export default Properties;
+

@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React from 'react';
 import HorizontalScroll from './components/HorizontalScroll';
 
 // Import components
@@ -18,141 +18,12 @@ const AdvancedFilterOverlay = ({
   onApplyFilters,
   onClearFilters 
 }) => {
-  console.log('AdvancedFilterOverlay - isOpen:', isOpen);
-  
-  const [sidebarWidth, setSidebarWidth] = useState(256); // Default expanded width
-  
-  // Listen for sidebar state changes
-  useEffect(() => {
-    const checkSidebarState = () => {
-      const sidebar = document.querySelector('.dashboard-sidebar');
-      if (!sidebar) {
-        setSidebarWidth(256);
-        return;
-      }
-      
-      // Check if sidebar is hidden
-      const isHidden = sidebar.classList.contains('-translate-x-full') || 
-                       sidebar.classList.contains('lg:-translate-x-full');
-      
-      if (isHidden) {
-        setSidebarWidth(0);
-        return;
-      }
-      
-      // Check for mobile state
-      if (sidebar.classList.contains('w-72')) {
-        setSidebarWidth(288); // 72 * 4 = 288px (mobile open)
-        return;
-      }
-      
-      // Check for desktop collapsed state
-      if (sidebar.classList.contains('w-20')) {
-        setSidebarWidth(80); // 20 * 4 = 80px (collapsed)
-        return;
-      }
-      
-      // Check for desktop expanded state
-      if (sidebar.classList.contains('w-64')) {
-        setSidebarWidth(256); // 64 * 4 = 256px (expanded)
-        return;
-      }
-      
-      // Default to 0 if we can't determine
-      setSidebarWidth(0);
-    };
-    
-    // Initial check
-    checkSidebarState();
-    
-    // Create MutationObserver
-    const observer = new MutationObserver(() => {
-      checkSidebarState();
-    });
-    
-    // Observe the sidebar
-    const sidebar = document.querySelector('.dashboard-sidebar');
-    if (sidebar) {
-      observer.observe(sidebar, { 
-        attributes: true, 
-        attributeFilter: ['class'],
-        childList: false, 
-        subtree: false 
-      });
-    }
-    
-    // Listen for resize
-    window.addEventListener('resize', checkSidebarState);
-    
-    // Check periodically (fallback)
-    const interval = setInterval(checkSidebarState, 500);
-    
-    return () => {
-      observer.disconnect();
-      window.removeEventListener('resize', checkSidebarState);
-      clearInterval(interval);
-    };
-  }, []);
-  
   if (!isOpen) return null;
-  
-  // Get the SearchHeader's position to cover it (ORIGINAL LOGIC)
-  const getOverlayStyle = () => {
-    const searchHeader = document.querySelector('.search-header');
-    const isMobile = window.innerWidth <= 900;
-    
-    if (!searchHeader) {
-      // Fallback positioning
-      if (isMobile) {
-        return {
-          left: '0px',
-          right: '0px',
-          top: '64px',
-          height: 'auto',
-          minHeight: '200px'
-        };
-      }
-      
-      return {
-        left: `${sidebarWidth}px`,
-        right: '0px',
-        top: '64px',
-        height: 'auto',
-        minHeight: '200px'
-      };
-    }
-    
-    const headerRect = searchHeader.getBoundingClientRect();
-    
-    if (isMobile) {
-      // Check if mobile sidebar is open
-      const sidebar = document.querySelector('.dashboard-sidebar');
-      const isMobileOpen = sidebar && sidebar.classList.contains('translate-x-0');
-      
-      return {
-        left: isMobileOpen ? '288px' : '0px',
-        right: '0px',
-        top: `${headerRect.top}px`,
-        height: 'auto',
-        minHeight: `${headerRect.height}px`
-      };
-    }
-    
-    // Desktop: use calculated sidebar width
-    return {
-      left: `${sidebarWidth}px`,
-      right: '0px',
-      top: `${headerRect.top}px`,
-      height: 'auto',
-      minHeight: `${headerRect.height}px`
-    };
-  };
   
   return (
     <div 
-      className="fixed bg-white rounded-b-xl shadow-2xl z-[999] border border-gray-200 animate-slide-down transition-all duration-300 ease-in-out"
+      className="relative w-full bg-white rounded-b-xl shadow-2xl z-[60] border border-gray-200 animate-slide-down transition-all duration-300 ease-in-out"
       style={{
-        ...getOverlayStyle(),
         borderLeft: '3px solid #9f7539',
         boxShadow: '0 10px 25px -5px rgba(159, 117, 57, 0.1), 0 10px 10px -5px rgba(159, 117, 57, 0.04)'
       }}
