@@ -1,50 +1,12 @@
-import React, { createContext, useContext, useMemo, useState } from 'react';
+import React, { createContext, useContext, useMemo, useState, useEffect } from 'react';
+import { useAuth } from '../../../../context/AuthContext';
+import { useProperties } from './PropertiesContext';
 
-const initialState = {
-  rents: {
-    'PROP-002': {
-      amount: 3500000,
-      nextDue: '2025-05-20',
-      status: 'Due' // Due | Upcoming | Overdue | Paid | Pending Confirmation
-    },
-    'PROP-001': {
-      amount: 2800000,
-      nextDue: '2026-03-01',
-      status: 'Upcoming'
-    }
-  },
-  bills: {
-    'PROP-002': [
-      { id: 'BILL-001', name: 'Service Charge', amount: 150000, dueDate: '2025-02-01', status: 'Due' },
-      { id: 'BILL-002', name: 'Generator Levy', amount: 80000, dueDate: '2025-01-25', status: 'Overdue' }
-    ],
-    'PROP-001': [
-      { id: 'BILL-101', name: 'Water', amount: 25000, dueDate: '2025-02-10', status: 'Due' }
-    ]
-  },
-  receipts: [
-    {
-      id: 'RCT-1001',
-      propertyId: 'PROP-002',
-      propertyName: '2 Bedroom Duplex in Ikoyi',
-      type: 'Rent',
-      amount: 3500000,
-      method: 'Paystack',
-      date: '2024-06-01',
-      status: 'Paid'
-    }
-  ],
-  history: [
-    {
-      id: 'HIS-1001',
-      propertyId: 'PROP-002',
-      propertyName: '2 Bedroom Duplex in Ikoyi',
-      title: 'Rent payment successful',
-      amount: 3500000,
-      status: 'Paid',
-      date: '2024-06-01 10:05'
-    }
-  ]
+const EMPTY_STATE = {
+  rents: {},
+  bills: {},
+  receipts: [],
+  history: []
 };
 
 const PaymentsContext = createContext();
@@ -56,7 +18,53 @@ export const usePayments = () => {
 };
 
 export const PaymentsProvider = ({ children }) => {
-  const [state, setState] = useState(initialState);
+  const { user } = useAuth();
+  const { properties } = useProperties();
+  const userKey = user?.id || 'guest';
+  const paymentsStorageKey = `domihive_payments_${userKey}`;
+
+  const [state, setState] = useState(EMPTY_STATE);
+
+  useEffect(() => {
+    try {
+      const raw = localStorage.getItem(paymentsStorageKey);
+      setState(raw ? JSON.parse(raw) : EMPTY_STATE);
+    } catch (_error) {
+      setState(EMPTY_STATE);
+    }
+  }, [paymentsStorageKey]);
+
+  useEffect(() => {
+    try {
+      localStorage.setItem(paymentsStorageKey, JSON.stringify(state));
+    } catch (err) {
+      console.error('Error saving payments state', err);
+    }
+  }, [state, paymentsStorageKey]);
+
+  useEffect(() => {
+    if (!properties.length) return;
+    setState((prev) => {
+      const nextRents = { ...prev.rents };
+      let changed = false;
+
+      properties
+        .filter((property) => property.tenancyStatus !== 'ENDED')
+        .forEach((property) => {
+          if (!nextRents[property.propertyId]) {
+            nextRents[property.propertyId] = {
+              amount: Number(property.rentAmount || 0),
+              nextDue: property.nextPayment?.dueDate || '',
+              status: property.nextPayment?.status || 'Upcoming'
+            };
+            changed = true;
+          }
+        });
+
+      if (!changed) return prev;
+      return { ...prev, rents: nextRents };
+    });
+  }, [properties]);
 
   const addReceipt = (receipt) => {
     setState((prev) => ({ ...prev, receipts: [receipt, ...prev.receipts] }));

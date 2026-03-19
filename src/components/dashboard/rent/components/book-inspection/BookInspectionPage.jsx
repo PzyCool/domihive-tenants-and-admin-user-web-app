@@ -1,5 +1,7 @@
 // src/dashboards/rent/components/book-inspection/BookInspectionPage.jsx
 import React, { useState } from 'react';
+import { useAuth } from '../../../../../context/AuthContext';
+import { useApplications } from '../../contexts/ApplicationsContext';
 import PropertySummary from './PropertySummary';
 import InspectionForm from './InspectionForm';
 import TermsAndConditions from './TermsAndConditions';
@@ -8,7 +10,9 @@ import UserContextBanner from './UserContextBanner';
 import SuccessModal from './SuccessModal';
 import FloatingCallButton from '../property-details/components/FloatingCallButton';
 
-const BookInspectionPage = ({ propertyId, onBack }) => {
+const BookInspectionPage = ({ propertyId, propertyData, onBack }) => {
+  const { user } = useAuth();
+  const { createApplicationFromBooking } = useApplications();
   const [showSuccessModal, setShowSuccessModal] = useState(false);
   const [agreeTerms, setAgreeTerms] = useState(false);
   
@@ -67,6 +71,20 @@ const BookInspectionPage = ({ propertyId, onBack }) => {
     } catch (error) {
       console.error('Error saving booking:', error);
     }
+
+    const fallbackProperty = {
+      id: propertyId || 'PROP-UNKNOWN',
+      title: 'Luxury 3-Bedroom Apartment in Ikoyi',
+      location: 'Ikoyi, Lagos Island',
+      price: 4500000,
+      image: '/ASSECT/3d-rendering-modern-dining-room-living-room-with-luxury-decor (1).jpg'
+    };
+
+    createApplicationFromBooking({
+      booking: completeFormData,
+      property: propertyData || fallbackProperty,
+      applicantName: user?.name
+    });
   };
 
   const handleTermsChange = (e) => {
@@ -79,8 +97,8 @@ const BookInspectionPage = ({ propertyId, onBack }) => {
 
   // Demo property data for SuccessModal (should come from PropertySummary)
   const demoProperty = {
-    title: "Luxury 3-Bedroom Apartment in Ikoyi",
-    location: "Ikoyi, Lagos Island"
+    title: propertyData?.title || "Luxury 3-Bedroom Apartment in Ikoyi",
+    location: propertyData?.location || "Ikoyi, Lagos Island"
   };
 
   return (
@@ -100,7 +118,7 @@ const BookInspectionPage = ({ propertyId, onBack }) => {
           </div>
 
           {/* Property Summary Section */}
-          <PropertySummary propertyId={propertyId} />
+          <PropertySummary propertyData={propertyData} />
 
           {/* Inspection Form Section */}
           <section className="mt-8">

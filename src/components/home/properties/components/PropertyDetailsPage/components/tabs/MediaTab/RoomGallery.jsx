@@ -1,74 +1,73 @@
-// src/components/home/properties/components/PropertyDetailsPage/components/tabs/MediaTab/RoomGallery.jsx
 import React, { useState } from 'react';
 
 const RoomGallery = ({ property }) => {
-  const defaultImages = [
-    'https://images.unsplash.com/photo-1560448204-603b3fc33ddc?w=800&h=600&fit=crop',
-    'https://images.unsplash.com/photo-1545323157-f6f63c0d66a7?w=800&h=600&fit=crop',
-    'https://images.unsplash.com/photo-1512917774080-9991f1c4c750?w=800&h=600&fit=crop',
-    'https://images.unsplash.com/photo-1560185127-6ed189bf02f4?w=800&h=600&fit=crop',
-    'https://images.unsplash.com/photo-1582268611958-ebfd161ef9cf?w=800&h=600&fit=crop',
-    'https://images.unsplash.com/photo-1560184897-ae75f418493e?w=800&h=600&fit=crop'
-  ];
+  const images = Array.isArray(property?.images)
+    ? property.images.filter(Boolean)
+    : [property?.image].filter(Boolean);
+  const [activeIndex, setActiveIndex] = useState(null);
 
-  const roomCategories = [
-    {
-      id: 'living',
-      name: 'Living Room',
-      images: defaultImages.slice(0, 3)
-    },
-    {
-      id: 'bedroom',
-      name: 'Bedrooms',
-      images: defaultImages.slice(1, 4)
-    },
-    {
-      id: 'kitchen',
-      name: 'Kitchen',
-      images: defaultImages.slice(2, 5)
-    },
-    {
-      id: 'bathroom',
-      name: 'Bathrooms',
-      images: defaultImages.slice(3, 6)
-    }
-  ];
+  const closeModal = () => setActiveIndex(null);
+  const nextImage = () => setActiveIndex((prev) => (prev === images.length - 1 ? 0 : prev + 1));
+  const prevImage = () => setActiveIndex((prev) => (prev === 0 ? images.length - 1 : prev - 1));
 
-  const [selectedRoom, setSelectedRoom] = useState(roomCategories[0]);
+  if (!images.length) {
+    return (
+      <div className="mb-8 bg-white rounded-2xl border border-[#e2e8f0] p-6 text-center">
+        <h3 className="text-xl font-bold text-[#0e1f42] mb-2">Room Gallery</h3>
+        <p className="text-sm text-[#64748b]">No photos uploaded for this property yet.</p>
+      </div>
+    );
+  }
 
   return (
-    <div className="room-gallery">
-      <div className="flex flex-wrap gap-2 mb-6">
-        {roomCategories.map((room) => (
-          <button
-            key={room.id}
-            onClick={() => setSelectedRoom(room)}
-            className={`px-4 py-2 rounded-lg transition-all ${
-              selectedRoom.id === room.id
-                ? 'bg-[#9f7539] text-white shadow-md'
-                : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
-            }`}
-          >
-            {room.name}
-          </button>
-        ))}
+    <>
+      <div className="room-gallery mb-8">
+        <h3 className="text-2xl font-bold text-[#0e1f42] mb-4">Room Gallery</h3>
+        <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+          {images.map((image, index) => (
+            <button
+              key={`${image}-${index}`}
+              onClick={() => setActiveIndex(index)}
+              className="rounded-xl overflow-hidden border border-[#e2e8f0] hover:shadow-md transition-shadow"
+            >
+              <img src={image} alt={`Property media ${index + 1}`} className="w-full h-44 object-cover" />
+            </button>
+          ))}
+        </div>
       </div>
 
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-        {selectedRoom.images.map((image, index) => (
-          <div
-            key={index}
-            className="rounded-xl overflow-hidden bg-gray-100 group cursor-pointer"
-          >
-            <img
-              src={image}
-              alt={`${selectedRoom.name} ${index + 1}`}
-              className="w-full h-48 object-cover group-hover:scale-105 transition-transform duration-300"
-            />
+      {activeIndex !== null && (
+        <div className="fixed inset-0 z-[1400] bg-black/70 p-4 flex items-center justify-center" onClick={closeModal}>
+          <div className="relative bg-white rounded-2xl w-full max-w-5xl p-3" onClick={(e) => e.stopPropagation()}>
+            <button
+              onClick={closeModal}
+              className="absolute top-4 right-4 h-9 w-9 rounded-full bg-white border border-[#e2e8f0]"
+            >
+              <i className="fas fa-times text-[#0e1f42]" />
+            </button>
+            <div className="relative">
+              <img src={images[activeIndex]} alt="Selected property media" className="w-full max-h-[75vh] object-contain rounded-xl bg-black" />
+              {images.length > 1 && (
+                <>
+                  <button
+                    onClick={prevImage}
+                    className="absolute left-3 top-1/2 -translate-y-1/2 h-10 w-10 rounded-full bg-white/90 border border-[#e2e8f0]"
+                  >
+                    <i className="fas fa-chevron-left text-[#0e1f42]" />
+                  </button>
+                  <button
+                    onClick={nextImage}
+                    className="absolute right-3 top-1/2 -translate-y-1/2 h-10 w-10 rounded-full bg-white/90 border border-[#e2e8f0]"
+                  >
+                    <i className="fas fa-chevron-right text-[#0e1f42]" />
+                  </button>
+                </>
+              )}
+            </div>
           </div>
-        ))}
-      </div>
-    </div>
+        </div>
+      )}
+    </>
   );
 };
 

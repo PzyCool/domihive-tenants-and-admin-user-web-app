@@ -3,11 +3,15 @@ import React, { useState, useEffect, useRef } from 'react';
 import { NavLink, useLocation } from 'react-router-dom';
 import { useAuth } from '../../../context/AuthContext';
 import { useDashboard } from '../../../context/DashboardContext';
+import { useApplications } from '../rent/contexts/ApplicationsContext';
+import { useProperties } from '../rent/contexts/PropertiesContext';
 import iconImage from '../../../assets/domihive-lcon.png';
 import logoImage from '../../../assets/domihive-logo.png';
 
 const Sidebar = ({ sidebarState, toggleSidebar, closeMobileSidebar, isMobile, currentDashboard }) => {
   const { user, logout } = useAuth();
+  const { applications } = useApplications();
+  const { properties } = useProperties();
   const location = useLocation();
   const sidebarNavRef = useRef(null);
   const activeLinkRef = useRef(null);
@@ -48,6 +52,11 @@ const Sidebar = ({ sidebarState, toggleSidebar, closeMobileSidebar, isMobile, cu
   const navItems = getDashboardNavItems();
   const isExpanded = sidebarState === 'expanded';
   const isCollapsed = sidebarState === 'collapsed';
+  const hasApprovedRental = applications.some((application) => application.status === 'APPROVED');
+  const hasManagedProperty = properties.some((property) =>
+    ['PENDING_MOVE_IN', 'ACTIVE'].includes(property.tenancyStatus)
+  );
+  const canAccessManagement = hasApprovedRental || hasManagedProperty;
 
   // Add CSS for scroll highlight effect - MOVE THIS HOOK BEFORE CONDITIONAL RETURN
   useEffect(() => {
@@ -349,42 +358,61 @@ const Sidebar = ({ sidebarState, toggleSidebar, closeMobileSidebar, isMobile, cu
           </div>
 
           {/* MY MANAGEMENTS Section */}
-          <div className="nav-section mb-6">
-            {!isCollapsed && (
-              <div className="nav-section-title px-6 mb-3 text-xs font-semibold text-[#64748b] uppercase tracking-wider">
-                MANAGEMENT
-              </div>
-            )}
+          {canAccessManagement ? (
+            <div className="nav-section mb-6">
+              {!isCollapsed && (
+                <div className="nav-section-title px-6 mb-3 text-xs font-semibold text-[#64748b] uppercase tracking-wider">
+                  MANAGEMENT
+                </div>
+              )}
 
-            <div className="space-y-1 px-3">
-              {navItems.management.map((item) => (
-                <NavLink
-                  key={item.path}
-                  to={item.path}
-                  onClick={handleNavClick}
-                  title={isCollapsed ? item.label : undefined}
-                  className={({ isActive }) =>
-                    `group relative flex items-center gap-3 ${isCollapsed ? 'px-0 py-3 justify-center' : 'px-4 py-3'} rounded-lg transition-all duration-200
-                    ${isActive
-                      ? 'bg-white/40 text-[#0e1f42] font-semibold backdrop-blur-sm'
-                      : 'text-[#334155] hover:bg-white/40 hover:text-[#0e1f42] backdrop-blur-sm'
+              <div className="space-y-1 px-3">
+                {navItems.management.map((item) => (
+                  <NavLink
+                    key={item.path}
+                    to={item.path}
+                    onClick={handleNavClick}
+                    title={isCollapsed ? item.label : undefined}
+                    className={({ isActive }) =>
+                      `group relative flex items-center gap-3 ${isCollapsed ? 'px-0 py-3 justify-center' : 'px-4 py-3'} rounded-lg transition-all duration-200
+                      ${isActive
+                        ? 'bg-white/40 text-[#0e1f42] font-semibold backdrop-blur-sm'
+                        : 'text-[#334155] hover:bg-white/40 hover:text-[#0e1f42] backdrop-blur-sm'
+                      }
+                      ${isCollapsed ? 'mx-2' : 'mx-3'}`
                     }
-                    ${isCollapsed ? 'mx-2' : 'mx-3'}`
-                  }
-                >
-                  {({ isActive }) => (
-                    <>
-                      <i className={`fas fa-${item.icon} ${isCollapsed ? 'text-lg' : 'text-base'} w-5 text-center ${isActive ? 'text-(--accent-color,#9f7539)' : 'text-[#64748b]'} transition-colors`}></i>
-                      {!isCollapsed && (
-                        <span className="nav-text font-medium text-sm">{item.label}</span>
-                      )}
+                  >
+                    {({ isActive }) => (
+                      <>
+                        <i className={`fas fa-${item.icon} ${isCollapsed ? 'text-lg' : 'text-base'} w-5 text-center ${isActive ? 'text-(--accent-color,#9f7539)' : 'text-[#64748b]'} transition-colors`}></i>
+                        {!isCollapsed && (
+                          <span className="nav-text font-medium text-sm">{item.label}</span>
+                        )}
 
-                    </>
-                  )}
-                </NavLink>
-              ))}
+                      </>
+                    )}
+                  </NavLink>
+                ))}
+              </div>
             </div>
-          </div>
+          ) : (
+            <div className="nav-section mb-6">
+              {!isCollapsed && (
+                <>
+                  <div className="nav-section-title px-6 mb-3 text-xs font-semibold text-[#64748b] uppercase tracking-wider">
+                    MANAGEMENT
+                  </div>
+                  <div className="mx-6 rounded-lg border border-dashed border-[#d0d7df] bg-white/30 px-3 py-2 text-xs text-[#64748b]">
+                    <div className="font-semibold text-[#475467] mb-1">
+                      <i className="fas fa-lock mr-2"></i>
+                      Locked
+                    </div>
+                    Complete inspection and get approved to unlock My Management.
+                  </div>
+                </>
+              )}
+            </div>
+          )}
         </nav>
 
         {/* Sidebar Footer - User Profile */}

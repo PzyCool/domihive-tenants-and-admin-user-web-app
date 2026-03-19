@@ -109,6 +109,14 @@ const MaintenancePage = () => {
 
   const renderNewRequest = () => (
     <div className="bg-white border border-[#e2e8f0] rounded-2xl p-5 space-y-6 shadow-sm">
+      {properties.length === 0 && (
+        <div className="border border-[#e2e8f0] rounded-xl p-4 bg-[#f8fafc]">
+          <p className="text-sm font-semibold text-[#0e1f42]">No property available for maintenance yet</p>
+          <p className="text-xs text-[#64748b] mt-1">
+            Your maintenance form will unlock once you have an active tenancy in My Properties.
+          </p>
+        </div>
+      )}
       <div className="grid gap-3 text-sm text-[#475467]">
         <label className="flex flex-col gap-1">
           Select Property *
@@ -116,6 +124,7 @@ const MaintenancePage = () => {
             value={form.propertyId}
             onChange={(e) => setForm((p) => ({ ...p, propertyId: e.target.value }))}
             className="border border-[#e2e8f0] rounded-lg px-3 py-2"
+            disabled={properties.length === 0}
           >
             <option value="">Select property</option>
             {properties.map((p) => (

@@ -10,6 +10,7 @@ import { PropertiesProvider } from '../rent/contexts/PropertiesContext';
 import { MaintenanceProvider } from '../rent/contexts/MaintenanceContext';
 import { PaymentsProvider } from '../rent/contexts/PaymentsContext';
 import { MessagesProvider } from '../rent/contexts/MessagesContext';
+import { JourneyProvider } from '../rent/contexts/JourneyContext';
 
 const DashboardLayout = () => {
   const [sidebarState, setSidebarState] = useState('expanded'); // 'expanded' | 'collapsed'
@@ -81,41 +82,43 @@ const DashboardLayout = () => {
   };
 
   return (
-    <div className="dashboard-layout flex h-screen overflow-hidden bg-(--light-gray)">
-      {/* Sidebar - fixed position */}
-      <Sidebar
-        sidebarState={sidebarState}
-        toggleSidebar={toggleSidebar}
-        closeMobileSidebar={closeMobileSidebar}
-        isMobile={isMobile}
-        currentDashboard={currentDashboard}
-      />
+    <ApplicationsProvider>
+      <PropertiesProvider>
+        <MaintenanceProvider>
+          <PaymentsProvider>
+            <MessagesProvider>
+              <JourneyProvider>
+                <div className="dashboard-layout flex h-screen overflow-hidden bg-(--light-gray)">
+                  {/* Sidebar - fixed position */}
+                  <Sidebar
+                    sidebarState={sidebarState}
+                    toggleSidebar={toggleSidebar}
+                    closeMobileSidebar={closeMobileSidebar}
+                    isMobile={isMobile}
+                    currentDashboard={currentDashboard}
+                  />
 
-      {/* Main Content Area */}
-      <div className={`dashboard-main flex-1 flex flex-col h-screen overflow-hidden transition-all duration-300 ease-in-out ${getMainMargin()}`}>
-        {/* Header - fixed at top */}
-        <Header
-          toggleSidebar={toggleSidebar}
-          isMobile={isMobile}
-          sidebarState={sidebarState}
-        />
+                  {/* Main Content Area */}
+                  <div className={`dashboard-main flex-1 flex flex-col h-screen overflow-hidden transition-all duration-300 ease-in-out ${getMainMargin()}`}>
+                    {/* Header - fixed at top */}
+                    <Header
+                      toggleSidebar={toggleSidebar}
+                      isMobile={isMobile}
+                      sidebarState={sidebarState}
+                    />
 
-        {/* Content Area - scrollable */}
-        <ApplicationsProvider>
-          <PropertiesProvider>
-            <MaintenanceProvider>
-              <PaymentsProvider>
-                <MessagesProvider>
-                  <main className="dashboard-content flex-1 overflow-auto">
-                    <Outlet />
-                  </main>
-                </MessagesProvider>
-              </PaymentsProvider>
-            </MaintenanceProvider>
-          </PropertiesProvider>
-        </ApplicationsProvider>
-      </div>
-    </div>
+                    {/* Content Area - scrollable */}
+                    <main className="dashboard-content flex-1 overflow-auto">
+                      <Outlet />
+                    </main>
+                  </div>
+                </div>
+              </JourneyProvider>
+            </MessagesProvider>
+          </PaymentsProvider>
+        </MaintenanceProvider>
+      </PropertiesProvider>
+    </ApplicationsProvider>
   );
 };
 

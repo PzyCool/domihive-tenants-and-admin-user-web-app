@@ -16,7 +16,14 @@ const PropertyDashboard = () => {
   );
 
   const [moveInForm, setMoveInForm] = useState(
-    property?.moveInChecklist || { keysReceived: false, inventoryConfirmed: false, meterReading: '', moveInDateConfirmed: false }
+    property?.moveInChecklist || {
+      keysReceived: false,
+      inventoryConfirmed: false,
+      meterReading: '',
+      moveInDateConfirmed: false,
+      keyNumber: '',
+      moveInDate: ''
+    }
   );
   const [activeTab, setActiveTab] = useState('updates'); // updates | lease | reviews
   const [showAgreement, setShowAgreement] = useState(false);
@@ -33,10 +40,12 @@ const PropertyDashboard = () => {
 
   const handleCompleteMoveIn = () => {
     completeMoveInChecklist(property.propertyId, {
-      keysReceived: true,
-      meterReading: moveInForm.meterReading || '000000',
-      inventoryConfirmed: true,
-      moveInDateConfirmed: true
+      keysReceived: !!moveInForm.keysReceived,
+      meterReading: moveInForm.keyNumber || moveInForm.meterReading || '000000',
+      keyNumber: moveInForm.keyNumber || '',
+      moveInDate: moveInForm.moveInDate || '',
+      inventoryConfirmed: !!moveInForm.keyNumber,
+      moveInDateConfirmed: !!moveInForm.moveInDate
     });
   };
 
@@ -103,23 +112,25 @@ const PropertyDashboard = () => {
                 />
                 Have you collected the keys?
               </label>
-              <label className="flex items-center gap-2">
-                <input type="checkbox" checked={!!moveInForm.inventoryConfirmed} onChange={() => setMoveInForm((p) => ({ ...p, inventoryConfirmed: !p.inventoryConfirmed }))} />
-                Inventory confirmed
-              </label>
-              <div className="flex items-center gap-2">
+              <div className="space-y-1">
+                <p className="text-sm font-medium text-[#0e1f42]">Please confirm your key number</p>
                 <input
                   type="text"
-                  value={moveInForm.meterReading || ''}
-                  onChange={(e) => setMoveInForm((p) => ({ ...p, meterReading: e.target.value }))}
+                  value={moveInForm.keyNumber || ''}
+                  onChange={(e) => setMoveInForm((p) => ({ ...p, keyNumber: e.target.value }))}
                   className="border border-[#e2e8f0] rounded-lg px-3 py-2 flex-1"
-                  placeholder="Enter reading"
+                  placeholder="Enter key number"
                 />
               </div>
-              <label className="flex items-center gap-2">
-                <input type="checkbox" checked={!!moveInForm.moveInDateConfirmed} onChange={() => setMoveInForm((p) => ({ ...p, moveInDateConfirmed: !p.moveInDateConfirmed }))} />
-                Move-in date confirmed
-              </label>
+              <div className="space-y-1">
+                <p className="text-sm font-medium text-[#0e1f42]">Move in date</p>
+                <input
+                  type="date"
+                  value={moveInForm.moveInDate || ''}
+                  onChange={(e) => setMoveInForm((p) => ({ ...p, moveInDate: e.target.value }))}
+                  className="border border-[#e2e8f0] rounded-lg px-3 py-2 w-full"
+                />
+              </div>
             </div>
           </div>
         </div>
@@ -390,22 +401,23 @@ const PropertyDashboard = () => {
                 />
                 Have you collected the keys?
               </label>
-              <label className="flex items-center gap-2">
-                <input type="checkbox" checked={!!moveInForm.inventoryConfirmed} onChange={() => setMoveInForm((p) => ({ ...p, inventoryConfirmed: !p.inventoryConfirmed }))} />
-                Inventory confirmed
-              </label>
-              <label className="flex items-center gap-2">
-                Meter reading
+              <label className="flex items-center gap-2 sm:col-span-2">
+                Please confirm your key number
                 <input
-                  value={moveInForm.meterReading || ''}
-                  onChange={(e) => setMoveInForm((p) => ({ ...p, meterReading: e.target.value }))}
+                  value={moveInForm.keyNumber || ''}
+                  onChange={(e) => setMoveInForm((p) => ({ ...p, keyNumber: e.target.value }))}
                   className="border border-[#e2e8f0] rounded-lg px-3 py-2 flex-1"
-                  placeholder="Enter reading"
+                  placeholder="Enter key number"
                 />
               </label>
-              <label className="flex items-center gap-2">
-                <input type="checkbox" checked={!!moveInForm.moveInDateConfirmed} onChange={() => setMoveInForm((p) => ({ ...p, moveInDateConfirmed: !p.moveInDateConfirmed }))} />
-                Move-in date confirmed
+              <label className="flex items-center gap-2 sm:col-span-2">
+                Move in date
+                <input
+                  type="date"
+                  value={moveInForm.moveInDate || ''}
+                  onChange={(e) => setMoveInForm((p) => ({ ...p, moveInDate: e.target.value }))}
+                  className="border border-[#e2e8f0] rounded-lg px-3 py-2 flex-1"
+                />
               </label>
             </div>
           </div>

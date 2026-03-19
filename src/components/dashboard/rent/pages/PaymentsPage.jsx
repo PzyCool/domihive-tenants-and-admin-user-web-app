@@ -22,6 +22,16 @@ const PaymentsPage = () => {
 
   const isDue = (status) => status === 'Due' || status === 'Overdue';
 
+  React.useEffect(() => {
+    if (!activeProperties.length) {
+      setSelectedPropertyId('');
+      return;
+    }
+    if (!selectedPropertyId || !activeProperties.some((p) => p.propertyId === selectedPropertyId)) {
+      setSelectedPropertyId(activeProperties[0].propertyId);
+    }
+  }, [activeProperties, selectedPropertyId]);
+
   const handlePay = (type, item) => {
     setPayMethod(PayMethods[0]);
     setPayPanel({ type, item });
@@ -430,7 +440,7 @@ const PaymentsPage = () => {
               onChange={(e) => setSelectedPropertyId(e.target.value)}
               className="border border-[var(--gray-light,#e2e8f0)] rounded-lg px-3 py-2 text-sm ml-2 bg-[var(--card-bg,#ffffff)] text-[var(--text-color,#0e1f42)]"
             >
-              <option value="">Select property</option>
+              <option value="">{activeProperties.length ? 'Select property' : 'No active property yet'}</option>
               {activeProperties.map((p) => (
                 <option key={p.propertyId} value={p.propertyId}>{p.name}</option>
               ))}
@@ -438,16 +448,25 @@ const PaymentsPage = () => {
           </label>
         </div>
 
-        <PaymentTabs active={mainTab} onChange={(tab) => { setMainTab(tab); if (tab !== 'pay') setPayPanel(null); }} />
-
-        {mainTab === 'pay' && (
+        {activeProperties.length === 0 ? (
+          <div className="bg-white border border-[#e2e8f0] rounded-2xl p-6 text-center">
+            <p className="text-base font-semibold text-[#0e1f42]">No active property yet</p>
+            <p className="text-sm text-[#64748b] mt-1">Once your application is approved and move-in is confirmed, payment records will appear here.</p>
+          </div>
+        ) : (
           <>
-            {payNowSection}
-            {payPanelContent}
+            <PaymentTabs active={mainTab} onChange={(tab) => { setMainTab(tab); if (tab !== 'pay') setPayPanel(null); }} />
+
+            {mainTab === 'pay' && (
+              <>
+                {payNowSection}
+                {payPanelContent}
+              </>
+            )}
+            {mainTab === 'receipts' && receiptsSection}
+            {mainTab === 'history' && historySection}
           </>
         )}
-        {mainTab === 'receipts' && receiptsSection}
-        {mainTab === 'history' && historySection}
       </div>
     </div>
   );

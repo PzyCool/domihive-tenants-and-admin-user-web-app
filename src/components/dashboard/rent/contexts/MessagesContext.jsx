@@ -1,37 +1,5 @@
-import React, { createContext, useContext, useMemo, useState } from 'react';
-
-const initialThreads = [
-  {
-    threadId: 'MSG-001',
-    subject: 'Rent payment question',
-    propertyId: 'PROP-002',
-    propertyName: '2 Bedroom Duplex in Ikoyi',
-    category: 'Payments',
-    status: 'OPEN',
-    unreadCount: 1,
-    lastMessage: 'We have processed your last payment.',
-    lastUpdatedAt: '2025-01-15 09:20',
-    messages: [
-      { id: 'm1', sender: 'USER', text: 'Hi, can you confirm my rent payment?', createdAt: '2025-01-15 09:00' },
-      { id: 'm2', sender: 'SUPPORT', text: 'We have processed your last payment.', createdAt: '2025-01-15 09:20' }
-    ]
-  },
-  {
-    threadId: 'MSG-002',
-    subject: 'Maintenance follow-up',
-    propertyId: 'PROP-002',
-    propertyName: '2 Bedroom Duplex in Ikoyi',
-    category: 'Maintenance Follow-up',
-    status: 'RESOLVED',
-    unreadCount: 0,
-    lastMessage: 'Issue resolved. Thank you.',
-    lastUpdatedAt: '2025-01-12 14:10',
-    messages: [
-      { id: 'm3', sender: 'USER', text: 'Any update on the electrical issue?', createdAt: '2025-01-12 13:45' },
-      { id: 'm4', sender: 'SUPPORT', text: 'Issue resolved. Thank you.', createdAt: '2025-01-12 14:10' }
-    ]
-  }
-];
+import React, { createContext, useContext, useMemo, useState, useEffect } from 'react';
+import { useAuth } from '../../../../context/AuthContext';
 
 const MessagesContext = createContext();
 
@@ -42,7 +10,27 @@ export const useMessages = () => {
 };
 
 export const MessagesProvider = ({ children }) => {
-  const [threads, setThreads] = useState(initialThreads);
+  const { user } = useAuth();
+  const userKey = user?.id || 'guest';
+  const threadsStorageKey = `domihive_message_threads_${userKey}`;
+  const [threads, setThreads] = useState([]);
+
+  useEffect(() => {
+    try {
+      const raw = localStorage.getItem(threadsStorageKey);
+      setThreads(raw ? JSON.parse(raw) : []);
+    } catch (_error) {
+      setThreads([]);
+    }
+  }, [threadsStorageKey]);
+
+  useEffect(() => {
+    try {
+      localStorage.setItem(threadsStorageKey, JSON.stringify(threads));
+    } catch (err) {
+      console.error('Error saving message threads', err);
+    }
+  }, [threads, threadsStorageKey]);
 
   const addThread = (thread) => {
     setThreads((prev) => [thread, ...prev]);

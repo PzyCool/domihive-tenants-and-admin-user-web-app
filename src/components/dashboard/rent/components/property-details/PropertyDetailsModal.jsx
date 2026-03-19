@@ -201,14 +201,25 @@ const PropertyDetailsModal = ({ propertyId, isOpen, onClose }) => {
           ) : property ? (
             <div ref={containerRef} className="container mx-auto px-4 lg:px-6 py-6 relative">
               <div className="mb-5">
-                <button
-                  type="button"
-                  onClick={onClose}
-                  className="inline-flex items-center gap-2 text-[#0e1f42] hover:text-[#9f7539] transition-colors"
-                >
-                  <i className="fas fa-arrow-left"></i>
-                  <span>Return to Browse</span>
-                </button>
+                {isOverview ? (
+                  <button
+                    type="button"
+                    onClick={onClose}
+                    className="inline-flex items-center gap-2 text-[#0e1f42] hover:text-[#9f7539] transition-colors"
+                  >
+                    <i className="fas fa-arrow-left"></i>
+                    <span>Return to Browse</span>
+                  </button>
+                ) : (
+                  <button
+                    type="button"
+                    onClick={() => setActiveSection('overview')}
+                    className="inline-flex h-9 w-9 items-center justify-center rounded-full border border-[#e2e8f0] bg-white text-[#0e1f42] hover:text-[#9f7539] hover:border-[#9f7539] transition-colors"
+                    title="Back to Property Details"
+                  >
+                    <i className="fas fa-arrow-left"></i>
+                  </button>
+                )}
               </div>
 
               {isOverview && (
@@ -235,19 +246,6 @@ const PropertyDetailsModal = ({ propertyId, isOpen, onClose }) => {
               )}
 
               <div>
-                  {!isOverview && (
-                    <div className="mb-6">
-                      <button
-                        type="button"
-                        onClick={() => setActiveSection('overview')}
-                        className="inline-flex items-center gap-2 text-[#0e1f42] hover:text-[#9f7539] transition-colors"
-                      >
-                        <i className="fas fa-arrow-left"></i>
-                        <span>Return to Overview</span>
-                      </button>
-                    </div>
-                  )}
-                  
                   {isOverview && (
                     <>
                   <PropertyGallery images={property.images} />
@@ -313,7 +311,20 @@ const PropertyDetailsModal = ({ propertyId, isOpen, onClose }) => {
                   )}
               </div>
             </div>
-          ) : null}
+          ) : (
+            <div className="flex items-center justify-center min-h-[400px]">
+              <div className="text-center">
+                <i className="fas fa-house-circle-xmark text-4xl text-[#9f7539] mb-4"></i>
+                <p className="text-gray-600">Property not found</p>
+                <button
+                  onClick={onClose}
+                  className="mt-4 px-4 py-2 bg-[#9f7539] text-white rounded-lg hover:bg-[#b58a4a]"
+                >
+                  Return
+                </button>
+              </div>
+            </div>
+          )}
         </div>
       </div>
       

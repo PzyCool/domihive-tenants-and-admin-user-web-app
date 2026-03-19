@@ -1,4 +1,4 @@
-import React, { useMemo } from 'react';
+import React, { useEffect, useMemo, useState } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
 import { useApplications } from '../contexts/ApplicationsContext';
 
@@ -39,11 +39,35 @@ const ApplicationTrackPage = () => {
   const { applicationId } = useParams();
   const navigate = useNavigate();
   const { applications } = useApplications();
+  const [animatedIndex, setAnimatedIndex] = useState(0);
 
   const application = useMemo(
     () => applications.find((app) => app.id === applicationId),
     [applications, applicationId]
   );
+
+  const isVerdictStatus = useMemo(
+    () => ['APPROVED', 'REJECTED', 'CANCELLED'].includes(application?.status),
+    [application?.status]
+  );
+
+  const flowStatus = isVerdictStatus ? 'VERDICT' : application?.status;
+  const currentIndex = STATUS_FLOW.indexOf(flowStatus);
+
+  useEffect(() => {
+    if (currentIndex < 0) return undefined;
+    setAnimatedIndex(0);
+    const interval = window.setInterval(() => {
+      setAnimatedIndex((prev) => {
+        if (prev >= currentIndex) {
+          window.clearInterval(interval);
+          return prev;
+        }
+        return prev + 1;
+      });
+    }, 450);
+    return () => window.clearInterval(interval);
+  }, [currentIndex, applicationId]);
 
   if (!application) {
     return (
@@ -53,16 +77,19 @@ const ApplicationTrackPage = () => {
     );
   }
 
-  const isVerdictStatus = ['APPROVED', 'REJECTED', 'CANCELLED'].includes(application.status);
-  const flowStatus = isVerdictStatus ? 'VERDICT' : application.status;
-  const currentIndex = STATUS_FLOW.indexOf(flowStatus);
+  const dueText = (() => {
+    const submittedAt = application.submittedAtISO ? new Date(application.submittedAtISO).getTime() : Date.now();
+    const dueAt = submittedAt + 72 * 60 * 60 * 1000;
+    const hours = Math.max(0, Math.ceil((dueAt - Date.now()) / (60 * 60 * 1000)));
+    return `Due in ${hours} hour${hours === 1 ? '' : 's'}`;
+  })();
 
   const verdictText = (() => {
     if (application.status === 'APPROVED') {
-      return 'Verdict: Approved. Move-in details will be shared. Notifications sent to email, phone, and dashboard.';
+      return 'Verdict: Approved. Move-in details will be shared in notifications.';
     }
     if (application.status === 'REJECTED' || application.status === 'CANCELLED') {
-      return 'Verdict shared. We have notified you via email, phone, and dashboard with next steps.';
+      return 'Verdict shared. See notifications for next steps.';
     }
     return 'Awaiting verdict.';
   })();
@@ -104,7 +131,7 @@ const ApplicationTrackPage = () => {
             <div className="space-y-1">
               <h3 className="text-lg font-semibold text-[#0e1f42]">{application.property?.title}</h3>
               <p className="text-sm text-[#475467]">{application.property?.location}</p>
-              <p className="text-sm font-semibold text-[#0e1f42]">₦{application.property?.price?.toLocaleString()} / year</p>
+              <p className="text-sm font-semibold text-[#0e1f42]">NGN {application.property?.price?.toLocaleString()} / year</p>
             </div>
           </div>
           <p className="text-xs text-[#6c757d]">Last updated: {application.updatedAt}</p>
@@ -114,7 +141,7 @@ const ApplicationTrackPage = () => {
           <h2 className="text-sm font-semibold text-[#0e1f42] mb-4">Status Progress</h2>
           <div className="space-y-3">
             {STATUS_FLOW.map((status, idx) => {
-              const active = idx <= currentIndex;
+              const active = idx <= animatedIndex;
               return (
                 <div key={status} className="flex items-start gap-3">
                   <div
@@ -131,6 +158,8 @@ const ApplicationTrackPage = () => {
                     <p className="text-xs text-[#6c757d]">
                       {status === 'INSPECTION_SCHEDULED' && application.inspectionDate
                         ? `Scheduled for ${application.inspectionDate}`
+                        : status === 'UNDER_REVIEW' && active
+                        ? dueText
                         : status === 'VERDICT'
                         ? verdictText
                         : 'Status in progress'}

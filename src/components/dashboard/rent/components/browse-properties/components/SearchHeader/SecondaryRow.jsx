@@ -7,7 +7,7 @@ import BedroomsDropdown from './components/BedroomsDropdown';
 import ApplyFilterButton from './components/ApplyFilterButton';
 import ClearButton from './components/ClearButton';
 
-const SecondaryRow = ({ filters, onFilterChange, onClearFilters }) => {
+const SecondaryRow = ({ filters, onFilterChange, onClearFilters, onApplyFilters, isSyncing = false }) => {
   // Handler functions
   const handleAreaChange = (areaType) => {
     onFilterChange({ areaType, location: 'all' }); // Reset location when area changes
@@ -99,12 +99,12 @@ const SecondaryRow = ({ filters, onFilterChange, onClearFilters }) => {
         
         {/* Action Buttons */}
         <div className="flex items-end gap-2">
-          <ClearButton onClick={onClearFilters} />
+          <ClearButton onClick={onClearFilters} disabled={isSyncing} />
           <ApplyFilterButton 
             onClick={() => {
-              // For now, just close the dropdown or trigger filter
-              console.log('Filters applied:', filters);
+              onApplyFilters?.();
             }}
+            disabled={isSyncing}
           />
         </div>
       </div>

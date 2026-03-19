@@ -16,7 +16,9 @@ const AdvancedFilterOverlay = ({
   filters, 
   onFilterChange,
   onApplyFilters,
-  onClearFilters 
+  onClearFilters,
+  activeFiltersCount = 0,
+  isSyncing = false
 }) => {
   if (!isOpen) return null;
   
@@ -37,6 +39,9 @@ const AdvancedFilterOverlay = ({
           </h3>
           <p className="text-sm text-gray-600">
             Select multiple options to narrow your search
+          </p>
+          <p className="text-xs text-[#9f7539] font-semibold mt-1">
+            {activeFiltersCount} active filters
           </p>
         </div>
         
@@ -64,8 +69,8 @@ const AdvancedFilterOverlay = ({
         {/* Bedrooms */}
         <div className="filter-section min-w-[180px] p-4">
           <BedroomCheckboxes
-            selected={filters.bedrooms || []}
-            onChange={(bedrooms) => onFilterChange({ bedrooms })}
+            selected={filters.advancedBedrooms || []}
+            onChange={(advancedBedrooms) => onFilterChange({ advancedBedrooms })}
           />
         </div>
 
@@ -139,10 +144,11 @@ const AdvancedFilterOverlay = ({
           <button
             type="button"
             onClick={onApplyFilters}
-            className="px-5 py-2.5 bg-[#9f7539] text-white rounded-lg hover:bg-[#b58a4a] transition-colors font-medium flex items-center shadow-sm"
+            disabled={isSyncing}
+            className="px-5 py-2.5 bg-[#9f7539] text-white rounded-lg hover:bg-[#b58a4a] transition-colors font-medium flex items-center shadow-sm disabled:opacity-50 disabled:cursor-not-allowed"
           >
             <i className="fas fa-check mr-2"></i>
-            Apply Filters
+            {isSyncing ? 'Applying...' : 'Apply Filters'}
           </button>
         </div>
       </div>

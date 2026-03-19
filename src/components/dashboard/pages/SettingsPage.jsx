@@ -12,6 +12,124 @@ const tabs = [
 const accent = 'var(--accent-color, #9F7539)';
 const primary = 'var(--primary-color, #0E1F42)';
 
+const getJourneyStorageKeys = (userKey) => [
+  `domihive_applications_state_${userKey}`,
+  `domihive_dashboard_notifications_${userKey}`,
+  `domihive_properties_${userKey}`,
+  `domihive_favorites_${userKey}`,
+  `domihive_payments_${userKey}`,
+  `domihive_message_threads_${userKey}`,
+  `domihive_maintenance_tickets_${userKey}`,
+  'domihive_pending_booking',
+  'domihive_booking_property',
+  'domihive_recent_properties',
+  'domihive_inspection_bookings',
+  'domihive_current_booking',
+  'domihive_user_favorites',
+  'domihive_user_applications',
+  'domihive_home_properties_cache_v1',
+  'domihive_browse_cache_v1'
+];
+
+const clearJourneyStorage = (userKey) => {
+  getJourneyStorageKeys(userKey).forEach((key) => localStorage.removeItem(key));
+  sessionStorage.removeItem('domihive_current_booking');
+};
+
+const buildPresentationSeed = (user) => {
+  const now = Date.now();
+  const inspectionAt = new Date(now + 24 * 60 * 60 * 1000);
+  const inspectionLabel = inspectionAt.toLocaleString('en-US', {
+    month: 'long',
+    day: 'numeric',
+    year: 'numeric',
+    hour: 'numeric',
+    minute: '2-digit'
+  });
+  const submittedAtISO = new Date(now - 3 * 1000).toISOString();
+
+  const sampleProperty = {
+    id: 'PROP-DEMO-001',
+    title: '3 Bedroom Luxury Apartment',
+    location: 'Lekki Phase 1, Lagos',
+    address: '15 Admiralty Way, Lekki Phase 1',
+    price: 2800000,
+    bedrooms: 3,
+    bathrooms: 3,
+    size: '180 sqm',
+    rating: 4.8,
+    reviewCount: 24,
+    image: 'https://images.unsplash.com/photo-1494526585095-c41746248156?auto=format&fit=crop&w=1200&q=80',
+    images: [
+      'https://images.unsplash.com/photo-1494526585095-c41746248156?auto=format&fit=crop&w=1400&q=80',
+      'https://images.unsplash.com/photo-1505693416388-ac5ce068fe85?auto=format&fit=crop&w=1400&q=80',
+      'https://images.unsplash.com/photo-1484154218962-a197022b5858?auto=format&fit=crop&w=1400&q=80'
+    ],
+    videos: [
+      {
+        id: 'walkthrough-demo-1',
+        type: 'walkthrough',
+        title: 'Property Walkthrough',
+        description: 'Full tour of the apartment from exterior to interior',
+        url: '',
+        thumbnail: 'https://images.unsplash.com/photo-1494526585095-c41746248156?auto=format&fit=crop&w=1200&q=80'
+      }
+    ],
+    reviews: [
+      {
+        id: 'review-demo-1',
+        name: 'Verified Tenant',
+        rating: 5,
+        title: 'Great apartment',
+        content: 'Smooth move-in process and responsive property management.',
+        verified: true,
+        date: 'March 15, 2026',
+        tags: ['Great Location', 'Responsive Management']
+      }
+    ]
+  };
+
+  const seededApplication = {
+    id: `APP-DEMO-${String(now).slice(-6)}`,
+    status: 'UNDER_REVIEW',
+    applicantName: user?.name || 'Tenant',
+    inspectionDate: inspectionLabel,
+    inspectionDateISO: inspectionAt.toISOString(),
+    inspectionUnlockAtISO: new Date(now - 1000).toISOString(),
+    attendees: 1,
+    bookingId: `DOMI-INSP-${now}`,
+    bookingDateISO: new Date(now - 2 * 24 * 60 * 60 * 1000).toISOString(),
+    submittedAtISO,
+    createdAtISO: new Date(now - 2 * 24 * 60 * 60 * 1000).toISOString(),
+    updatedAtISO: submittedAtISO,
+    updatedAt: 'Just now',
+    property: sampleProperty
+  };
+
+  const seededNotifications = [
+    {
+      id: `notif-demo-${now}`,
+      createdAt: new Date(now - 4000).toISOString(),
+      read: false,
+      type: 'application',
+      title: 'Application Submitted',
+      message: 'Your application is now under review (72 hours SLA).',
+      cta: { label: 'Track Application', path: `/dashboard/rent/applications/${seededApplication.id}/track` }
+    },
+    {
+      id: `notif-demo-${now + 1}`,
+      createdAt: new Date(now - 10000).toISOString(),
+      read: false,
+      type: 'inspection',
+      title: 'Inspection Verified',
+      message: `${sampleProperty.title} inspection has been verified.`,
+      cta: { label: 'View Application', path: '/dashboard/rent/applications' }
+    }
+  ];
+
+  return { sampleProperty, seededApplication, seededNotifications };
+};
+
 const SettingsPage = () => {
   const { user, updateUser } = useAuth();
   const [activeTab, setActiveTab] = useState('profile');
@@ -34,6 +152,7 @@ const SettingsPage = () => {
   const [theme, setTheme] = useState(() => localStorage.getItem('domihive_theme') || 'light');
   const [showDeleteModal, setShowDeleteModal] = useState(false);
   const [avatarPreview, setAvatarPreview] = useState(user?.profilePhoto || '');
+  const [isJourneyActionRunning, setIsJourneyActionRunning] = useState(false);
   const fileInputRef = useRef(null);
 
   const themeMap = {
@@ -108,6 +227,50 @@ const SettingsPage = () => {
   const handleRemovePhoto = () => {
     setAvatarPreview('');
     updateUser?.({ profilePhoto: null });
+  };
+
+  const handleResetJourneyData = () => {
+    if (isJourneyActionRunning) return;
+    setIsJourneyActionRunning(true);
+    try {
+      const userKey = user?.id || 'guest';
+      clearJourneyStorage(userKey);
+      window.alert('Journey data reset complete. The dashboard will reload.');
+      window.location.reload();
+    } catch (_error) {
+      window.alert('Unable to reset journey data. Please try again.');
+      setIsJourneyActionRunning(false);
+    }
+  };
+
+  const handleSeedPresentationJourney = () => {
+    if (isJourneyActionRunning) return;
+    setIsJourneyActionRunning(true);
+    try {
+      const userKey = user?.id || 'guest';
+      clearJourneyStorage(userKey);
+
+      const { sampleProperty, seededApplication, seededNotifications } = buildPresentationSeed(user);
+
+      localStorage.setItem(`domihive_applications_state_${userKey}`, JSON.stringify([seededApplication]));
+      localStorage.setItem(`domihive_dashboard_notifications_${userKey}`, JSON.stringify(seededNotifications));
+      localStorage.setItem('domihive_recent_properties', JSON.stringify([sampleProperty]));
+      localStorage.setItem('domihive_booking_property', JSON.stringify(sampleProperty));
+      localStorage.setItem('domihive_home_properties_cache_v1', JSON.stringify([sampleProperty]));
+      localStorage.setItem(
+        'domihive_browse_cache_v1',
+        JSON.stringify({
+          items: [sampleProperty],
+          syncedAt: new Date().toISOString()
+        })
+      );
+
+      window.alert('Presentation journey seeded. The dashboard will reload.');
+      window.location.reload();
+    } catch (_error) {
+      window.alert('Unable to seed presentation journey. Please try again.');
+      setIsJourneyActionRunning(false);
+    }
   };
 
   const renderProfile = () => (
@@ -368,6 +531,34 @@ const SettingsPage = () => {
           <p className="text-sm text-[var(--text-muted,#6c757d)]">Get a copy of all your data in a portable format</p>
         </div>
         <button className="px-4 py-2 rounded-md text-white font-semibold" style={{ backgroundColor: accent }}>Download Data</button>
+      </div>
+
+      <div className="border border-[var(--gray-light,#e2e8f0)] rounded-lg p-4 bg-[var(--card-bg,#ffffff)] space-y-4">
+        <div>
+          <p className="font-semibold text-[var(--text-color,#0e1f42)]">Demo Journey Controls</p>
+          <p className="text-sm text-[var(--text-muted,#6c757d)]">
+            Use this for presentation mode. Reset all user journey data or seed a guided demo flow.
+          </p>
+        </div>
+        <div className="flex flex-wrap gap-2">
+          <button
+            type="button"
+            onClick={handleResetJourneyData}
+            disabled={isJourneyActionRunning}
+            className="px-4 py-2 rounded-md border border-[var(--gray-light,#e2e8f0)] text-[var(--text-color,#0e1f42)] font-semibold disabled:opacity-60"
+          >
+            Reset User Journey Data
+          </button>
+          <button
+            type="button"
+            onClick={handleSeedPresentationJourney}
+            disabled={isJourneyActionRunning}
+            className="px-4 py-2 rounded-md text-white font-semibold disabled:opacity-60"
+            style={{ backgroundColor: accent }}
+          >
+            Seed Presentation Journey
+          </button>
+        </div>
       </div>
 
       <div className="border border-red-200 bg-[var(--card-bg,#ffffff)] rounded-lg p-4 space-y-4">

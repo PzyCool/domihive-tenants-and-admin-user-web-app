@@ -25,6 +25,12 @@ const MessagesPage = () => {
   const simpleThreads = useMemo(() => threads, [threads]);
   const selectedThread = simpleThreads.find((t) => t.threadId === selectedId);
 
+  React.useEffect(() => {
+    if (!selectedId && simpleThreads.length) {
+      setSelectedId(simpleThreads[0].threadId);
+    }
+  }, [selectedId, simpleThreads]);
+
   const handleSend = () => {
     if (!newMessage || !selectedThread) return;
     addMessage(selectedThread.threadId, {

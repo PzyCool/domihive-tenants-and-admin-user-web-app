@@ -21,8 +21,12 @@ const ApplicationStartPage = () => {
     );
   }
 
-  const handleSaveDraft = (id) => {
-    updateApplication(id, { status: 'APPLICATION_STARTED', updatedAt: 'Just now' });
+  const handleSaveDraft = (id, formData) => {
+    updateApplication(id, {
+      status: 'APPLICATION_STARTED',
+      applicantProfile: formData,
+      updatedAt: 'Just now'
+    });
   };
 
   const handleProceed = () => {

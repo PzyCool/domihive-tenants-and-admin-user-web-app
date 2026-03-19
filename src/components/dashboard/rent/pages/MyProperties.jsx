@@ -7,13 +7,26 @@ const MyProperties = () => {
   const navigate = useNavigate();
   const { properties } = useProperties();
 
+  const visibleProperties = React.useMemo(() => {
+    const nonEnded = properties.filter((p) => p.tenancyStatus !== 'ENDED');
+    const primaryJourneyProperty =
+      nonEnded.find((p) => p.isPrimaryJourneyProperty) ||
+      nonEnded.find((p) => p.propertyId === 'PROP-001');
+
+    if (primaryJourneyProperty) {
+      return [primaryJourneyProperty];
+    }
+
+    return nonEnded;
+  }, [properties]);
+
   const stats = React.useMemo(() => {
-    const visible = properties.filter((p) => p.tenancyStatus !== 'ENDED');
+    const visible = visibleProperties;
     const active = visible.filter((p) => p.tenancyStatus === 'ACTIVE').length;
     const pending = visible.filter((p) => p.tenancyStatus === 'PENDING_MOVE_IN').length;
     const upcomingPayments = visible.filter((p) => p.nextPayment).length;
     return { active, pending, upcomingPayments };
-  }, [properties]);
+  }, [visibleProperties]);
 
   const handleAction = (property, action) => {
     const base = `/dashboard/rent/my-properties/${property.propertyId}`;
@@ -58,11 +71,18 @@ const MyProperties = () => {
         </div>
 
         <div className="grid gap-4">
-          {properties
-            .filter((property) => property.tenancyStatus !== 'ENDED')
-            .map((property) => (
+          {visibleProperties.length === 0 ? (
+            <div className="bg-white border border-[#e2e8f0] rounded-2xl p-6 text-center">
+              <p className="text-base font-semibold text-[#0e1f42]">No active tenancy yet</p>
+              <p className="text-sm text-[#64748b] mt-1">
+                Complete inspection, submit application, and wait for approval to see your property here.
+              </p>
+            </div>
+          ) : (
+            visibleProperties.map((property) => (
               <PropertyCard key={property.propertyId} property={property} onAction={handleAction} />
-            ))}
+            ))
+          )}
         </div>
       </div>
     </div>

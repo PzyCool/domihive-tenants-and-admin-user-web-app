@@ -6,32 +6,7 @@ import ReviewFilters from './ReviewFilters';
 import ActionSection from '../../ActionSection/ActionSection'; // Add import
 
 const ReviewsTab = ({ property }) => {
-  const reviews = [
-    {
-      id: 1,
-      name: 'Sarah Johnson',
-      status: 'Verified Tenant',
-      date: 'March 15, 2024',
-      rating: 5,
-      title: 'Perfect Home for Our Family!',
-      content: "We've been living here for 2 years and it's been absolutely wonderful. The location is perfect, the neighbors are friendly, and the maintenance team is very responsive. The apartment is spacious and well-maintained.",
-      tags: ['Great Location', 'Responsive Maintenance', 'Spacious Rooms'],
-      helpful: 12,
-      verified: true
-    },
-    {
-      id: 2,
-      name: 'Michael Adebayo',
-      status: 'Former Tenant',
-      date: 'February 28, 2024',
-      rating: 4,
-      title: 'Good overall experience',
-      content: 'The property is well maintained and the security is excellent. Only issue was occasional water pressure problems.',
-      tags: ['Good Security', 'Well Maintained'],
-      helpful: 8,
-      verified: true
-    }
-  ];
+  const reviews = Array.isArray(property?.reviews) ? property.reviews : [];
 
   const handleBookInspection = (propertyId) => {
     console.log('Book inspection for property:', propertyId);
@@ -63,9 +38,29 @@ const ReviewsTab = ({ property }) => {
       
       {/* Reviews List */}
       <div className="space-y-6">
-        {reviews.map((review) => (
-          <ReviewCard key={review.id} review={review} />
-        ))}
+        {reviews.length === 0 ? (
+          <div className="bg-white rounded-2xl border border-[#e2e8f0] p-6 text-center">
+            <p className="text-sm font-semibold text-[#0e1f42]">No reviews yet</p>
+            <p className="text-xs text-[#64748b] mt-1">Verified tenant reviews will appear here when available.</p>
+          </div>
+        ) : (
+          reviews.map((review, index) => (
+            <ReviewCard
+              key={review.id || `${review.name || 'review'}-${index}`}
+              review={{
+                helpful: 0,
+                verified: false,
+                status: 'Tenant',
+                date: '',
+                tags: [],
+                title: 'Review',
+                content: '',
+                rating: 0,
+                ...review
+              }}
+            />
+          ))
+        )}
       </div>
       
       {/* Load More Button */}

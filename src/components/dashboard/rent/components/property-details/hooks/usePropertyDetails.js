@@ -1,6 +1,6 @@
 // src/dashboards/rent/components/property-details/hooks/usePropertyDetails.js
 import { useState, useEffect } from 'react';
-import { getMockPropertyData } from '../utils/propertyMockData';
+import { resolvePropertyById } from '../../../../../shared/utils/propertyResolver';
 
 export const usePropertyDetails = (propertyId) => {
   const [property, setProperty] = useState(null);
@@ -11,18 +11,14 @@ export const usePropertyDetails = (propertyId) => {
     const fetchProperty = async () => {
       try {
         setLoading(true);
-        
-        // In real app, you would fetch from API:
-        // const response = await fetch(`/api/properties/${propertyId}`);
-        // const data = await response.json();
-        
-        // For now, use mock data
-        const mockData = getMockPropertyData(propertyId);
-        
-        // Simulate API delay
-        await new Promise(resolve => setTimeout(resolve, 500));
-        
-        setProperty(mockData);
+        await new Promise((resolve) => setTimeout(resolve, 200));
+        const resolved = resolvePropertyById(propertyId);
+        if (!resolved) {
+          setProperty(null);
+          setError('Property not found.');
+          return;
+        }
+        setProperty(resolved);
         setError(null);
       } catch (err) {
         setError('Failed to load property details');

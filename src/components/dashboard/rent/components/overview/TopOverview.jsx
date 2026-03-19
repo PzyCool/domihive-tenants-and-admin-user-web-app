@@ -2,47 +2,53 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { useNavigate } from 'react-router-dom';
 
-const TopOverview = () => {
+const TopOverview = ({
+  statsOverride,
+  recentPropertyOverride,
+  hasBookingIntentOverride,
+  timelineEventsOverride,
+  isLoading = false,
+  isError = false,
+  errorMessage = '',
+  isStale = false,
+  syncedAt,
+  onRefresh = () => {}
+}) => {
   const navigate = useNavigate();
 
   // ========== STATS (merged card) ==========
-  const [stats] = useState({
-    activeProperties: 2,
-    daysUntilPayment: 15,
-    occupancyRate: '85%',
-    nextPaymentAmount: '100,000'
-  });
+  const defaultStats = {
+    activeProperties: 0,
+    daysUntilPayment: 0,
+    occupancyRate: '0%',
+    nextPaymentAmount: '0'
+  };
+  const stats = { ...defaultStats, ...(statsOverride || {}) };
 
   // ========== RECENTLY VIEWED PROPERTY SECTION ==========
   const [isFavorite, setIsFavorite] = useState(false);
-  const [recentProperty, setRecentProperty] = useState(null);
-  const [hasBookingIntent, setHasBookingIntent] = useState(false);
-
-  const fallbackProperty = {
-    id: 'recent_001',
-    title: '3 Bedroom Luxury Apartment',
-    location: 'Lekki Phase 1, Lagos',
-    price: 'NGN 2,800,000/year',
-    bedrooms: 3,
-    bathrooms: 3,
-    size: '180 sqm',
-    image: 'https://images.unsplash.com/photo-1545323157-f6f63c0d66a7?w=800&h=600&fit=crop',
-    viewedAt: '2 hours ago'
-  };
+  const [recentProperty, setRecentProperty] = useState(recentPropertyOverride || null);
+  const [hasBookingIntent, setHasBookingIntent] = useState(Boolean(hasBookingIntentOverride));
 
   useEffect(() => {
+    if (recentPropertyOverride) {
+      setRecentProperty(recentPropertyOverride);
+      setHasBookingIntent(Boolean(hasBookingIntentOverride));
+      return;
+    }
+
     const normalize = (raw) => {
       if (!raw) return null;
       return {
-        id: raw.id || raw.propertyId || fallbackProperty.id,
-        title: raw.title || raw.name || fallbackProperty.title,
-        location: raw.location || raw.address || fallbackProperty.location,
-        price: raw.price || raw.rent || fallbackProperty.price,
-        bedrooms: raw.bedrooms || raw.beds || fallbackProperty.bedrooms,
-        bathrooms: raw.bathrooms || raw.baths || fallbackProperty.bathrooms,
-        size: raw.size || raw.area || fallbackProperty.size,
-        image: raw.image || raw.images?.[0] || fallbackProperty.image,
-        viewedAt: raw.viewedAt || raw.updatedAt || fallbackProperty.viewedAt
+        id: raw.id || raw.propertyId || '',
+        title: raw.title || raw.name || '',
+        location: raw.location || raw.address || '',
+        price: raw.price || raw.rent || '',
+        bedrooms: raw.bedrooms || raw.beds || '',
+        bathrooms: raw.bathrooms || raw.baths || '',
+        size: raw.size || raw.area || '',
+        image: raw.image || raw.images?.[0] || '',
+        viewedAt: raw.viewedAt || raw.updatedAt || ''
       };
     };
 
@@ -76,18 +82,20 @@ const TopOverview = () => {
       console.error('Failed to load recent property data:', error);
     }
 
-    setRecentProperty(fallbackProperty);
+    setRecentProperty(null);
     setHasBookingIntent(false);
-  }, []);
+  }, [recentPropertyOverride, hasBookingIntentOverride]);
 
-  const property = recentProperty || fallbackProperty;
+  const property = recentProperty || null;
 
-  const features = [
-    { icon: 'bed', label: 'Bedrooms', value: property.bedrooms },
-    { icon: 'bath', label: 'Bathrooms', value: property.bathrooms },
-    { icon: 'ruler-combined', label: 'Size', value: property.size },
-    { icon: 'tag', label: 'Price', value: property.price }
-  ];
+  const features = property
+    ? [
+        { icon: 'bed', label: 'Bedrooms', value: property.bedrooms },
+        { icon: 'bath', label: 'Bathrooms', value: property.bathrooms },
+        { icon: 'ruler-combined', label: 'Size', value: property.size },
+        { icon: 'tag', label: 'Price', value: property.price }
+      ]
+    : [];
 
   // ========== TIMELINE CALENDAR SECTION ==========
   const [view, setView] = useState('month');
@@ -95,13 +103,10 @@ const TopOverview = () => {
   const [isExpanded, setIsExpanded] = useState(false);
   const containerRef = useRef(null);
 
-  const events = [
-    { date: new Date('2024-01-15'), type: 'rented', title: 'Moved into Ikeja Apartment', color: '#22c55e' },
-    { date: new Date('2024-03-01'), type: 'rented', title: 'Started renting VI Studio', color: '#22c55e' },
-    { date: new Date('2024-06-10'), type: 'inspection', title: 'Property Inspection', color: '#3b82f6' },
-    { date: new Date('2024-09-05'), type: 'payment', title: 'Quarterly Payment Due', color: '#f59e0b' },
-    { date: new Date('2025-01-14'), type: 'renewal', title: 'Lease Renewal', color: '#a855f7' }
-  ];
+  const events = (timelineEventsOverride || []).map((event) => ({
+    ...event,
+    date: new Date(event.date)
+  }));
 
   const timelineStats = [
     { label: 'Properties Rented', value: '2', icon: 'home' },
@@ -190,10 +195,44 @@ const TopOverview = () => {
           <h2 className="text-2xl font-bold text-[var(--text-color,#0e1f42)] mb-2">Dashboard Overview</h2>
           <p className="text-[var(--text-muted,#64748b)]">Your rental portfolio at a glance</p>
         </div>
-        <div className="text-sm font-medium text-[#9f7539] bg-[#9f7539]/10 px-3 py-1.5 rounded-full">
-          <i className="fas fa-chart-pie mr-1"></i> LIVE UPDATES
+        <div className="flex items-center gap-2">
+          <div className="text-sm font-medium text-[#9f7539] bg-[#9f7539]/10 px-3 py-1.5 rounded-full">
+            <i className="fas fa-chart-pie mr-1"></i> LIVE UPDATES
+          </div>
+          <button
+            onClick={onRefresh}
+            className="text-xs font-semibold px-2.5 py-1.5 rounded-full border border-[#e2e8f0] text-[#475467] hover:text-[#9f7539] hover:border-[#9f7539]/40"
+          >
+            Refresh
+          </button>
         </div>
       </div>
+
+      <div className="flex items-center justify-between mb-4 text-xs text-[#64748b]">
+        <span>
+          {syncedAt ? `Last synced ${new Date(syncedAt).toLocaleTimeString()}` : 'Waiting for sync...'}
+        </span>
+        {isStale && (
+          <span className="px-2 py-1 rounded-full bg-amber-100 text-amber-700 font-semibold">
+            Stale snapshot
+          </span>
+        )}
+      </div>
+
+      {isError && (
+        <div className="mb-4 p-3 rounded-lg border border-red-200 bg-red-50 text-red-700 text-sm">
+          <div className="font-semibold mb-1">Unable to load overview</div>
+          <div>{errorMessage || 'Please try refreshing this section.'}</div>
+        </div>
+      )}
+
+      {isLoading && (
+        <div className="mb-5 grid grid-cols-1 md:grid-cols-3 gap-3">
+          {[1, 2, 3].map((item) => (
+            <div key={item} className="h-16 rounded-lg bg-gray-100 animate-pulse border border-[#e2e8f0]"></div>
+          ))}
+        </div>
+      )}
 
       {/* Top Row: 2 Columns */}
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
@@ -212,6 +251,22 @@ const TopOverview = () => {
           </div>
 
           <div className="overview-card bg-[#f8fafc] rounded-xl border border-[#e2e8f0] overflow-hidden flex-1 flex flex-col">
+            {!property ? (
+              <div className="p-6 text-center flex-1 flex flex-col items-center justify-center">
+                <div className="w-12 h-12 rounded-full bg-white border border-[#e2e8f0] flex items-center justify-center mb-3">
+                  <i className="fas fa-house text-[#9f7539]"></i>
+                </div>
+                <p className="text-sm font-semibold text-[#0e1f42]">No recently viewed property yet</p>
+                <p className="text-xs text-[#64748b] mt-1">Browse properties to start your journey.</p>
+                <button
+                  onClick={() => navigate('/dashboard/rent/browse')}
+                  className="mt-3 px-4 py-2 rounded-lg text-xs font-semibold text-white bg-gradient-to-r from-[#0e1f42] to-[#1a2d5f]"
+                >
+                  Browse Properties
+                </button>
+              </div>
+            ) : (
+              <>
             {/* Property Image */}
             <div className="relative h-40 flex-shrink-0">
               <img
@@ -278,6 +333,8 @@ const TopOverview = () => {
                 </div>
               )}
             </div>
+              </>
+            )}
           </div>
         </div>
 
@@ -332,8 +389,8 @@ const TopOverview = () => {
                 </div>
 
                 <div className="grid grid-cols-7 gap-1 mb-2">
-                  {daysOfWeek.map(day => (
-                    <div key={day} className="text-center text-xs font-medium text-[#64748b] py-1">
+                  {daysOfWeek.map((day, dayIndex) => (
+                    <div key={`${day}-${dayIndex}`} className="text-center text-xs font-medium text-[#64748b] py-1">
                       {day}
                     </div>
                   ))}

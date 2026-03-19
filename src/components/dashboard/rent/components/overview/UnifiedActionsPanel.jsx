@@ -3,7 +3,14 @@ import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useDashboard } from '../../../../../context/DashboardContext';
 
-const UnifiedActionsPanel = ({ rentOnlyMode = true }) => {
+const UnifiedActionsPanel = ({
+  rentOnlyMode = true,
+  statusDataOverride,
+  pendingItemsOverride = [],
+  isLoading = false,
+  isError = false,
+  onRetry
+}) => {
   const navigate = useNavigate();
   const { currentDashboard, switchDashboard } = useDashboard();
   
@@ -26,6 +33,11 @@ const UnifiedActionsPanel = ({ rentOnlyMode = true }) => {
 
   // Load unified data
   useEffect(() => {
+    if (statusDataOverride) {
+      setStatusData(statusDataOverride);
+      return undefined;
+    }
+
     const loadStatusData = () => {
       const savedFavorites = JSON.parse(localStorage.getItem('domihive_user_favorites') || '[]');
       const applications = JSON.parse(localStorage.getItem('domihive_user_applications') || '[]');
@@ -96,7 +108,7 @@ const UnifiedActionsPanel = ({ rentOnlyMode = true }) => {
     }, 60000);
 
     return () => clearInterval(interval);
-  }, [rentOnlyMode]);
+  }, [rentOnlyMode, statusDataOverride]);
   
   // Handle notification click
   const handleNotificationClick = (notification) => {
@@ -183,6 +195,47 @@ const UnifiedActionsPanel = ({ rentOnlyMode = true }) => {
   
   return (
     <section className="unified-actions-panel bg-white rounded-lg shadow-md border border-[#e2e8f0] p-6">
+      {isError && (
+        <div className="mb-4 p-3 rounded-lg border border-red-200 bg-red-50 text-red-700 text-sm">
+          <div className="font-semibold mb-1">Unable to fully sync journey widgets</div>
+          <button
+            onClick={onRetry}
+            className="text-xs font-semibold px-2 py-1 rounded border border-red-300 hover:bg-red-100"
+          >
+            Retry
+          </button>
+        </div>
+      )}
+
+      {isLoading && (
+        <div className="mb-5 grid grid-cols-1 md:grid-cols-2 gap-3">
+          {[1, 2].map((item) => (
+            <div key={item} className="h-14 rounded-lg bg-gray-100 animate-pulse border border-[#e2e8f0]"></div>
+          ))}
+        </div>
+      )}
+
+      {pendingItemsOverride.length > 0 && (
+        <div className="mb-6 border border-[#e2e8f0] rounded-xl p-4 bg-[#f8fafc]">
+          <div className="flex items-center justify-between mb-3">
+            <h4 className="text-sm font-semibold text-[#0e1f42]">Pending Items</h4>
+            <span className="text-xs text-[#64748b]">Synced tasks</span>
+          </div>
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-2">
+            {pendingItemsOverride.map((item) => (
+              <button
+                key={item.id}
+                onClick={() => navigate(item.path)}
+                className="text-left border border-[#e2e8f0] rounded-lg p-2 bg-white hover:border-[#9f7539]/40 transition-colors"
+              >
+                <div className="text-xs text-[#64748b]">{item.label}</div>
+                <div className="font-semibold text-[#0e1f42]">{item.value}</div>
+              </button>
+            ))}
+          </div>
+        </div>
+      )}
+
       {!rentOnlyMode && (
         <>
           {/* Notifications Section - Updated colors */}

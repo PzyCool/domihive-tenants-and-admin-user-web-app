@@ -70,6 +70,7 @@ const Properties = () => {
       setIsLoading(true);
       try {
         const properties = generateNigerianProperties(80);
+        localStorage.setItem('domihive_home_properties_cache_v1', JSON.stringify(properties));
         setAllProperties(properties);
         setFilteredProperties(properties);
         const totalPages = Math.ceil(properties.length / 6);
@@ -164,7 +165,7 @@ const Properties = () => {
     if (filters.priceRange !== 'all') {
       const [min, max] = filters.priceRange.split('-').map(str => {
         if (str.includes('+')) return parseInt(str.replace('+', '')) + 1;
-        const num = str.replace('â‚¦', '').replace('M', '000000').replace('/year', '').trim();
+        const num = str.replace('₦', '').replace('M', '000000').replace('/year', '').trim();
         return parseInt(num);
       });
       

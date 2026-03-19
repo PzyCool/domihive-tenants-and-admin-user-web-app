@@ -15,8 +15,9 @@ const LocationTab = ({ property }) => {
       <div className="mb-8">
         <h3 className="text-2xl font-bold text-[#0e1f42] mb-4">Location & Neighborhood</h3>
         <p className="text-[#64748b]">
-          Prime location in Ikoyi, Lagos Island. This area is known for its security,
-          excellent infrastructure, and proximity to major business districts and lifestyle amenities.
+          {property?.location
+            ? `Explore the neighborhood around ${property.location}.`
+            : 'Explore the neighborhood and nearby amenities.'}
         </p>
       </div>
 

@@ -1297,11 +1297,11 @@ body.dashboard-themed[data-theme="true-black"]
 body.dashboard-themed[data-theme="dark-gray"]
   .top-overview-container
   .timeline-card
-  .hover\\:bg-gray-100:hover,
+  button:hover,
 body.dashboard-themed[data-theme="true-black"]
   .top-overview-container
   .timeline-card
-  .hover\\:bg-gray-100:hover {
+  button:hover {
   background: rgba(255, 255, 255, 0.08) !important;
 }
 
@@ -1319,11 +1319,43 @@ body.dashboard-themed[data-theme="true-black"]
 body.dashboard-themed[data-theme="dark-gray"]
   .top-overview-container
   .timeline-card
-  .text-\[var\(--text-color\,#0e1f42\)\],
+  h1,
+body.dashboard-themed[data-theme="dark-gray"]
+  .top-overview-container
+  .timeline-card
+  h2,
+body.dashboard-themed[data-theme="dark-gray"]
+  .top-overview-container
+  .timeline-card
+  h3,
+body.dashboard-themed[data-theme="dark-gray"]
+  .top-overview-container
+  .timeline-card
+  p,
+body.dashboard-themed[data-theme="dark-gray"]
+  .top-overview-container
+  .timeline-card
+  span,
 body.dashboard-themed[data-theme="true-black"]
   .top-overview-container
   .timeline-card
-  .text-\[var\(--text-color\,#0e1f42\)\] {
+  h1,
+body.dashboard-themed[data-theme="true-black"]
+  .top-overview-container
+  .timeline-card
+  h2,
+body.dashboard-themed[data-theme="true-black"]
+  .top-overview-container
+  .timeline-card
+  h3,
+body.dashboard-themed[data-theme="true-black"]
+  .top-overview-container
+  .timeline-card
+  p,
+body.dashboard-themed[data-theme="true-black"]
+  .top-overview-container
+  .timeline-card
+  span {
   color: var(--text-color, #f8fafc) !important;
 }
 
@@ -1380,12 +1412,52 @@ body.dashboard-themed[data-theme="dark-gray"]
   .top-overview-container
   .timeline-card
   .timeline-stat-card
-  .text-\[var\(--text-color\,#0e1f42\)\],
+  h1,
+body.dashboard-themed[data-theme="dark-gray"]
+  .top-overview-container
+  .timeline-card
+  .timeline-stat-card
+  h2,
+body.dashboard-themed[data-theme="dark-gray"]
+  .top-overview-container
+  .timeline-card
+  .timeline-stat-card
+  h3,
+body.dashboard-themed[data-theme="dark-gray"]
+  .top-overview-container
+  .timeline-card
+  .timeline-stat-card
+  p,
+body.dashboard-themed[data-theme="dark-gray"]
+  .top-overview-container
+  .timeline-card
+  .timeline-stat-card
+  span,
 body.dashboard-themed[data-theme="true-black"]
   .top-overview-container
   .timeline-card
   .timeline-stat-card
-  .text-\[var\(--text-color\,#0e1f42\)\] {
+  h1,
+body.dashboard-themed[data-theme="true-black"]
+  .top-overview-container
+  .timeline-card
+  .timeline-stat-card
+  h2,
+body.dashboard-themed[data-theme="true-black"]
+  .top-overview-container
+  .timeline-card
+  .timeline-stat-card
+  h3,
+body.dashboard-themed[data-theme="true-black"]
+  .top-overview-container
+  .timeline-card
+  .timeline-stat-card
+  p,
+body.dashboard-themed[data-theme="true-black"]
+  .top-overview-container
+  .timeline-card
+  .timeline-stat-card
+  span {
   color: var(--text-color, #f8fafc) !important;
 }
 
@@ -1426,11 +1498,43 @@ body.dashboard-themed[data-theme="true-black"]
 body.dashboard-themed[data-theme="dark-gray"]
   .top-overview-container
   .timeline-overlay
-  .text-\[var\(--text-color\,#0e1f42\)\],
+  h1,
+body.dashboard-themed[data-theme="dark-gray"]
+  .top-overview-container
+  .timeline-overlay
+  h2,
+body.dashboard-themed[data-theme="dark-gray"]
+  .top-overview-container
+  .timeline-overlay
+  h3,
+body.dashboard-themed[data-theme="dark-gray"]
+  .top-overview-container
+  .timeline-overlay
+  p,
+body.dashboard-themed[data-theme="dark-gray"]
+  .top-overview-container
+  .timeline-overlay
+  span,
 body.dashboard-themed[data-theme="true-black"]
   .top-overview-container
   .timeline-overlay
-  .text-\[var\(--text-color\,#0e1f42\)\] {
+  h1,
+body.dashboard-themed[data-theme="true-black"]
+  .top-overview-container
+  .timeline-overlay
+  h2,
+body.dashboard-themed[data-theme="true-black"]
+  .top-overview-container
+  .timeline-overlay
+  h3,
+body.dashboard-themed[data-theme="true-black"]
+  .top-overview-container
+  .timeline-overlay
+  p,
+body.dashboard-themed[data-theme="true-black"]
+  .top-overview-container
+  .timeline-overlay
+  span {
   color: var(--text-color, #f8fafc) !important;
 }
 

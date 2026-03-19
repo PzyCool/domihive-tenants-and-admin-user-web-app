@@ -18,7 +18,12 @@ const PrimaryRow = ({
   isExpanded,
   onToggleExpand,
   showAdvancedFilters, // ADD THIS
-  onAdvancedToggle     // ADD THIS
+  onAdvancedToggle,     // ADD THIS
+  searchDraft,
+  onSearchDraftChange,
+  isSyncing,
+  lastSyncedAt,
+  onRefresh
 }) => {
   // Handle search
   const handleSearch = (searchQuery) => {
@@ -44,8 +49,8 @@ const PrimaryRow = ({
         {/* Search Bar */}
         <div className="flex-1 max-w-md">
           <SearchBar
-            value={filters.searchQuery || ''}
-            onChange={handleSearch}
+            value={searchDraft ?? (filters.searchQuery || '')}
+            onChange={onSearchDraftChange || handleSearch}
           />
         </div>
         
@@ -64,6 +69,17 @@ const PrimaryRow = ({
       
       {/* Right Section */}
       <div className="flex items-center gap-2 lg:gap-3 ml-3 lg:ml-5">
+        <div className="hidden xl:flex items-center gap-2 text-xs text-[#64748b]">
+          <span>{lastSyncedAt ? `Synced ${new Date(lastSyncedAt).toLocaleTimeString()}` : 'Sync pending'}</span>
+          {isSyncing && <span className="text-[#9f7539] font-semibold">Syncing...</span>}
+          <button
+            onClick={onRefresh}
+            className="px-2 py-1 rounded-full border border-[#e2e8f0] hover:border-[#9f7539]/40 text-[#475467]"
+          >
+            Refresh
+          </button>
+        </div>
+
         {/* View Toggle */}
         <ViewToggle
           currentView={viewType}

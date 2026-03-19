@@ -1,13 +1,11 @@
 // src/components/home/properties/components/PropertyDetailsPage/components/tabs/ReviewsTab/ReviewsTab.jsx
-import React, { useState } from 'react';
+import React from 'react';
 import ReviewCard from './ReviewCard';
 import RatingSummary from './RatingSummary';
 // import ReviewFilters from './ReviewFilters';
 import ActionSection from '../../ActionSection/ActionSection';
 
 const ReviewsTab = ({ property, listingType, onBookInspection }) => {
-  const [filter, setFilter] = useState('all');
-
   return (
     <div className="reviews-tab space-y-8">
       <div>
@@ -21,10 +19,7 @@ const ReviewsTab = ({ property, listingType, onBookInspection }) => {
 
       {/* Rating Summary */}
       <div className="bg-white rounded-xl border border-gray-200 p-6">
-        <RatingSummary 
-          rating={property.rating || 4.5}
-          reviewCount={property.reviewCount || 24}
-        />
+        <RatingSummary property={property} />
       </div>
 
       {/* Review Filters */}

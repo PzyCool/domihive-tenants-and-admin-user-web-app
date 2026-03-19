@@ -1,5 +1,5 @@
 // src/App.jsx
-import { Routes, Route, Navigate } from 'react-router-dom';
+import { Routes, Route, Navigate, useParams } from 'react-router-dom';
 import Header from './components/home/layout/Header';
 import Footer from './components/home/layout/Footer';
 import Hero from './components/home/Hero';
@@ -52,6 +52,56 @@ import AdminReports from './components/admin/pages/AdminReports';
 import AdminSettings from './components/admin/pages/AdminSettings';
 import AdminCreateContract from './components/admin/pages/AdminCreateContract';
 import AdminPaymentDetails from './components/admin/pages/AdminPaymentDetails';
+import { useApplications } from './components/dashboard/rent/contexts/ApplicationsContext';
+import { applicationStageGuards } from './components/dashboard/rent/contexts/JourneyContext';
+import { useProperties } from './components/dashboard/rent/contexts/PropertiesContext';
+
+const RequireApplicationAccess = ({ mode, children }) => {
+  const { applicationId } = useParams();
+  const { applications } = useApplications();
+  const application = applications.find((app) => app.id === applicationId);
+
+  if (!application) {
+    return <Navigate to="/dashboard/rent/applications" replace />;
+  }
+
+  const status = application.status;
+  if (mode === 'start' && !applicationStageGuards.canStart.has(status)) {
+    if (applicationStageGuards.canTrack.has(status)) {
+      return <Navigate to={`/dashboard/rent/applications/${applicationId}/track`} replace />;
+    }
+    return <Navigate to="/dashboard/rent/applications" replace />;
+  }
+
+  if (mode === 'payment' && !applicationStageGuards.canPay.has(status)) {
+    if (applicationStageGuards.canTrack.has(status)) {
+      return <Navigate to={`/dashboard/rent/applications/${applicationId}/track`} replace />;
+    }
+    if (applicationStageGuards.canStart.has(status)) {
+      return <Navigate to={`/dashboard/rent/applications/${applicationId}/start`} replace />;
+    }
+    return <Navigate to="/dashboard/rent/applications" replace />;
+  }
+
+  if (mode === 'track' && !applicationStageGuards.canTrack.has(status)) {
+    if (applicationStageGuards.canStart.has(status)) {
+      return <Navigate to={`/dashboard/rent/applications/${applicationId}/start`} replace />;
+    }
+    return <Navigate to="/dashboard/rent/applications" replace />;
+  }
+
+  return children;
+};
+
+const RequirePropertyAccess = ({ children }) => {
+  const { propertyId } = useParams();
+  const { properties } = useProperties();
+  const exists = properties.some((property) => property.propertyId === propertyId);
+  if (!exists) {
+    return <Navigate to="/dashboard/rent/my-properties" replace />;
+  }
+  return children;
+};
 
 function App() {
   return (
@@ -118,13 +168,55 @@ function App() {
             <Route path="browse" element={<RentBrowse />} />
             <Route path="favorites" element={<FavoritesPage />} />
             <Route path="applications" element={<RentApplications />} />
-            <Route path="applications/:applicationId/start" element={<ApplicationStartPage />} />
-            <Route path="applications/:applicationId/payment" element={<ApplicationPaymentPage />} />
-            <Route path="applications/:applicationId/track" element={<ApplicationTrackPage />} />
+            <Route
+              path="applications/:applicationId/start"
+              element={(
+                <RequireApplicationAccess mode="start">
+                  <ApplicationStartPage />
+                </RequireApplicationAccess>
+              )}
+            />
+            <Route
+              path="applications/:applicationId/payment"
+              element={(
+                <RequireApplicationAccess mode="payment">
+                  <ApplicationPaymentPage />
+                </RequireApplicationAccess>
+              )}
+            />
+            <Route
+              path="applications/:applicationId/track"
+              element={(
+                <RequireApplicationAccess mode="track">
+                  <ApplicationTrackPage />
+                </RequireApplicationAccess>
+              )}
+            />
             <Route path="my-properties" element={<MyProperties />} />
-            <Route path="my-properties/:propertyId" element={<PropertyDashboard />} />
-            <Route path="my-properties/:propertyId/payments" element={<PropertyPayments />} />
-            <Route path="my-properties/:propertyId/vacate" element={<PropertyVacate />} />
+            <Route
+              path="my-properties/:propertyId"
+              element={(
+                <RequirePropertyAccess>
+                  <PropertyDashboard />
+                </RequirePropertyAccess>
+              )}
+            />
+            <Route
+              path="my-properties/:propertyId/payments"
+              element={(
+                <RequirePropertyAccess>
+                  <PropertyPayments />
+                </RequirePropertyAccess>
+              )}
+            />
+            <Route
+              path="my-properties/:propertyId/vacate"
+              element={(
+                <RequirePropertyAccess>
+                  <PropertyVacate />
+                </RequirePropertyAccess>
+              )}
+            />
             <Route path="maintenance" element={<MaintenancePage />} />
             <Route path="maintenance/:ticketId" element={<MaintenanceDetailPage />} />
             <Route path="maintenance/policy" element={<MaintenancePolicyPage />} />

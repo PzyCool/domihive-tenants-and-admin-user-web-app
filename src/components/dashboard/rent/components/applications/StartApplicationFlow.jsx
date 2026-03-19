@@ -1,4 +1,5 @@
-import React, { useState } from 'react';
+import React, { useEffect, useState } from 'react';
+import { useAuth } from '../../../../../context/AuthContext';
 
 const INITIAL_FORM = {
   fullName: '',
@@ -17,15 +18,26 @@ const INITIAL_FORM = {
 };
 
 const StartApplicationFlow = ({ application, onSaveDraft, onProceed, onClose }) => {
+  const { user } = useAuth();
   const [formData, setFormData] = useState(INITIAL_FORM);
+
+  useEffect(() => {
+    if (!user) return;
+    setFormData((prev) => ({
+      ...prev,
+      fullName: prev.fullName || user.name || '',
+      email: prev.email || user.email || '',
+      phone: prev.phone || user.phone || ''
+    }));
+  }, [user]);
 
   const handleFieldChange = (field, value) => {
     setFormData(prev => ({ ...prev, [field]: value }));
   };
 
   const handleProceed = () => {
-    onSaveDraft?.(application.id);
-    onProceed?.();
+    onSaveDraft?.(application.id, formData);
+    onProceed?.(formData);
   };
 
   return (

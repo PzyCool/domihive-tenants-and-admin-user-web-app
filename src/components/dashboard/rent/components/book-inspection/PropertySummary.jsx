@@ -1,9 +1,8 @@
 // src/dashboards/rent/components/book-inspection/PropertySummary.jsx
 import React from 'react';
 
-const PropertySummary = ({ propertyId }) => {
-  // This would fetch property data in real implementation
-  const property = {
+const PropertySummary = ({ propertyData }) => {
+  const fallbackProperty = {
     title: "Luxury 3-Bedroom Apartment in Ikoyi",
     price: 4500000,
     location: "Ikoyi, Lagos Island",
@@ -12,6 +11,7 @@ const PropertySummary = ({ propertyId }) => {
     size: "180 sqm",
     image: "/ASSECT/3d-rendering-modern-dining-room-living-room-with-luxury-decor (1).jpg"
   };
+  const property = { ...fallbackProperty, ...(propertyData || {}) };
 
   const formatPrice = (price) => {
     return `₦${price.toLocaleString()}/year`;
