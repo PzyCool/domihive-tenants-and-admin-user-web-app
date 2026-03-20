@@ -246,7 +246,7 @@ const TopOverview = ({
             <div className={`text-xs px-3 py-1.5 rounded-full font-medium overview-pill ${
               hasBookingIntent ? 'bg-[#9f7539]/10 text-[#9f7539]' : 'bg-blue-100 text-blue-800'
             }`}>
-              {hasBookingIntent ? 'PENDING BOOKING' : `VIEWED ${String(property.viewedAt).toUpperCase()}`}
+              {hasBookingIntent ? 'PENDING BOOKING' : `VIEWED ${String(property?.viewedAt || 'RECENTLY').toUpperCase()}`}
             </div>
           </div>
 

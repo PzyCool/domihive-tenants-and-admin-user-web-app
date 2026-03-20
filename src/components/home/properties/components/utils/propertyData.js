@@ -1,26 +1,26 @@
 // src/components/home/properties/components/utils/propertyData.js
 const NIGERIAN_PROPERTY_IMAGES = {
   luxury: [
-    'https://www.propertypro.ng/blog/wp-content/uploads/2021/03/luxury-apartment-in-ikoyi.jpg',
-    'https://www.propertypro.ng/blog/wp-content/uploads/2020/11/lekki-apartment-for-rent.jpg',
-    'https://www.privateproperty.com.ng/blog/wp-content/uploads/2022/06/modern-apartment-lagos.jpg',
-    'https://www.propertypro.ng/blog/wp-content/uploads/2021/05/contemporary-lagos-apartment.jpg',
+    'https://images.unsplash.com/photo-1600607687939-ce8a6c25118c?w=1200&h=800&fit=crop',
+    'https://images.unsplash.com/photo-1600047509807-ba8f99d2cdde?w=1200&h=800&fit=crop',
+    'https://images.unsplash.com/photo-1560185007-cde436f6a4d0?w=1200&h=800&fit=crop',
+    'https://images.unsplash.com/photo-1613490493576-7fde63acd811?w=1200&h=800&fit=crop',
   ],
   standard: [
-    'https://www.privateproperty.com.ng/blog/wp-content/uploads/2022/03/ikeja-apartment-interior.jpg',
-    'https://www.propertypro.ng/blog/wp-content/uploads/2020/09/surulere-flat-for-rent.jpg',
-    'https://www.propertypro.ng/blog/wp-content/uploads/2021/08/mainland-lagos-property.jpg',
-    'https://www.privateproperty.com.ng/blog/wp-content/uploads/2021/11/affordable-lagos-apartment.jpg',
+    'https://images.unsplash.com/photo-1493809842364-78817add7ffb?w=1200&h=800&fit=crop',
+    'https://images.unsplash.com/photo-1502672260266-1c1ef2d93688?w=1200&h=800&fit=crop',
+    'https://images.unsplash.com/photo-1560185127-6ed189bf02f4?w=1200&h=800&fit=crop',
+    'https://images.unsplash.com/photo-1484154218962-a197022b5858?w=1200&h=800&fit=crop',
   ],
   estate: [
-    'https://www.propertypro.ng/blog/wp-content/uploads/2022/01/gated-estate-lagos.jpg',
-    'https://www.privateproperty.com.ng/blog/wp-content/uploads/2022/04/lagos-estate-property.jpg',
-    'https://www.propertypro.ng/blog/wp-content/uploads/2020/12/lekki-gated-community.jpg',
+    'https://images.unsplash.com/photo-1600607687644-c7171b42498f?w=1200&h=800&fit=crop',
+    'https://images.unsplash.com/photo-1600607687920-4e2a09cf159d?w=1200&h=800&fit=crop',
+    'https://images.unsplash.com/photo-1570129477492-45c003edd2be?w=1200&h=800&fit=crop',
   ],
   interior: [
-    'https://www.propertypro.ng/blog/wp-content/uploads/2021/07/nigerian-living-room-design.jpg',
-    'https://www.privateproperty.com.ng/blog/wp-content/uploads/2022/02/lagos-bedroom-interior.jpg',
-    'https://www.propertypro.ng/blog/wp-content/uploads/2021/04/modern-nigerian-kitchen.jpg',
+    'https://images.unsplash.com/photo-1600210492486-724fe5c67fb0?w=1200&h=800&fit=crop',
+    'https://images.unsplash.com/photo-1616594039964-3f1cb070f2d3?w=1200&h=800&fit=crop',
+    'https://images.unsplash.com/photo-1556911220-bda9f7f7597e?w=1200&h=800&fit=crop',
   ],
   fallback: [
     'https://images.unsplash.com/photo-1560448204-603b3fc33ddc?w=800&h=600&fit=crop',

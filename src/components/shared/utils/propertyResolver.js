@@ -1,5 +1,18 @@
 const BROWSE_CACHE_KEY = 'domihive_browse_cache_v1';
 const HOME_CACHE_KEY = 'domihive_home_properties_cache_v1';
+const FALLBACK_IMAGES = [
+  'https://images.unsplash.com/photo-1560448204-603b3fc33ddc?w=1400&h=900&fit=crop',
+  'https://images.unsplash.com/photo-1505691938895-1758d7feb511?w=1400&h=900&fit=crop',
+  'https://images.unsplash.com/photo-1494526585095-c41746248156?w=1400&h=900&fit=crop'
+];
+
+const blockedHostPattern = /(propertypro\.ng|privateproperty\.com\.ng|privateproperty\.ng)/i;
+
+const safeImageUrl = (url, fallbackIndex = 0) => {
+  if (!url || typeof url !== 'string') return FALLBACK_IMAGES[fallbackIndex % FALLBACK_IMAGES.length];
+  if (blockedHostPattern.test(url)) return FALLBACK_IMAGES[fallbackIndex % FALLBACK_IMAGES.length];
+  return url;
+};
 
 const safeRead = (key, fallback = null) => {
   try {
@@ -12,9 +25,22 @@ const safeRead = (key, fallback = null) => {
 
 const normalizeProperty = (raw) => {
   if (!raw) return null;
-  const images = Array.isArray(raw.images)
-    ? raw.images.filter(Boolean)
-    : [raw.image].filter(Boolean);
+  const sourceImages = [
+    ...(Array.isArray(raw.images) ? raw.images : []),
+    ...(Array.isArray(raw.photos) ? raw.photos : []),
+    raw.image,
+    raw.imageUrl,
+    raw.thumbnail
+  ].filter(Boolean);
+  const images = sourceImages.length
+    ? sourceImages.map((item, index) => safeImageUrl(item, index))
+    : [...FALLBACK_IMAGES];
+  const primaryImage = safeImageUrl(raw.image || raw.imageUrl || images[0], 0);
+  const videos = Array.isArray(raw.videos) ? raw.videos : [];
+  const normalizedVideos = videos.map((video, index) => ({
+    ...video,
+    thumbnail: safeImageUrl(video?.thumbnail || images[index] || primaryImage, index)
+  }));
 
   return {
     ...raw,
@@ -24,8 +50,9 @@ const normalizeProperty = (raw) => {
     name: raw.name || raw.title || 'Property',
     location: raw.location || raw.address || 'Lagos, Nigeria',
     address: raw.address || raw.location || 'Lagos, Nigeria',
-    image: raw.image || images[0] || '',
+    image: primaryImage,
     images,
+    videos: normalizedVideos,
     amenities: Array.isArray(raw.amenities) ? raw.amenities : [],
     reviews: Array.isArray(raw.reviews) ? raw.reviews : []
   };

@@ -62,32 +62,80 @@ const RequireApplicationAccess = ({ mode, children }) => {
   const application = applications.find((app) => app.id === applicationId);
 
   if (!application) {
-    return <Navigate to="/dashboard/rent/applications" replace />;
+    return (
+      <Navigate
+        to="/dashboard/rent/applications"
+        replace
+        state={{ guardToast: 'Application not found.' }}
+      />
+    );
   }
 
   const status = application.status;
   if (mode === 'start' && !applicationStageGuards.canStart.has(status)) {
     if (applicationStageGuards.canTrack.has(status)) {
-      return <Navigate to={`/dashboard/rent/applications/${applicationId}/track`} replace />;
+      return (
+        <Navigate
+          to={`/dashboard/rent/applications/${applicationId}/track`}
+          replace
+          state={{ guardToast: 'This application is already beyond inspection.' }}
+        />
+      );
     }
-    return <Navigate to="/dashboard/rent/applications" replace />;
+    return (
+      <Navigate
+        to="/dashboard/rent/applications"
+        replace
+        state={{ guardToast: 'Complete inspection first.' }}
+      />
+    );
   }
 
   if (mode === 'payment' && !applicationStageGuards.canPay.has(status)) {
     if (applicationStageGuards.canTrack.has(status)) {
-      return <Navigate to={`/dashboard/rent/applications/${applicationId}/track`} replace />;
+      return (
+        <Navigate
+          to={`/dashboard/rent/applications/${applicationId}/track`}
+          replace
+          state={{ guardToast: 'Payment already submitted for this application.' }}
+        />
+      );
     }
     if (applicationStageGuards.canStart.has(status)) {
-      return <Navigate to={`/dashboard/rent/applications/${applicationId}/start`} replace />;
+      return (
+        <Navigate
+          to={`/dashboard/rent/applications/${applicationId}/start`}
+          replace
+          state={{ guardToast: 'Complete the application form first.' }}
+        />
+      );
     }
-    return <Navigate to="/dashboard/rent/applications" replace />;
+    return (
+      <Navigate
+        to="/dashboard/rent/applications"
+        replace
+        state={{ guardToast: 'Complete inspection first.' }}
+      />
+    );
   }
 
   if (mode === 'track' && !applicationStageGuards.canTrack.has(status)) {
     if (applicationStageGuards.canStart.has(status)) {
-      return <Navigate to={`/dashboard/rent/applications/${applicationId}/start`} replace />;
+      return (
+        <Navigate
+          to={`/dashboard/rent/applications/${applicationId}/start`}
+          replace
+          state={{ guardToast: 'Submit your application before tracking progress.' }}
+        />
+      );
     }
-    return <Navigate to="/dashboard/rent/applications" replace />;
+    return (
+      <Navigate
+        to="/dashboard/rent/applications"
+        replace
+        state={{ guardToast: 'Submit your application before tracking progress.' }}
+      />
+    );
   }
 
   return children;
@@ -98,7 +146,13 @@ const RequirePropertyAccess = ({ children }) => {
   const { properties } = useProperties();
   const exists = properties.some((property) => property.propertyId === propertyId);
   if (!exists) {
-    return <Navigate to="/dashboard/rent/my-properties" replace />;
+    return (
+      <Navigate
+        to="/dashboard/rent/my-properties"
+        replace
+        state={{ guardToast: 'Property not found.' }}
+      />
+    );
   }
   return children;
 };

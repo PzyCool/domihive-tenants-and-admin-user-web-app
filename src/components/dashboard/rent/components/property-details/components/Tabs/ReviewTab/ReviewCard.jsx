@@ -36,7 +36,7 @@ const ReviewCard = ({ review }) => {
             </div>
             <div className="flex items-center gap-2 text-sm text-[#64748b]">
               <span>{review.status}</span>
-              <span>•</span>
+              <span>�</span>
               <span>{review.date}</span>
             </div>
           </div>
@@ -106,7 +106,7 @@ const ReviewCard = ({ review }) => {
             />
           </svg>
           <span className="font-medium">
-            {isHelpful ? 'Helpful ✓' : 'Helpful'}
+            {isHelpful ? 'Helpful ?' : 'Helpful'}
           </span>
           <span className={`text-sm ${isHelpful ? 'text-green-600' : 'text-[#64748b]'}`}>
             ({helpfulCount})
