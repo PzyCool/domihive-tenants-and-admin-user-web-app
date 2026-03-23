@@ -42,6 +42,7 @@ const AdminHeader = ({ toggleSidebar, isMobile }) => {
     if (path.includes('/clients')) return 'Clients';
     if (path.includes('/contracts')) return 'Contracts';
     if (path.includes('/properties')) return 'Properties';
+    if (path.includes('/units')) return 'Units';
     if (path.includes('/locations-filters')) return 'Locations & Filters';
     if (path.includes('/inspection-slots')) return 'Inspection Slots';
     if (path.includes('/inspections')) return 'Inspections';

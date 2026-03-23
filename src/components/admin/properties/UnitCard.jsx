@@ -3,6 +3,10 @@ import React from 'react';
 import { Link } from 'react-router-dom';
 
 const UnitCard = ({ unit }) => {
+    const displayPropertyTitle = String(unit.propertyTitle || '')
+        .replace(/^\s*\d+\s*bed(?:room)?\s*/i, '')
+        .trim() || unit.propertyTitle || 'Property';
+
     const statusStyles = {
         occupied: "bg-green-100 text-green-700 dark:bg-green-500/10 dark:text-green-400",
         available: "bg-yellow-100 text-yellow-700 dark:bg-yellow-500/10 dark:text-yellow-400",
@@ -41,7 +45,7 @@ const UnitCard = ({ unit }) => {
             <div className="p-4 space-y-3">
                 <div>
                     <h3 className="font-semibold text-[#0e1f42] dark:text-white text-sm">
-                        {unit.propertyTitle}
+                        {displayPropertyTitle}
                     </h3>
                     <p className="text-xs text-gray-500 dark:text-gray-400 mt-1">
                         {unit.propertyLocation}
@@ -90,7 +94,7 @@ const UnitCard = ({ unit }) => {
 
                 {/* Actions */}
                 <div className='w-full grid grid-cols-1 text-center'>
-                    <Link to={`/admin/properties/unit/${unit.id}`} className="bg-[#9F7539] mt-2 w-full text-white text-xs flex items-center justify-center gap-2 font-semibold py-2 rounded-lg">
+                    <Link to={`/admin/units/${unit.id}`} className="bg-[#9F7539] mt-2 w-full text-white text-xs flex items-center justify-center gap-2 font-semibold py-2 rounded-lg">
                         <Eye size={16} /> View Unit
                     </Link>
                 </div>

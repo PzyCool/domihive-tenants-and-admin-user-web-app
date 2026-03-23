@@ -29,6 +29,7 @@ const navSections = [
       { to: '/admin/contracts', label: 'Contracts', icon: ScrollText },
       { to: '/admin/clients', label: 'Clients', icon: Users },
       { to: '/admin/properties', label: 'Properties', icon: Building2 },
+      { to: '/admin/units', label: 'Units', icon: House },
       { to: '/admin/tenants', label: 'Tenants', icon: House },
     ],
   },

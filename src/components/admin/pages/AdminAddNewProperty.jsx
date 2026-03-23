@@ -97,8 +97,8 @@ const AdminAddNewProperty = () => {
             <div className="flex items-start justify-between">
                 <div>
                     <div className="flex items-center gap-2 text-xs text-gray-500 dark:text-gray-400">
-                        <span className="hover:text-gray-700 dark:hover:text-gray-200 cursor-pointer" onClick={() => navigate("/admin/properties")}>
-                            Properties
+                        <span className="hover:text-gray-700 dark:hover:text-gray-200 cursor-pointer" onClick={() => navigate("/admin")}>
+                            Admin
                         </span>
                         <ChevronRight size={14} />
                         <span className="text-gray-700 dark:text-gray-300 font-medium">Add New Property</span>

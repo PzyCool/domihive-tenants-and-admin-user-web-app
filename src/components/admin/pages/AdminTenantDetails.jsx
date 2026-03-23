@@ -187,7 +187,7 @@ const AdminTenantDetails = () => {
                                 <div className="space-y-1">
                                     <p className="text-[10px] font-bold text-gray-400 dark:text-gray-500 uppercase tracking-widest">Assigned Property</p>
                                     <p className="text-sm font-bold text-[#0e1f42] dark:text-white leading-tight">{tenant.propertyTitle}</p>
-                                    <Link to={`/admin/properties/unit/${tenant.unitId}`} className="text-[11px] text-[#9F7539] font-bold flex items-center gap-1 mt-1 hover:underline">
+                                    <Link to={`/admin/units/${tenant.unitId}`} className="text-[11px] text-[#9F7539] font-bold flex items-center gap-1 mt-1 hover:underline">
                                         Property Details <ExternalLink size={10} />
                                     </Link>
                                 </div>

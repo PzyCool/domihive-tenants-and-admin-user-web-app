@@ -76,7 +76,7 @@ const AdminDashboard = () => {
         <div className="bg-white dark:bg-[#111827] rounded-lg p-4 shadow border border-gray-100 dark:border-white/10">
           <h3 className="font-semibold text-[#0e1f42] dark:text-white mb-4">Quick Actions</h3>
           <div className='flex flex-col gap-4'>
-            <button onClick={() => navigate('/admin/properties/add-new-property')} className='bg-[#9F7539] text-sm  text-white w-full hover:bg-[#b58a4a] p-3 rounded-lg cursor-pointer transition duration-300 flex items-center gap-2 font-semibold'>
+            <button onClick={() => navigate('/admin/add-property')} className='bg-[#9F7539] text-sm  text-white w-full hover:bg-[#b58a4a] p-3 rounded-lg cursor-pointer transition duration-300 flex items-center gap-2 font-semibold'>
               <Plus size={20} />
               Add Property
             </button>

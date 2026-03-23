@@ -1,10 +1,11 @@
 import React, { useMemo, useState } from "react";
-import { Link, useParams } from "react-router-dom";
+import { Link, useNavigate, useParams } from "react-router-dom";
 import { useAdmin } from "../../../context/AdminContext";
 import { Download, Plus, Eye } from "lucide-react";
 
 const AdminClientPortfolio = () => {
   const { clientId } = useParams();
+  const navigate = useNavigate();
   const { clients, properties } = useAdmin();
   const client = clients.find((c) => c.id === clientId);
   const [tab, setTab] = useState("all");
@@ -149,7 +150,11 @@ const AdminClientPortfolio = () => {
                 </div>
                 <div className="flex items-center justify-between pt-3">
                   <span className="inline-flex text-[10px] px-2 py-0.5 rounded-full bg-green-100 text-green-700">{occPct}% Occupied</span>
-                  <button className="text-[#9F7539] hover:text-[#7a5a2c]" aria-label="View property details" onClick={() => {}}>
+                  <button
+                    className="text-[#9F7539] hover:text-[#7a5a2c]"
+                    aria-label="View property details"
+                    onClick={() => navigate(`/admin/properties/${prop.id}`)}
+                  >
                     <Eye size={16} />
                   </button>
                 </div>

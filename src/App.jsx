@@ -31,6 +31,7 @@ import FavoritesPage from './components/dashboard/rent/pages/FavoritesPage';
 import AdminLayout from './components/admin/layout/AdminLayout';
 import AdminDashboard from './components/admin/pages/AdminDashboard';
 import AdminProperties from './components/admin/pages/AdminProperties';
+import AdminUnits from './components/admin/pages/AdminUnits';
 import AdminLocationsFilters from './components/admin/pages/AdminLocationsFilters';
 import AdminInspectionSlots from './components/admin/pages/AdminInspectionSlots';
 import AdminInspections from './components/admin/pages/AdminInspections';
@@ -41,7 +42,10 @@ import AdminAddNewProperty from './components/admin/pages/AdminAddNewProperty';
 import './App.css';
 import NotFound from './components/NotFound';
 import AdminPropertyDetails from './components/admin/pages/AdminPropertyDetails';
+import AdminPropertyView from './components/admin/pages/AdminPropertyView';
+import AdminPropertyUnits from './components/admin/pages/AdminPropertyUnits';
 import AdminClients from './components/admin/pages/AdminClients';
+import AdminContracts from './components/admin/pages/AdminContracts';
 import AdminClientDetail from './components/admin/pages/AdminClientDetail';
 import AdminClientPortfolio from './components/admin/pages/AdminClientPortfolio';
 import AdminPayments from './components/admin/pages/AdminPayments';
@@ -194,6 +198,9 @@ function App() {
         <Route path="/admin" element={<AdminLayout />}>
           <Route index element={<AdminDashboard />} />
           <Route path="properties" element={<AdminProperties />} />
+          <Route path="properties/:propertyId" element={<AdminPropertyView />} />
+          <Route path="properties/:propertyId/units" element={<AdminPropertyUnits />} />
+          <Route path="units" element={<AdminUnits />} />
           <Route path="locations-filters" element={<AdminLocationsFilters />} />
           <Route path="inspection-slots" element={<AdminInspectionSlots />} />
           <Route path="inspections" element={<AdminInspections />} />
@@ -202,6 +209,7 @@ function App() {
           <Route path="tenants/:tenantId" element={<AdminTenantDetails />} />
           <Route path="content-policies" element={<AdminContentPolicies />} />
           <Route path="clients" element={<AdminClients />} />
+          <Route path="contracts" element={<AdminContracts />} />
           <Route path="clients/:clientId" element={<AdminClientDetail />} />
           <Route path="clients/:clientId/portfolio" element={<AdminClientPortfolio />} />
           <Route path="clients/:clientId/contracts/new" element={<AdminCreateContract />} />
@@ -212,10 +220,10 @@ function App() {
           <Route path="reports" element={<AdminReports />} />
           <Route path="settings" element={<AdminSettings />} />
 
-          {/* Route for adding new properties */}
-          <Route path="properties/add-new-property" element={<AdminAddNewProperty />} />
-          {/* Route for property details */}
-          <Route path="properties/unit/:unitId" element={<AdminPropertyDetails />} />
+          {/* Standalone route for adding new properties */}
+          <Route path="add-property" element={<AdminAddNewProperty />} />
+          {/* Route for unit details */}
+          <Route path="units/:unitId" element={<AdminPropertyDetails />} />
         </Route>
 
 
