@@ -1,6 +1,5 @@
 // src/components/home/properties/components/SearchHeader/SecondaryRow.jsx
 import React from 'react';
-import AreaToggle from './components/AreaToggle';
 import LocationDropdown from './components/LocationDropdown';
 import PropertyTypeDropdown from './components/PropertyTypeDropdown';
 import PriceRangeDropdown from './components/PriceRangeDropdown';
@@ -8,9 +7,18 @@ import BedroomsDropdown from './components/BedroomsDropdown';
 import ApplyFiltersButton from './components/ApplyFiltersButton';
 import ClearButton from './components/ClearButton';
 
+const AREA_BY_STATE = {
+  Lagos: ['Lagos Island', 'Lagos Mainland'],
+  Delta: ['Delta North', 'Delta Central', 'Delta South']
+};
+
 const SecondaryRow = ({ filters, onFilterChange, onClearFilters }) => {
-  const handleAreaChange = (areaType) => {
-    onFilterChange({ areaType, location: 'all' });
+  const handleStateChange = (state) => {
+    onFilterChange({ state, area: 'all', location: 'all' });
+  };
+
+  const handleAreaChange = (area) => {
+    onFilterChange({ area, location: 'all' });
   };
   
   const handleLocationChange = (location) => {
@@ -29,19 +37,50 @@ const SecondaryRow = ({ filters, onFilterChange, onClearFilters }) => {
     onFilterChange({ bedrooms });
   };
   
+  const areaOptions = filters.state && filters.state !== 'all' ? (AREA_BY_STATE[filters.state] || []) : [];
+
   return (
     <div className="secondary-row relative z-50 hidden md:block px-4 lg:px-6 py-4 bg-gray-50 border-t border-gray-200">
       <div className="flex flex-col lg:flex-row gap-4">
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-5 gap-4 flex-1">
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-6 gap-4 flex-1">
+          <div>
+            <label className="block text-xs font-semibold text-gray-700 mb-1 uppercase tracking-wide">
+              <i className="fas fa-map mr-1 text-[#9f7539]"></i>
+              State
+            </label>
+            <select
+              value={filters.state || 'all'}
+              onChange={(e) => handleStateChange(e.target.value)}
+              className="w-full px-3 py-2 rounded-lg border border-gray-300 hover:border-gray-400 transition-colors text-sm bg-white"
+            >
+              <option value="all">All States</option>
+              <option value="Lagos">Lagos</option>
+              <option value="Delta">Delta</option>
+            </select>
+          </div>
+
           <div>
             <label className="block text-xs font-semibold text-gray-700 mb-1 uppercase tracking-wide">
               <i className="fas fa-map-marker-alt mr-1 text-[#9f7539]"></i>
               Area
             </label>
-            <AreaToggle
-              value={filters.areaType || 'all'}
-              onChange={handleAreaChange}
-            />
+            <select
+              value={filters.area || 'all'}
+              onChange={(e) => handleAreaChange(e.target.value)}
+              disabled={!filters.state || filters.state === 'all'}
+              className={`w-full px-3 py-2 rounded-lg border transition-colors text-sm ${
+                !filters.state || filters.state === 'all'
+                  ? 'bg-gray-100 cursor-not-allowed border-gray-200'
+                  : 'bg-white border-gray-300 hover:border-gray-400'
+              }`}
+            >
+              <option value="all">All Areas</option>
+              {areaOptions.map((option) => (
+                <option key={option} value={option}>
+                  {option}
+                </option>
+              ))}
+            </select>
           </div>
           
           <div>
@@ -51,7 +90,8 @@ const SecondaryRow = ({ filters, onFilterChange, onClearFilters }) => {
             </label>
             <LocationDropdown
               value={filters.location || 'all'}
-              areaType={filters.areaType}
+              state={filters.state}
+              area={filters.area}
               onChange={handleLocationChange}
             />
           </div>

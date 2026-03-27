@@ -1,4 +1,4 @@
-import React, { useEffect, useMemo, useState } from 'react';
+﻿import React, { useEffect, useMemo, useState } from 'react';
 import PrimaryRow from './PrimaryRow';
 import SecondaryRow from './SecondaryRow';
 import AdvancedFilterOverlay from './AdvancedFilterOverlay/AdvancedFilterOverlay';
@@ -34,7 +34,8 @@ const SearchHeader = ({
   useEffect(() => {
     let count = 0;
     const {
-      areaType,
+      state,
+      area,
       location,
       propertyType,
       bedrooms,
@@ -50,7 +51,8 @@ const SearchHeader = ({
       propertyAge
     } = filters;
 
-    if (areaType && areaType !== 'all') count++;
+    if (state && state !== 'all') count++;
+    if (area && area !== 'all') count++;
     if (location && location !== 'all') count++;
     if (propertyType && propertyType !== 'all') count++;
     if (bedrooms && bedrooms !== 'all') count++;
@@ -75,7 +77,8 @@ const SearchHeader = ({
 
   const handleClearFilters = () => {
     onFilterChange?.({
-      areaType: 'all',
+      state: 'all',
+      area: 'all',
       location: 'all',
       propertyType: 'all',
       bedrooms: 'all',
@@ -96,7 +99,8 @@ const SearchHeader = ({
 
   const activeFilterChips = useMemo(() => {
     const chips = [];
-    if (filters.areaType && filters.areaType !== 'all') chips.push({ key: 'areaType', label: `Area: ${filters.areaType}` });
+    if (filters.state && filters.state !== 'all') chips.push({ key: 'state', label: `State: ${filters.state}` });
+    if (filters.area && filters.area !== 'all') chips.push({ key: 'area', label: `Area: ${filters.area}` });
     if (filters.location && filters.location !== 'all') chips.push({ key: 'location', label: `Location: ${filters.location}` });
     if (filters.propertyType && filters.propertyType !== 'all') chips.push({ key: 'propertyType', label: `Type: ${filters.propertyType}` });
     if (filters.bedrooms && filters.bedrooms !== 'all') chips.push({ key: 'bedrooms', label: `Beds: ${filters.bedrooms}` });
@@ -116,7 +120,8 @@ const SearchHeader = ({
 
   const clearSingleFilter = (chipKey) => {
     const resetMap = {
-      areaType: 'all',
+      state: 'all',
+      area: 'all',
       location: 'all',
       propertyType: 'all',
       bedrooms: 'all',
@@ -167,7 +172,7 @@ const SearchHeader = ({
               onClick={() => clearSingleFilter(chip.key)}
               className="text-xs px-2.5 py-1 rounded-full border border-[#e2e8f0] bg-white hover:border-[#9f7539]/40 text-[#475467]"
             >
-              {chip.label} <span className="ml-1">�</span>
+              {chip.label} <span className="ml-1">×</span>
             </button>
           ))}
           <button

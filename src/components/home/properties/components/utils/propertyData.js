@@ -52,6 +52,27 @@ const LAGOS_AREAS = {
   }
 };
 
+const DELTA_AREAS = {
+  north: {
+    areaLabel: 'Delta North',
+    locations: ['Asaba', 'Ibusa', 'Okpanam', 'Agbor', 'Issele-Uku'],
+    priceRange: { min: 700000, max: 4500000 },
+    propertyTypes: ['Apartment', 'Duplex', 'Flat', 'Bungalow']
+  },
+  central: {
+    areaLabel: 'Delta Central',
+    locations: ['Warri', 'Effurun', 'Sapele', 'Ughelli', 'Abraka'],
+    priceRange: { min: 800000, max: 5000000 },
+    propertyTypes: ['Apartment', 'Duplex', 'Terrace', 'Flat']
+  },
+  south: {
+    areaLabel: 'Delta South',
+    locations: ['Ozoro', 'Oleh', 'Burutu', 'Koko', 'Bomadi'],
+    priceRange: { min: 650000, max: 4000000 },
+    propertyTypes: ['Apartment', 'Flat', 'Mini-Flat', 'Bungalow']
+  }
+};
+
 const MANAGEMENT_TYPES = {
   domihive_managed: {
     name: 'DomiHive Managed',
@@ -114,9 +135,13 @@ export const generateNigerianProperties = (count = 80) => {
   const managementTypes = Object.keys(MANAGEMENT_TYPES);
   
   for (let i = 1; i <= count; i++) {
-    const isIsland = Math.random() > 0.4;
-    const areaType = isIsland ? 'island' : 'mainland';
-    const areaData = LAGOS_AREAS[areaType];
+    const state = Math.random() > 0.8 ? 'Delta' : 'Lagos';
+    const isLagos = state === 'Lagos';
+    const areaType = isLagos
+      ? (Math.random() > 0.4 ? 'island' : 'mainland')
+      : (['north', 'central', 'south'][Math.floor(Math.random() * 3)]);
+    const areaData = isLagos ? LAGOS_AREAS[areaType] : DELTA_AREAS[areaType];
+    const areaLabel = isLagos ? (areaType === 'island' ? 'Lagos Island' : 'Lagos Mainland') : areaData.areaLabel;
     
     const managementType = managementTypes[Math.floor(Math.random() * managementTypes.length)];
     const mgmtConfig = MANAGEMENT_TYPES[managementType];
@@ -124,14 +149,16 @@ export const generateNigerianProperties = (count = 80) => {
     const location = areaData.locations[Math.floor(Math.random() * areaData.locations.length)];
     
     let price;
-    if (areaType === 'island') {
+    if (isLagos && areaType === 'island') {
       price = mgmtConfig.name === 'DomiHive Managed' 
         ? 3500000 + Math.random() * 6500000
         : 3000000 + Math.random() * 5000000;
-    } else {
+    } else if (isLagos) {
       price = mgmtConfig.name === 'DomiHive Managed'
         ? 1200000 + Math.random() * 2800000
         : 800000 + Math.random() * 2200000;
+    } else {
+      price = areaData.priceRange.min + Math.random() * (areaData.priceRange.max - areaData.priceRange.min);
     }
     
     let bedrooms;
@@ -146,7 +173,7 @@ export const generateNigerianProperties = (count = 80) => {
       Math.floor(Math.random() * areaData.propertyTypes.length)
     ];
     
-    const imageSet = areaType === 'island' ? 'luxury' : 'standard';
+    const imageSet = isLagos && areaType === 'island' ? 'luxury' : 'standard';
     const images = [
       NIGERIAN_PROPERTY_IMAGES[imageSet][Math.floor(Math.random() * NIGERIAN_PROPERTY_IMAGES[imageSet].length)],
       NIGERIAN_PROPERTY_IMAGES.interior[Math.floor(Math.random() * NIGERIAN_PROPERTY_IMAGES.interior.length)]
@@ -158,7 +185,10 @@ export const generateNigerianProperties = (count = 80) => {
       id: `property_${i.toString().padStart(3, '0')}`,
       title: `${bedrooms} Bedroom ${propertyType} in ${location}`,
       price: Math.round(price),
-      location: `${location}, Lagos ${areaType === 'island' ? 'Island' : 'Mainland'}`,
+      location: `${location}, ${areaLabel}, ${state}`,
+      state,
+      area: areaLabel,
+      locationName: location,
       areaType: areaType,
       bedrooms: bedrooms,
       bathrooms: Math.max(1, bedrooms - (Math.random() > 0.7 ? 0 : 1)),

@@ -25,7 +25,8 @@ const Properties = () => {
   
   const [filters, setFilters] = useState({
     searchQuery: '',
-    areaType: 'all',
+    state: 'all',
+    area: 'all',
     location: 'all',
     propertyType: 'all',
     bedrooms: 'all',
@@ -134,9 +135,13 @@ const Properties = () => {
       );
     }
     
-    if (filters.areaType !== 'all') {
+    if (filters.state !== 'all') {
+      filtered = filtered.filter(property => property.state === filters.state);
+    }
+
+    if (filters.area !== 'all') {
       filtered = filtered.filter(property => 
-        property.areaType === filters.areaType
+        property.area === filters.area
       );
     }
     
@@ -214,10 +219,11 @@ const Properties = () => {
   };
   
   const handleClearFilters = () => {
-    setFilters({
-      searchQuery: '',
-      areaType: 'all',
-      location: 'all',
+      setFilters({
+        searchQuery: '',
+        state: 'all',
+        area: 'all',
+        location: 'all',
       propertyType: 'all',
       bedrooms: 'all',
       priceRange: 'all',
@@ -280,7 +286,7 @@ const Properties = () => {
                 </h2>
                 <p className="text-gray-600">
                   Showing {displayedProperties.length} of {filteredProperties.length} properties
-                  {filters.areaType !== 'all' && ` in ${filters.areaType === 'island' ? 'Lagos Island' : 'Lagos Mainland'}`}
+                  {filters.area !== 'all' && ` in ${filters.area}`}
                 </p>
               </div>
               
@@ -344,7 +350,7 @@ const Properties = () => {
                 </div>
               </div>
               
-              {(filters.searchQuery || filters.areaType !== 'all' || filters.location !== 'all' || 
+              {(filters.searchQuery || filters.state !== 'all' || filters.area !== 'all' || filters.location !== 'all' || 
                 filters.propertyType !== 'all' || filters.bedrooms !== 'all' || 
                 filters.priceRange !== 'all' || filters.managementType !== 'all' || filters.listingType !== 'rent') && (
                 <div className="mt-6 text-center">

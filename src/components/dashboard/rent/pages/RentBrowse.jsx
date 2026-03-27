@@ -10,7 +10,8 @@ import PropertyGrid from '../components/browse-properties/components/PropertyGri
 
 const DEFAULT_FILTERS = {
   searchQuery: '',
-  areaType: 'all',
+  state: 'all',
+  area: 'all',
   location: 'all',
   propertyType: 'all',
   bedrooms: 'all',
@@ -30,7 +31,8 @@ const DEFAULT_FILTERS = {
 
 const FILTER_KEYS = [
   'searchQuery',
-  'areaType',
+  'state',
+  'area',
   'location',
   'propertyType',
   'bedrooms',
@@ -124,8 +126,12 @@ const applyFilters = (allProperties, filters) => {
     filtered = filtered.filter((property) => property.managementType === filters.managementType);
   }
 
-  if (filters.areaType !== 'all') {
-    filtered = filtered.filter((property) => property.areaType === filters.areaType);
+  if (filters.state !== 'all') {
+    filtered = filtered.filter((property) => property.state === filters.state);
+  }
+
+  if (filters.area !== 'all') {
+    filtered = filtered.filter((property) => property.area === filters.area);
   }
 
   if (filters.location !== 'all') {

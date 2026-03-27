@@ -17,9 +17,10 @@ const SearchHeader = ({
   
   useEffect(() => {
     let count = 0;
-    const { areaType, location, propertyType, bedrooms, priceRange, managementType, listingType } = filters;
+    const { state, area, location, propertyType, bedrooms, priceRange, managementType, listingType } = filters;
     
-    if (areaType && areaType !== 'all') count++;
+    if (state && state !== 'all') count++;
+    if (area && area !== 'all') count++;
     if (location && location !== 'all') count++;
     if (propertyType && propertyType !== 'all') count++;
     if (bedrooms && bedrooms !== 'all') count++;
@@ -47,7 +48,8 @@ const SearchHeader = ({
   const handleClearFilters = () => {
     if (onFilterChange) {
       onFilterChange({
-        areaType: 'all',
+        state: 'all',
+        area: 'all',
         location: 'all',
         propertyType: 'all',
         bedrooms: 'all',
