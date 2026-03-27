@@ -41,8 +41,11 @@ const UNIT_TYPE_OPTIONS = [
 ];
 
 const AMENITIES = [
-  "CCTV",
   "WiFi",
+  "A/C",
+  "Jacuzzi",
+  "Central Water Heater System",
+  "POP Ceilings",
 ];
 
 const formatAmountInWords = (value) => {

@@ -3,10 +3,9 @@ import HorizontalScroll from './components/HorizontalScroll';
 
 // Import components
 import PriceSlider from './components/PriceSlider';
-import BedroomCheckboxes from './components/BedroomCheckboxes';
-import BathroomCheckboxes from './components/BathroomCheckboxes';
 import FurnishingOptions from './components/FurnishingOptions';
 import AmenitiesGrid from './components/AmenitiesGrid';
+import GymToggle from './components/GymToggle';
 import PetPolicyToggle from './components/PetPolicyToggle';
 import PropertyAgeSelect from './components/PropertyAgeSelect';
 
@@ -66,22 +65,6 @@ const AdvancedFilterOverlay = ({
           />
         </div>
         
-        {/* Bedrooms */}
-        <div className="filter-section min-w-[180px] p-4">
-          <BedroomCheckboxes
-            selected={filters.advancedBedrooms || []}
-            onChange={(advancedBedrooms) => onFilterChange({ advancedBedrooms })}
-          />
-        </div>
-
-        {/* Bathrooms */}
-        <div className="filter-section min-w-[180px] p-4">
-          <BathroomCheckboxes
-            selected={filters.bathrooms || []}
-            onChange={(bathrooms) => onFilterChange({ bathrooms })}
-          />
-        </div>
-        
         {/* Furnishing */}
         <div className="filter-section min-w-[200px] p-4">
           <FurnishingOptions
@@ -100,6 +83,18 @@ const AdvancedFilterOverlay = ({
                 ? current.filter(id => id !== amenityId)
                 : [...current, amenityId];
               onFilterChange({ amenities: newAmenities });
+            }}
+          />
+        </div>
+
+        <div className="filter-section min-w-[180px] p-4">
+          <GymToggle
+            enabled={Boolean((filters.amenities || []).includes('gym'))}
+            onChange={(enabled) => {
+              const current = filters.amenities || [];
+              const hasGym = current.includes('gym');
+              if (enabled && !hasGym) onFilterChange({ amenities: [...current, 'gym'] });
+              if (!enabled && hasGym) onFilterChange({ amenities: current.filter((id) => id !== 'gym') });
             }}
           />
         </div>

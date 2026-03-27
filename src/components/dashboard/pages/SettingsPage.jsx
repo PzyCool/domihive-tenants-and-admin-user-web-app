@@ -169,10 +169,19 @@ const SettingsPage = () => {
       '--primary-color': '#0E1F42',
       '--accent-color': '#9F7539',
       '--accent-light': '#b58a4a',
-      '--page-bg': '#111827',
-      '--card-bg': '#1f2937',
-      '--text-color': '#e5e7eb',
-      '--text-muted': '#cbd5e1'
+      '--page-bg': '#0b0f17',
+      '--card-bg': '#0f172a',
+      '--text-color': '#f8fafc',
+      '--text-muted': '#94a3b8'
+    },
+    'gold-dark': {
+      '--primary-color': '#0E1F42',
+      '--accent-color': '#9F7539',
+      '--accent-light': '#b58a4a',
+      '--page-bg': '#15110b',
+      '--card-bg': '#1e1710',
+      '--text-color': '#f8f3eb',
+      '--text-muted': '#cfbfa7'
     },
     'true-black': {
       '--primary-color': '#0E1F42',
@@ -190,9 +199,13 @@ const SettingsPage = () => {
     Object.entries(selected).forEach(([key, value]) => {
       document.documentElement.style.setProperty(key, value);
     });
-    document.documentElement.setAttribute('data-theme', themeId);
-    document.body?.setAttribute('data-theme', themeId);
+    const themeAttr = themeId === 'gold-dark' ? 'dark-gray' : themeId;
+    document.documentElement.setAttribute('data-theme', themeAttr);
+    document.body?.setAttribute('data-theme', themeAttr);
     localStorage.setItem('domihive_theme', themeId);
+    if (themeId !== 'light') {
+      localStorage.setItem('domihive_dark_theme', themeId);
+    }
   };
 
   // Apply theme on mount
@@ -482,8 +495,8 @@ const SettingsPage = () => {
         <h3 className="text-xl font-semibold text-[var(--text-color,#0e1f42)] mb-4">Theme</h3>
         <div className="grid grid-cols-1 md:grid-cols-3 gap-4 md:gap-6 mb-6">
           {[
-            { id: 'light', label: 'Light', blocks: ['#0e1f42', '#f8fafc', '#ffffff'] },
-            { id: 'dark-gray', label: 'Dark Gray', blocks: ['#1f2937', '#2f3748', '#3a404c'] },
+            { id: 'dark-gray', label: 'Blue Dark', blocks: ['#0b0f17', '#0f172a', '#111827'] },
+            { id: 'gold-dark', label: 'Gold Dark', blocks: ['#15110b', '#1e1710', '#2a1f14'] },
             { id: 'true-black', label: 'True Black', blocks: ['#000000', '#0b0b0b', '#151515'] }
           ].map((themeOption) => (
             <button

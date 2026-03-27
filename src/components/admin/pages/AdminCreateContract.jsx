@@ -1,5 +1,5 @@
-import React, { useState } from "react";
-import { Link, useNavigate } from "react-router-dom";
+import React, { useEffect, useMemo, useState } from "react";
+import { Link, useNavigate, useSearchParams } from "react-router-dom";
 import { Loader2, UserCircle2 } from "lucide-react";
 import { useAdmin } from "../../../context/AdminContext";
 
@@ -26,7 +26,15 @@ const sleep = (ms) => new Promise((resolve) => setTimeout(resolve, ms));
 
 export default function AdminCreateContract() {
   const navigate = useNavigate();
-  const { setClients } = useAdmin();
+  const [searchParams] = useSearchParams();
+  const { clients, setClients } = useAdmin();
+  const mode = searchParams.get("mode");
+  const renewalClientId = searchParams.get("clientId");
+  const isRenewalMode = mode === "renew" && Boolean(renewalClientId);
+  const renewalClient = useMemo(
+    () => clients.find((c) => c.id === renewalClientId) || null,
+    [clients, renewalClientId]
+  );
   const [errors, setErrors] = useState({});
   const [isDraftSaved, setIsDraftSaved] = useState(false);
   const [isSubmitting, setIsSubmitting] = useState(false);
@@ -56,6 +64,40 @@ export default function AdminCreateContract() {
     contractId: generateContractId(),
     notes: "",
   });
+
+  useEffect(() => {
+    if (!isRenewalMode || !renewalClient) return;
+
+    const feePercent = Number(renewalClient.managementFeePercent || 10);
+    const durationYearsMatch = String(renewalClient.contractDuration || "").match(/^(\d+)/);
+    const durationYears = durationYearsMatch ? durationYearsMatch[1] : "5";
+    const currentEnd = String(renewalClient.contractDuration || "").match(/-\s*([0-9]{4}-[0-9]{2}-[0-9]{2})\)/)?.[1] || "";
+    const suggestedStart = currentEnd
+      ? (() => {
+          const d = new Date(currentEnd);
+          d.setDate(d.getDate() + 1);
+          return d.toISOString().slice(0, 10);
+        })()
+      : "";
+
+    setForm((prev) => ({
+      ...prev,
+      newClientName: renewalClient.name || "",
+      newClientEmail: renewalClient.email || "",
+      newClientPhone: renewalClient.phone || "",
+      profileImagePreview: renewalClient.avatar || "",
+      bankName: renewalClient.bankName || "",
+      accountName: renewalClient.accountName || renewalClient.name || "",
+      accountNumber: renewalClient.accountNumber || "",
+      contractType: renewalClient.contractType || "Full Management",
+      durationYears,
+      startDate: suggestedStart || prev.startDate,
+      endDate: addYearsToDate(suggestedStart || prev.startDate, durationYears),
+      managementFeeValue: String(feePercent || 10),
+      contractId: generateContractId(),
+      notes: `Renewal for ${renewalClient.name}${renewalClient.contractId ? ` (Previous: ${renewalClient.contractId})` : ""}`,
+    }));
+  }, [isRenewalMode, renewalClient]);
 
   const setField = (name, value) => {
     setForm((prev) => ({ ...prev, [name]: value }));
@@ -115,8 +157,8 @@ export default function AdminCreateContract() {
     return Object.keys(nextErrors).length === 0;
   };
 
-  const buildClientPayload = (statusLabel) => ({
-    id: `client-${Date.now()}`,
+  const buildClientPayload = (statusLabel, existingClient = null) => ({
+    id: existingClient?.id || `client-${Date.now()}`,
     name: form.newClientName.trim(),
     avatar:
       form.profileImagePreview || "https://randomuser.me/api/portraits/lego/1.jpg",
@@ -148,11 +190,32 @@ export default function AdminCreateContract() {
     pendingPropertyAssignment: true,
     pendingPropertyAssignmentNote:
       "Pending: create a property for this client and link it.",
+    contractId: form.contractId,
+    previousContracts: [
+      ...(Array.isArray(existingClient?.previousContracts) ? existingClient.previousContracts : []),
+      ...(existingClient?.contractId
+        ? [
+            {
+              contractId: existingClient.contractId,
+              contractStatus: existingClient.contractStatus || "Active",
+              contractType: existingClient.contractType || "Full Management",
+              contractDuration: existingClient.contractDuration || "",
+              managementFeePercent: Number(existingClient.managementFeePercent || 0),
+              renewedAt: new Date().toISOString(),
+            },
+          ]
+        : []),
+    ],
   });
 
   const handleSaveDraft = () => {
-    const payload = buildClientPayload("Draft");
-    setClients((prev) => [payload, ...prev]);
+    if (isRenewalMode && renewalClient) {
+      const payload = buildClientPayload("Draft", renewalClient);
+      setClients((prev) => prev.map((c) => (c.id === renewalClient.id ? payload : c)));
+    } else {
+      const payload = buildClientPayload("Draft");
+      setClients((prev) => [payload, ...prev]);
+    }
     setIsDraftSaved(true);
   };
 
@@ -164,12 +227,18 @@ export default function AdminCreateContract() {
 
     await sleep(1200);
 
-    const payload = buildClientPayload("Active");
-    setClients((prev) => [payload, ...prev]);
+    if (isRenewalMode && renewalClient) {
+      const payload = buildClientPayload("Active", renewalClient);
+      setClients((prev) => prev.map((c) => (c.id === renewalClient.id ? payload : c)));
+    } else {
+      const payload = buildClientPayload("Active");
+      setClients((prev) => [payload, ...prev]);
+    }
     navigate("/admin/clients", {
       state: {
-        infoBanner:
-          "Contract created. Pending: please create a property for this client and link it.",
+        infoBanner: isRenewalMode
+          ? "Contract renewed successfully."
+          : "Contract created. Pending: please create a property for this client and link it.",
       },
     });
   };
@@ -182,13 +251,15 @@ export default function AdminCreateContract() {
           <span className="px-1">&gt;</span>
           <Link to="/admin/clients" className="hover:text-[#9F7539]">Clients</Link>
           <span className="px-1">&gt;</span>
-          <span>Create New Contract</span>
+          <span>{isRenewalMode ? "Renew Client Contract" : "Create New Contract"}</span>
         </div>
         <h1 className="text-xl sm:text-2xl font-bold text-[#0e1f42] dark:text-white mt-2">
-          Create New Contract
+          {isRenewalMode ? "Renew Client Contract" : "Create New Contract"}
         </h1>
         <p className="text-xs sm:text-sm text-gray-600 dark:text-gray-400">
-          Set up a new property management contract and link it to a client and property.
+          {isRenewalMode
+            ? "Review and renew this client contract with updated terms."
+            : "Set up a new property management contract and link it to a client and property."}
         </p>
       </div>
 
@@ -416,7 +487,7 @@ export default function AdminCreateContract() {
               Creating Contract...
             </>
           ) : (
-            "Create Contract"
+            isRenewalMode ? "Renew Contract" : "Create Contract"
           )}
         </button>
       </div>

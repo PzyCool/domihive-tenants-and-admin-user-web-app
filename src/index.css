@@ -84,10 +84,17 @@ body.dashboard-themed .text-gray-500 {
 }
 
 :root[data-theme="dark-gray"] {
-  --page-bg: #111827;
-  --card-bg: #1f2937;
-  --text-color: #e5e7eb;
-  --text-muted: #cbd5e1;
+  --page-bg: #0b0f17;
+  --card-bg: #0f172a;
+  --text-color: #f8fafc;
+  --text-muted: #94a3b8;
+}
+
+:root[data-theme="gold-dark"] {
+  --page-bg: #15110b;
+  --card-bg: #1e1710;
+  --text-color: #f8f3eb;
+  --text-muted: #cfbfa7;
 }
 
 :root[data-theme="true-black"] {
@@ -98,18 +105,22 @@ body.dashboard-themed .text-gray-500 {
 }
 
 body.dashboard-themed[data-theme="dark-gray"],
+body.dashboard-themed[data-theme="gold-dark"],
 body.dashboard-themed[data-theme="true-black"] {
   background: var(--page-bg, #111827) !important;
   color: var(--text-color, #e5e7eb) !important;
 }
 
 body.dashboard-themed[data-theme="dark-gray"] .bg-white,
+body.dashboard-themed[data-theme="gold-dark"] .bg-white,
 body.dashboard-themed[data-theme="true-black"] .bg-white {
   background: var(--card-bg) !important;
   color: var(--text-color) !important;
 }
 body.dashboard-themed[data-theme="dark-gray"] .bg-gray-50,
 body.dashboard-themed[data-theme="dark-gray"] .bg-gray-100,
+body.dashboard-themed[data-theme="gold-dark"] .bg-gray-50,
+body.dashboard-themed[data-theme="gold-dark"] .bg-gray-100,
 body.dashboard-themed[data-theme="true-black"] .bg-gray-50,
 body.dashboard-themed[data-theme="true-black"] .bg-gray-100 {
   background: var(--page-bg) !important;
@@ -119,10 +130,36 @@ body.dashboard-themed[data-theme="true-black"] .bg-gray-100 {
 body.dashboard-themed[data-theme="dark-gray"] .text-gray-600,
 body.dashboard-themed[data-theme="dark-gray"] .text-gray-700,
 body.dashboard-themed[data-theme="dark-gray"] .text-gray-800,
+body.dashboard-themed[data-theme="gold-dark"] .text-gray-600,
+body.dashboard-themed[data-theme="gold-dark"] .text-gray-700,
+body.dashboard-themed[data-theme="gold-dark"] .text-gray-800,
 body.dashboard-themed[data-theme="true-black"] .text-gray-600,
 body.dashboard-themed[data-theme="true-black"] .text-gray-700,
 body.dashboard-themed[data-theme="true-black"] .text-gray-800 {
   color: var(--text-muted) !important;
+}
+
+/* Property cards: improve contrast for Blue Dark / dark themes */
+body.dashboard-themed[data-theme="dark-gray"] .property-price-main,
+body.dashboard-themed[data-theme="gold-dark"] .property-price-main,
+body.dashboard-themed[data-theme="true-black"] .property-price-main {
+  color: var(--accent-color, #9f7539) !important;
+}
+
+body.dashboard-themed[data-theme="dark-gray"] .property-view-details-btn,
+body.dashboard-themed[data-theme="gold-dark"] .property-view-details-btn,
+body.dashboard-themed[data-theme="true-black"] .property-view-details-btn {
+  background: transparent !important;
+  border-color: rgba(255, 255, 255, 0.35) !important;
+  color: #ffffff !important;
+}
+
+body.dashboard-themed[data-theme="dark-gray"] .property-view-details-btn:hover,
+body.dashboard-themed[data-theme="gold-dark"] .property-view-details-btn:hover,
+body.dashboard-themed[data-theme="true-black"] .property-view-details-btn:hover {
+  background: rgba(255, 255, 255, 0.12) !important;
+  border-color: var(--accent-color, #9f7539) !important;
+  color: #ffffff !important;
 }
 
 /* Force text to white/near-white in dark themes */

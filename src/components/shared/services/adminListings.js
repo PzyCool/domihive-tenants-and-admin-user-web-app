@@ -38,6 +38,13 @@ const normalizeAmenityIds = (property, unit) => {
   if (/\bac\b|air/.test(source)) ids.push("ac");
   if (/swimming/.test(source)) ids.push("swimming_pool");
   if (/cctv/.test(source)) ids.push("cctv");
+  if (/inverter/.test(source)) ids.push("inverter");
+  if (/solar/.test(source)) ids.push("solar_system");
+  if (/external garden|garden/.test(source)) ids.push("external_garden");
+  if (/jacuzzi/.test(source)) ids.push("jacuzzi");
+  if (/central water heater|water heater/.test(source)) ids.push("central_water_heater_system");
+  if (/pop ceiling|pop ceilings/.test(source)) ids.push("pop_ceilings");
+  if (/\bgym\b/.test(source)) ids.push("gym");
   return Array.from(new Set(ids));
 };
 

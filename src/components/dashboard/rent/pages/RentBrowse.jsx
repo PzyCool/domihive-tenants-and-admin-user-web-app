@@ -20,8 +20,6 @@ const DEFAULT_FILTERS = {
   managementType: 'all',
   sortBy: 'newest',
   isExpanded: false,
-  advancedBedrooms: [],
-  bathrooms: [],
   amenities: [],
   furnishing: '',
   petsAllowed: false,
@@ -64,9 +62,7 @@ const parseParamsToState = (searchParams) => {
     }
   });
 
-  nextFilters.bathrooms = parseList(searchParams.get('bathrooms'));
   nextFilters.amenities = parseList(searchParams.get('amenities'));
-  nextFilters.advancedBedrooms = parseList(searchParams.get('advancedBedrooms'));
 
   const nextViewType = searchParams.get('view') || VIEW_TYPES.LIST;
   const nextPage = Math.max(1, Number(searchParams.get('page') || '1'));
@@ -90,14 +86,8 @@ const buildSearchParamsFromState = ({ filters, currentPage, viewType }) => {
     }
   });
 
-  if (Array.isArray(filters.bathrooms) && filters.bathrooms.length) {
-    params.set('bathrooms', filters.bathrooms.join(','));
-  }
   if (Array.isArray(filters.amenities) && filters.amenities.length) {
     params.set('amenities', filters.amenities.join(','));
-  }
-  if (Array.isArray(filters.advancedBedrooms) && filters.advancedBedrooms.length) {
-    params.set('advancedBedrooms', filters.advancedBedrooms.join(','));
   }
 
   if (viewType && viewType !== VIEW_TYPES.LIST) {
@@ -158,22 +148,6 @@ const applyFilters = (allProperties, filters) => {
     } else {
       filtered = filtered.filter((property) => property.bedrooms === Number(filters.bedrooms));
     }
-  }
-
-  if (Array.isArray(filters.advancedBedrooms) && filters.advancedBedrooms.length) {
-    filtered = filtered.filter((property) =>
-      filters.advancedBedrooms.some((selected) =>
-        selected === '4' ? property.bedrooms >= 4 : property.bedrooms === Number(selected)
-      )
-    );
-  }
-
-  if (Array.isArray(filters.bathrooms) && filters.bathrooms.length) {
-    filtered = filtered.filter((property) =>
-      filters.bathrooms.some((selected) =>
-        selected === '4' ? property.bathrooms >= 4 : property.bathrooms === Number(selected)
-      )
-    );
   }
 
   if (filters.bathroomsCount !== 'all') {

@@ -1,5 +1,6 @@
 import React, { useEffect, useMemo, useState } from 'react';
 import { useLocation, useNavigate } from 'react-router-dom';
+import { Sun, Moon } from 'lucide-react';
 import { useAuth } from '../../../context/AuthContext';
 import { useDashboard } from '../../../context/DashboardContext';
 import { useJourney } from '../rent/contexts/JourneyContext';
@@ -16,6 +17,81 @@ const Header = ({ toggleSidebar, isMobile }) => {
   const [showUserDropdown, setShowUserDropdown] = useState(false);
   const [showDashboardSwitcher, setShowDashboardSwitcher] = useState(false);
   const [showNotificationsDrawer, setShowNotificationsDrawer] = useState(false);
+  const [isDarkMode, setIsDarkMode] = useState(() => {
+    const saved = localStorage.getItem('domihive_theme') || 'light';
+    return saved === 'dark-gray' || saved === 'gold-dark' || saved === 'true-black';
+  });
+
+  const themeMap = {
+    light: {
+      '--primary-color': '#0E1F42',
+      '--accent-color': '#9F7539',
+      '--accent-light': '#b58a4a',
+      '--page-bg': '#f8f9fa',
+      '--card-bg': '#ffffff',
+      '--text-color': '#0e1f42',
+      '--text-muted': '#6c757d'
+    },
+    'dark-gray': {
+      '--primary-color': '#0E1F42',
+      '--accent-color': '#9F7539',
+      '--accent-light': '#b58a4a',
+      '--page-bg': '#0b0f17',
+      '--card-bg': '#0f172a',
+      '--text-color': '#f8fafc',
+      '--text-muted': '#94a3b8'
+    },
+    'gold-dark': {
+      '--primary-color': '#0E1F42',
+      '--accent-color': '#9F7539',
+      '--accent-light': '#b58a4a',
+      '--page-bg': '#15110b',
+      '--card-bg': '#1e1710',
+      '--text-color': '#f8f3eb',
+      '--text-muted': '#cfbfa7'
+    },
+    'true-black': {
+      '--primary-color': '#0E1F42',
+      '--accent-color': '#9F7539',
+      '--accent-light': '#b58a4a',
+      '--page-bg': '#000000',
+      '--card-bg': '#0b0b0b',
+      '--text-color': '#f8fafc',
+      '--text-muted': '#cbd5e1'
+    }
+  };
+
+  const applyTheme = (themeId) => {
+    const selected = themeMap[themeId] || themeMap.light;
+    Object.entries(selected).forEach(([key, value]) => {
+      document.documentElement.style.setProperty(key, value);
+    });
+    const themeAttr = themeId === 'gold-dark' ? 'dark-gray' : themeId;
+    document.documentElement.setAttribute('data-theme', themeAttr);
+    document.body?.setAttribute('data-theme', themeAttr);
+    localStorage.setItem('domihive_theme', themeId);
+    if (themeId !== 'light') {
+      localStorage.setItem('domihive_dark_theme', themeId);
+      setIsDarkMode(true);
+    } else {
+      setIsDarkMode(false);
+    }
+  };
+
+  const toggleTheme = () => {
+    const currentTheme = localStorage.getItem('domihive_theme') || 'light';
+    if (currentTheme === 'light') {
+      const preferredDarkTheme = localStorage.getItem('domihive_dark_theme') || 'dark-gray';
+      applyTheme(preferredDarkTheme);
+      return;
+    }
+    applyTheme('light');
+  };
+
+  useEffect(() => {
+    const savedTheme = localStorage.getItem('domihive_theme') || 'light';
+    applyTheme(savedTheme);
+  }, []);
 
   useEffect(() => {
     const path = location.pathname;
@@ -159,6 +235,14 @@ const Header = ({ toggleSidebar, isMobile }) => {
 
             <div className="quick-actions hidden lg:flex items-center gap-1">
               <button
+                className="action-btn p-2 rounded-lg hover:bg-gray-100 text-gray-700 hover:text-gray-900 transition-colors"
+                title={isDarkMode ? 'Switch to light mode' : 'Switch to dark mode'}
+                onClick={toggleTheme}
+              >
+                {isDarkMode ? <Sun size={16} /> : <Moon size={16} />}
+              </button>
+
+              <button
                 className="action-btn p-2 rounded-lg hover:bg-gray-100 text-gray-700 hover:text-gray-900 transition-colors relative"
                 title="Notifications"
                 onClick={(e) => {
@@ -174,12 +258,6 @@ const Header = ({ toggleSidebar, isMobile }) => {
                 </span>
               </button>
 
-              <button
-                className="action-btn p-2 rounded-lg hover:bg-gray-100 text-gray-700 hover:text-gray-900 transition-colors"
-                title="Help"
-              >
-                <i className="fas fa-question-circle"></i>
-              </button>
             </div>
 
             <div className="relative">

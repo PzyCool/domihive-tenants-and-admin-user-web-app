@@ -106,9 +106,9 @@ const AdminClientDetail = () => {
           </button>
           <button
             className="inline-flex items-center gap-2 px-3 py-2 text-xs border border-[#9F7539] rounded-md text-[#9F7539] bg-transparent"
-            onClick={() => navigate(`/admin/clients/contracts/new`)}
+            onClick={() => navigate(`/admin/clients/contracts/new?mode=renew&clientId=${client.id}`)}
           >
-            <Plus size={14} /> Create New Contract
+            <Plus size={14} /> Renew Client Contract
           </button>
           <button className="inline-flex items-center gap-2 px-3 py-2 text-xs rounded-md text-white bg-[#9F7539]">
             <Pencil size={14} /> Edit Client

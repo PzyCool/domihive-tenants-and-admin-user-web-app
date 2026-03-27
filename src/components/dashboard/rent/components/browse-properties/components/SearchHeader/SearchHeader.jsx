@@ -41,11 +41,9 @@ const SearchHeader = ({
       propertyType,
       bedrooms,
       bathroomsCount,
-      advancedBedrooms,
       managementType,
       priceMin,
       priceMax,
-      bathrooms,
       furnishing,
       amenities,
       petsAllowed,
@@ -58,10 +56,8 @@ const SearchHeader = ({
     if (propertyType && propertyType !== 'all') count++;
     if (bedrooms && bedrooms !== 'all') count++;
     if (bathroomsCount && bathroomsCount !== 'all') count++;
-    if (Array.isArray(advancedBedrooms) && advancedBedrooms.length) count++;
     if (managementType && managementType !== 'all') count++;
     if (priceMin || priceMax) count++;
-    if (Array.isArray(bathrooms) && bathrooms.length) count++;
     if (furnishing) count++;
     if (Array.isArray(amenities) && amenities.length) count++;
     if (petsAllowed) count++;
@@ -98,12 +94,10 @@ const SearchHeader = ({
       propertyType: 'all',
       bedrooms: 'all',
       bathroomsCount: 'all',
-      advancedBedrooms: [],
       managementType: 'all',
       searchQuery: '',
       priceMin: null,
       priceMax: null,
-      bathrooms: [],
       furnishing: '',
       amenities: [],
       petsAllowed: false,
@@ -170,8 +164,6 @@ const SearchHeader = ({
           onFilterChange({
             priceMin: null,
             priceMax: null,
-            advancedBedrooms: [],
-            bathrooms: [],
             furnishing: '',
             amenities: [],
             petsAllowed: false,

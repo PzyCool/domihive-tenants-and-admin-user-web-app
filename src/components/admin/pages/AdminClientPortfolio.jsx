@@ -1,7 +1,7 @@
 import React, { useMemo, useState } from "react";
 import { Link, useNavigate, useParams } from "react-router-dom";
 import { useAdmin } from "../../../context/AdminContext";
-import { Download, Plus, Eye } from "lucide-react";
+import { Download, Eye } from "lucide-react";
 
 const AdminClientPortfolio = () => {
   const { clientId } = useParams();
@@ -66,9 +66,6 @@ const AdminClientPortfolio = () => {
             <button className="inline-flex items-center gap-2 px-3 py-2 text-xs border border-gray-200 dark:border-white/10 rounded-md text-gray-600 dark:text-gray-200 bg-white dark:bg-[#0f172a]">
               <Download size={14} /> Generate Report
             </button>
-            <button className="inline-flex items-center gap-2 px-3 py-2 text-xs rounded-md text-white bg-[#9F7539]">
-              <Plus size={14} /> Add Property to Portfolio
-            </button>
           </div>
         </div>
       </div>
@@ -104,10 +101,10 @@ const AdminClientPortfolio = () => {
         <h2 className="text-sm font-semibold text-[#0e1f42] dark:text-white">Properties</h2>
         <div className="flex items-center gap-4 text-xs">
           {[
-            { key: "all", label: "All Units" },
-            { key: "full", label: "Fully Occupied" },
-            { key: "partial", label: "Partially Occupied" },
-            { key: "vacant", label: "Vacant" }
+            { key: "all", label: "All Properties" },
+            { key: "full", label: "Fully Occupied Properties" },
+            { key: "partial", label: "Partially Occupied Properties" },
+            { key: "vacant", label: "No Occupancy" }
           ].map((t) => (
             <button
               key={t.key}

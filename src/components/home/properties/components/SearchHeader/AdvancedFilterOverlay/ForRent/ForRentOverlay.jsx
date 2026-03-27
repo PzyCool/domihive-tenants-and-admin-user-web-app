@@ -2,10 +2,9 @@
 import React from 'react';
 import HorizontalScroll from './components/HorizontalScroll';
 import PriceSlider from './components/PriceSlider';
-import BedroomCheckboxes from './components/BedroomCheckboxes';
-import BathroomCheckboxes from './components/BathroomCheckboxes';
 import FurnishingOptions from './components/FurnishingOptions';
 import AmenitiesGrid from './components/AmenitiesGrid';
+import GymToggle from './components/GymToggle';
 import PetPolicyToggle from './components/PetPolicyToggle';
 import PropertyAgeSelect from './components/PropertyAgeSelect';
 
@@ -49,16 +48,6 @@ const ForRentOverlay = ({
           onPriceChange={(min, max) => onFilterChange({ priceMin: min, priceMax: max })}
         />
         
-        <BedroomCheckboxes
-          selected={filters.bedrooms || []}
-          onChange={(bedrooms) => onFilterChange({ bedrooms })}
-        />
-
-        <BathroomCheckboxes
-          selected={filters.bathrooms || []}
-          onChange={(bathrooms) => onFilterChange({ bathrooms })}
-        />
-        
         <FurnishingOptions
           selected={filters.furnishing || ''}
           onChange={(furnishing) => onFilterChange({ furnishing })}
@@ -72,6 +61,16 @@ const ForRentOverlay = ({
               ? current.filter(id => id !== amenityId)
               : [...current, amenityId];
             onFilterChange({ amenities: newAmenities });
+          }}
+        />
+
+        <GymToggle
+          enabled={Boolean((filters.amenities || []).includes('gym'))}
+          onChange={(enabled) => {
+            const current = filters.amenities || [];
+            const hasGym = current.includes('gym');
+            if (enabled && !hasGym) onFilterChange({ amenities: [...current, 'gym'] });
+            if (!enabled && hasGym) onFilterChange({ amenities: current.filter((id) => id !== 'gym') });
           }}
         />
         
@@ -97,20 +96,6 @@ const ForRentOverlay = ({
             />
           </div>
           
-          <div className="filter-section min-w-[180px] p-4">
-            <BedroomCheckboxes
-              selected={filters.bedrooms || []}
-              onChange={(bedrooms) => onFilterChange({ bedrooms })}
-            />
-          </div>
-
-          <div className="filter-section min-w-[180px] p-4">
-            <BathroomCheckboxes
-              selected={filters.bathrooms || []}
-              onChange={(bathrooms) => onFilterChange({ bathrooms })}
-            />
-          </div>
-          
           <div className="filter-section min-w-[200px] p-4">
             <FurnishingOptions
               selected={filters.furnishing || ''}
@@ -127,6 +112,18 @@ const ForRentOverlay = ({
                   ? current.filter(id => id !== amenityId)
                   : [...current, amenityId];
                 onFilterChange({ amenities: newAmenities });
+              }}
+            />
+          </div>
+
+          <div className="filter-section min-w-[180px] p-4">
+            <GymToggle
+              enabled={Boolean((filters.amenities || []).includes('gym'))}
+              onChange={(enabled) => {
+                const current = filters.amenities || [];
+                const hasGym = current.includes('gym');
+                if (enabled && !hasGym) onFilterChange({ amenities: [...current, 'gym'] });
+                if (!enabled && hasGym) onFilterChange({ amenities: current.filter((id) => id !== 'gym') });
               }}
             />
           </div>

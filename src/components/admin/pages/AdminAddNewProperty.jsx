@@ -55,6 +55,19 @@ const PROPERTY_AGE_OPTIONS = [
   { value: "established", label: "Old" },
 ];
 
+const PROPERTY_FEATURE_OPTIONS = [
+  "WiFi",
+  "Parking",
+  "Security",
+  "Generator",
+  "Swimming Pool",
+  "Gym",
+  "Inverter",
+  "Solar System",
+  "External Garden",
+  "CCTV",
+];
+
 const Section = ({ title, children }) => (
   <section className="rounded-md border border-gray-200 dark:border-white/5 bg-white dark:bg-[#111827] transition-colors">
     <div className="border-b border-gray-100 dark:border-white/5 px-4 py-3">
@@ -231,17 +244,7 @@ export default function AdminAddNewProperty() {
     () => locations?.locations?.[form.area] || [],
     [locations?.locations, form.area]
   );
-  const amenities = useMemo(() => {
-    const base = locations?.amenities || ["WiFi", "Parking", "Security", "Generator"];
-    const filtered = base.filter((item) => {
-      const normalized = String(item).trim().toLowerCase();
-      return normalized !== "water" && normalized !== "ac";
-    });
-    if (!filtered.some((item) => String(item).toLowerCase() === "swimming pool")) {
-      filtered.push("Swimming Pool");
-    }
-    return filtered;
-  }, [locations?.amenities]);
+  const amenities = useMemo(() => PROPERTY_FEATURE_OPTIONS, []);
   const selectedPropertyType =
     PROPERTY_TYPE_OPTIONS.find((option) => option.value === form.type) || PROPERTY_TYPE_OPTIONS[0];
 

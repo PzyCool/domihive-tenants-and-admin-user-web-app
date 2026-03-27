@@ -7,7 +7,13 @@ const AmenitiesGrid = ({ selected = [], onToggle }) => {
     { id: 'security', label: 'Security', icon: 'shield-alt' },
     { id: 'generator', label: 'Gen', icon: 'bolt' },
     { id: 'ac', label: 'A/C', icon: 'snowflake' },
-    { id: 'swimming_pool', label: 'Pool', icon: 'swimmer' }
+    { id: 'swimming_pool', label: 'Pool', icon: 'swimmer' },
+    { id: 'inverter', label: 'Inverter', icon: 'battery-half' },
+    { id: 'solar_system', label: 'Solar', icon: 'sun' },
+    { id: 'external_garden', label: 'Garden', icon: 'leaf' },
+    { id: 'jacuzzi', label: 'Jacuzzi', icon: 'hot-tub' },
+    { id: 'central_water_heater_system', label: 'Water Heater', icon: 'fire' },
+    { id: 'pop_ceilings', label: 'POP Ceilings', icon: 'building' }
   ];
 
   const handleToggle = (amenityId) => {
@@ -23,7 +29,8 @@ const AmenitiesGrid = ({ selected = [], onToggle }) => {
         Amenities
       </p>
       
-      <div className="grid grid-cols-3 gap-1">
+      <div className="overflow-x-auto pb-1">
+        <div className="grid grid-flow-col grid-rows-2 auto-cols-[96px] gap-1 min-w-max">
         {amenities.map((amenity) => {
           const checked = isSelected(amenity.id);
           
@@ -47,6 +54,7 @@ const AmenitiesGrid = ({ selected = [], onToggle }) => {
             </button>
           );
         })}
+        </div>
       </div>
     </div>
   );

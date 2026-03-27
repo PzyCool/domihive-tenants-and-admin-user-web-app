@@ -31,7 +31,7 @@ const emptyForm = {
   videoWalkthrough: "",
 };
 
-const AMENITIES = ["CCTV", "WiFi"];
+const AMENITIES = ["WiFi", "A/C", "Jacuzzi", "Central Water Heater System", "POP Ceilings"];
 
 const UNIT_TYPE_OPTIONS = [
   {

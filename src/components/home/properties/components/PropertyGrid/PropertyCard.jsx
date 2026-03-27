@@ -20,7 +20,23 @@ const PropertyCard = ({
     }
     return `₦${price.toLocaleString('en-NG')}/year`;
   };
-  
+
+  const formatPriceWords = (price) => {
+    const amount = Number(price) || 0;
+    if (amount >= 1000000000) return `${(amount / 1000000000).toFixed(1)} billion naira yearly`;
+    if (amount >= 1000000) return `${(amount / 1000000).toFixed(1)} million naira yearly`;
+    if (amount >= 1000) return `${(amount / 1000).toFixed(1)} thousand naira yearly`;
+    return `${amount.toLocaleString('en-NG')} naira yearly`;
+  };
+  const formatSize = (size) => {
+    const raw = String(size ?? '').trim();
+    if (!raw) return '—';
+    const normalized = raw.toLowerCase();
+    if (normalized.includes('sqm') || normalized.includes('sq m') || normalized.includes('m²')) {
+      return raw;
+    }
+    return `${raw} sqm`;
+  };
   const handleFavoriteClick = (e) => {
     e.stopPropagation();
     if (onToggleFavorite) onToggleFavorite(property, !isFavorite);
@@ -122,7 +138,7 @@ const PropertyCard = ({
             <button
               type="button"
               onClick={openImageModal}
-              className="absolute bottom-3 left-3 bg-[#0e1f42]/85 hover:bg-[#0e1f42] text-white text-xs px-3 py-1.5 rounded-full transition-colors"
+              className="absolute top-3 left-3 bg-[#0e1f42]/85 hover:bg-[#0e1f42] text-white text-xs px-3 py-1.5 rounded-full transition-colors"
             >
               Click to view full image
             </button>
@@ -131,9 +147,11 @@ const PropertyCard = ({
           <div className="lg:w-[58%] p-4 md:p-5 flex flex-col">
             <div className="flex items-start justify-between gap-3">
               <div>
-                <div className="text-3xl font-bold text-[#0e1f42] leading-tight">
+                <div className="property-price-main text-2xl font-bold text-[#0e1f42] leading-tight">
                   {formatPrice(property.price)}
                 </div>
+                <div className="text-xs text-gray-500 mt-1">{formatPriceWords(property.price)}</div>
+                <div className="text-gray-700 font-medium mt-1">{property.title}</div>
                 <div className="flex items-center gap-4 text-gray-600 text-sm mt-2">
                   <span className="inline-flex items-center gap-1.5">
                     <i className="fas fa-bed text-[#9f7539] text-[11px]"></i>
@@ -145,10 +163,9 @@ const PropertyCard = ({
                   </span>
                   <span className="inline-flex items-center gap-1.5">
                     <i className="fas fa-ruler-combined text-[#9f7539] text-[11px]"></i>
-                    {property.size}
+                    {formatSize(property.size)}
                   </span>
                 </div>
-                <div className="text-gray-700 font-medium mt-1">{property.title}</div>
                 <div className="text-gray-600 text-sm mt-1 inline-flex items-center gap-1.5">
                   <i className="fas fa-map-marker-alt text-[#9f7539] text-[11px]"></i>
                   {property.location}
@@ -189,7 +206,7 @@ const PropertyCard = ({
               <div className="flex items-center gap-2">
                 <button
                   onClick={handleViewDetails}
-                  className="px-4 py-2 border border-[#0e1f42] text-[#0e1f42] rounded-lg font-semibold text-sm hover:bg-[#0e1f42] hover:text-white transition-colors"
+                  className="property-view-details-btn px-4 py-2 border border-[#0e1f42] text-[#0e1f42] rounded-lg font-semibold text-sm hover:bg-[#0e1f42] hover:text-white transition-colors"
                 >
                   View Details
                 </button>
@@ -291,11 +308,11 @@ const PropertyCard = ({
         <div className="absolute bottom-0 left-0 right-0 bg-linear-to-t from-black/80 via-black/40 to-transparent p-4">
           <div className="flex items-end justify-between">
             <div>
-              <div className="text-2xl font-bold text-white leading-tight">
+              <div className="property-price-main text-2xl font-bold text-white leading-tight">
                 {formatPrice(property.price)}
               </div>
               <div className="text-white/90 text-sm mt-1">
-                {property.isNegotiable ? 'Price Negotiable' : 'Fixed Price'}
+                {formatPriceWords(property.price)}
               </div>
             </div>
           </div>
@@ -304,7 +321,7 @@ const PropertyCard = ({
         <button
           type="button"
           onClick={openImageModal}
-          className="absolute bottom-3 left-3 bg-[#0e1f42]/85 hover:bg-[#0e1f42] text-white text-xs px-3 py-1.5 rounded-full transition-colors"
+          className="absolute top-3 left-3 bg-[#0e1f42]/85 hover:bg-[#0e1f42] text-white text-xs px-3 py-1.5 rounded-full transition-colors"
         >
           Click to view full image
         </button>
@@ -344,7 +361,7 @@ const PropertyCard = ({
           </div>
           <div className="flex flex-col items-center p-1.5 bg-gray-50 rounded-lg">
             <i className="fas fa-ruler-combined text-[#9f7539] text-xs mb-0.5"></i>
-            <span className="text-xs md:text-sm font-bold text-gray-900">{property.size}</span>
+            <span className="text-xs md:text-sm font-bold text-gray-900">{formatSize(property.size)}</span>
             <span className="text-[11px] text-gray-600 font-medium">Size</span>
           </div>
         </div>
@@ -371,7 +388,7 @@ const PropertyCard = ({
           <div className="flex gap-2">
             <button
               onClick={handleViewDetails}
-              className="flex-1 bg-[#0e1f42] text-white font-semibold py-2 rounded-lg hover:bg-[#1a2d5f] transition-colors flex items-center justify-center gap-2 text-xs shadow-sm hover:shadow"
+              className="property-view-details-btn flex-1 bg-[#0e1f42] text-white font-semibold py-2 rounded-lg hover:bg-[#1a2d5f] transition-colors flex items-center justify-center gap-2 text-xs shadow-sm hover:shadow"
             >
               <i className="fas fa-eye text-[11px]"></i>
               View Details

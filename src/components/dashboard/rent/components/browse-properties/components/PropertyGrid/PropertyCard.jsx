@@ -200,7 +200,7 @@ const PropertyCard = ({ property, onViewDetails, onToggleFavorite, onBookNowClic
         <div className="absolute bottom-0 left-0 right-0 bg-gradient-to-t from-black/80 via-black/40 to-transparent p-4">
           <div className="flex items-end justify-between">
             <div>
-              <div className="text-2xl font-bold text-white leading-tight">
+              <div className="property-price-main text-2xl font-bold text-white leading-tight">
                 {formatPrice(property.price)}
               </div>
               <div className="text-white/90 text-sm mt-1">
@@ -302,7 +302,7 @@ const PropertyCard = ({ property, onViewDetails, onToggleFavorite, onBookNowClic
           <div className="flex gap-2">
             <button
               onClick={handleViewDetails}
-              className="flex-1 bg-[#0e1f42] text-white font-semibold py-2.5 rounded-lg hover:bg-[#1a2d5f] transition-colors flex items-center justify-center gap-2 text-sm shadow-sm hover:shadow"
+              className="property-view-details-btn flex-1 bg-[#0e1f42] text-white font-semibold py-2.5 rounded-lg hover:bg-[#1a2d5f] transition-colors flex items-center justify-center gap-2 text-sm shadow-sm hover:shadow"
             >
               <i className="fas fa-eye text-xs"></i>
               View Details
