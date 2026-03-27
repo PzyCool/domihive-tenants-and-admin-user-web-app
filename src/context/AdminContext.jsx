@@ -1,4 +1,5 @@
-import React, { createContext, useContext, useMemo, useState } from 'react';
+import React, { createContext, useContext, useEffect, useMemo, useState } from 'react';
+import { readAdminStorage, writeAdminStorage } from './adminPersistence';
 
 const AdminContext = createContext(null);
 const defaultProperties = [
@@ -917,17 +918,46 @@ const defaultPayments = [
 ];
 
 export const AdminProvider = ({ children }) => {
-  const [properties, setProperties] = useState([]);
-  const [clients, setClients] = useState([]);
-  const [locations, setLocations] = useState(defaultLocations);
-  const [slots, setSlots] = useState([]);
-  const [inspections, setInspections] = useState([]);
-  const [applications, setApplications] = useState([]);
-  const [tenants, setTenants] = useState([]);
-  const [policies, setPolicies] = useState(defaultPolicies);
-  const [recentActivities, setRecentActivities] = useState([]);
-  const [maintenanceRequests, setMaintenanceRequests] = useState([]);
-  const [payments, setPayments] = useState([]);
+  const persisted = useMemo(() => readAdminStorage(), []);
+  const [properties, setProperties] = useState(() => persisted?.properties || []);
+  const [clients, setClients] = useState(() => persisted?.clients || []);
+  const [locations, setLocations] = useState(() => persisted?.locations || defaultLocations);
+  const [slots, setSlots] = useState(() => persisted?.slots || []);
+  const [inspections, setInspections] = useState(() => persisted?.inspections || []);
+  const [applications, setApplications] = useState(() => persisted?.applications || []);
+  const [tenants, setTenants] = useState(() => persisted?.tenants || []);
+  const [policies, setPolicies] = useState(() => persisted?.policies || defaultPolicies);
+  const [recentActivities, setRecentActivities] = useState(() => persisted?.recentActivities || []);
+  const [maintenanceRequests, setMaintenanceRequests] = useState(() => persisted?.maintenanceRequests || []);
+  const [payments, setPayments] = useState(() => persisted?.payments || []);
+
+  useEffect(() => {
+    writeAdminStorage({
+      properties,
+      clients,
+      locations,
+      slots,
+      inspections,
+      applications,
+      tenants,
+      policies,
+      recentActivities,
+      maintenanceRequests,
+      payments
+    });
+  }, [
+    properties,
+    clients,
+    locations,
+    slots,
+    inspections,
+    applications,
+    tenants,
+    policies,
+    recentActivities,
+    maintenanceRequests,
+    payments
+  ]);
 
   const value = useMemo(
     () => ({

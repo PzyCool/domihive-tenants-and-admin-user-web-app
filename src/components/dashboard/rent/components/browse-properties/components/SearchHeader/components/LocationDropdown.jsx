@@ -8,10 +8,14 @@ const LOCATION_BY_AREA = {
   'Delta South': ['Ozoro', 'Oleh', 'Burutu', 'Koko', 'Bomadi']
 };
 
-const LocationDropdown = ({ value, state, area, onChange }) => {
+const LocationDropdown = ({ value, state, area, locationsByArea, onChange }) => {
   const [isOpen, setIsOpen] = useState(false);
   
-  const locations = area && area !== 'all' ? (LOCATION_BY_AREA[area] || []) : [];
+  const source =
+    locationsByArea && Object.keys(locationsByArea).length
+      ? locationsByArea
+      : LOCATION_BY_AREA;
+  const locations = area && area !== 'all' ? (source[area] || []) : [];
   const selectedLabel = value === 'all' ? 'All Locations' : value;
   
   return (

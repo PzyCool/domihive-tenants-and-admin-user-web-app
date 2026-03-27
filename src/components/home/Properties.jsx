@@ -6,7 +6,8 @@ import PropertyGrid from "./properties/components/PropertyGrid/PropertyGrid";
 import SearchHeader from "./properties/components/SearchHeader/SearchHeader";
 import PropertyDetailsPage from "./properties/components/PropertyDetailsPage/PropertyDetailsPage";
 // import BookInspectionPage from "./properties/components/BookInspectionPage/BookInspectionPage";
-import { generateNigerianProperties } from "./properties/components/utils/propertyData";
+import { fetchBrowseSnapshot } from "../dashboard/rent/services/mockBrowseService";
+import { buildListingFilterMeta } from "../shared/services/adminListings";
 import { showNotification } from '../auth/utils/notifications';
 
 const Properties = () => {
@@ -30,7 +31,7 @@ const Properties = () => {
     location: 'all',
     propertyType: 'all',
     bedrooms: 'all',
-    priceRange: 'all',
+    bathroomsCount: 'all',
     managementType: 'all',
     listingType: 'rent',
     isExpanded: false
@@ -40,6 +41,12 @@ const Properties = () => {
   const [currentPage, setCurrentPage] = useState(1);
   const [totalPages, setTotalPages] = useState(1);
   const [isLoading, setIsLoading] = useState(true);
+  const [filterMeta, setFilterMeta] = useState({
+    states: [],
+    areasByState: {},
+    locationsByArea: {},
+    propertyTypeOptions: []
+  });
   
   // Handle context changes (from HowItWorks/FinalCta buttons)
   useEffect(() => {
@@ -67,13 +74,14 @@ const Properties = () => {
   }, [showPropertyDetails]);
 
   useEffect(() => {
-    const loadProperties = () => {
+    const loadProperties = async () => {
       setIsLoading(true);
       try {
-        const properties = generateNigerianProperties(80);
-        localStorage.setItem('domihive_home_properties_cache_v1', JSON.stringify(properties));
+        const snapshot = await fetchBrowseSnapshot({ forceRefresh: true });
+        const properties = Array.isArray(snapshot?.items) ? snapshot.items : [];
         setAllProperties(properties);
         setFilteredProperties(properties);
+        setFilterMeta(buildListingFilterMeta(properties));
         const totalPages = Math.ceil(properties.length / 6);
         setTotalPages(totalPages);
         updateDisplayedProperties(properties, 1);
@@ -112,6 +120,13 @@ const Properties = () => {
   useEffect(() => {
     if (allProperties.length === 0) return;
     
+    const normalize = (value) =>
+      String(value || '')
+        .toLowerCase()
+        .replace(/&/g, 'and')
+        .replace(/[^a-z0-9]+/g, '_')
+        .replace(/^_+|_+$/g, '');
+
     let filtered = [...allProperties];
     
     if (filters.searchQuery) {
@@ -153,7 +168,7 @@ const Properties = () => {
     
     if (filters.propertyType !== 'all') {
       filtered = filtered.filter(property => 
-        property.propertyType.toLowerCase() === filters.propertyType.toLowerCase()
+        normalize(property.propertyType) === normalize(filters.propertyType)
       );
     }
     
@@ -166,20 +181,15 @@ const Properties = () => {
         );
       }
     }
-    
-    if (filters.priceRange !== 'all') {
-      const [min, max] = filters.priceRange.split('-').map(str => {
-        if (str.includes('+')) return parseInt(str.replace('+', '')) + 1;
-        const num = str.replace('₦', '').replace('M', '000000').replace('/year', '').trim();
-        return parseInt(num);
-      });
-      
-      filtered = filtered.filter(property => {
-        if (filters.priceRange.includes('+')) {
-          return property.price >= min;
-        }
-        return property.price >= min && property.price <= max;
-      });
+
+    if (filters.bathroomsCount !== 'all') {
+      if (filters.bathroomsCount === '4') {
+        filtered = filtered.filter((property) => Number(property.bathrooms) >= 4);
+      } else {
+        filtered = filtered.filter(
+          (property) => Number(property.bathrooms) === parseInt(filters.bathroomsCount, 10)
+        );
+      }
     }
     
     setFilteredProperties(filtered);
@@ -226,7 +236,7 @@ const Properties = () => {
         location: 'all',
       propertyType: 'all',
       bedrooms: 'all',
-      priceRange: 'all',
+      bathroomsCount: 'all',
       managementType: 'all',
       listingType: 'rent',
       isExpanded: false
@@ -276,6 +286,7 @@ const Properties = () => {
                     onFilterChange={handleFilterChange}
                     viewType={viewType}
                     onViewToggle={handleViewToggle}
+                    filterMeta={filterMeta}
                   />
                 </div>
               </div>
@@ -353,7 +364,7 @@ const Properties = () => {
               
               {(filters.searchQuery || filters.state !== 'all' || filters.area !== 'all' || filters.location !== 'all' || 
                 filters.propertyType !== 'all' || filters.bedrooms !== 'all' || 
-                filters.priceRange !== 'all' || filters.managementType !== 'all' || filters.listingType !== 'rent') && (
+                filters.bathroomsCount !== 'all' || filters.managementType !== 'all' || filters.listingType !== 'rent') && (
                 <div className="mt-6 text-center">
                   <button
                     onClick={handleClearFilters}

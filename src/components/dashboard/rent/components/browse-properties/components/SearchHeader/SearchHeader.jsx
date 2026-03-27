@@ -8,6 +8,7 @@ const SearchHeader = ({
   onFilterChange,
   viewType,
   onViewToggle,
+  filterMeta,
   isSyncing = false,
   lastSyncedAt,
   onRefresh = () => {},
@@ -39,8 +40,8 @@ const SearchHeader = ({
       location,
       propertyType,
       bedrooms,
+      bathroomsCount,
       advancedBedrooms,
-      priceRange,
       managementType,
       priceMin,
       priceMax,
@@ -56,7 +57,7 @@ const SearchHeader = ({
     if (location && location !== 'all') count++;
     if (propertyType && propertyType !== 'all') count++;
     if (bedrooms && bedrooms !== 'all') count++;
-    if (priceRange && priceRange !== 'all') count++;
+    if (bathroomsCount && bathroomsCount !== 'all') count++;
     if (Array.isArray(advancedBedrooms) && advancedBedrooms.length) count++;
     if (managementType && managementType !== 'all') count++;
     if (priceMin || priceMax) count++;
@@ -96,8 +97,8 @@ const SearchHeader = ({
       location: 'all',
       propertyType: 'all',
       bedrooms: 'all',
+      bathroomsCount: 'all',
       advancedBedrooms: [],
-      priceRange: 'all',
       managementType: 'all',
       searchQuery: '',
       priceMin: null,
@@ -150,6 +151,7 @@ const SearchHeader = ({
             onFilterChange={onFilterChange}
             onClearFilters={handleClearFilters}
             onApplyFilters={onApplyFilters}
+            filterMeta={filterMeta}
             isSyncing={isSyncing}
           />
         )}

@@ -1,4 +1,5 @@
-const BROWSE_CACHE_KEY = 'domihive_browse_cache_v1';
+const BROWSE_CACHE_KEY = 'domihive_browse_cache_v2';
+const LEGACY_BROWSE_CACHE_KEY = 'domihive_browse_cache_v1';
 const HOME_CACHE_KEY = 'domihive_home_properties_cache_v1';
 const FALLBACK_IMAGES = [
   'https://images.unsplash.com/photo-1560448204-603b3fc33ddc?w=1400&h=900&fit=crop',
@@ -61,7 +62,7 @@ const normalizeProperty = (raw) => {
 export const resolvePropertyById = (propertyId) => {
   if (!propertyId) return null;
 
-  const browseCache = safeRead(BROWSE_CACHE_KEY, {});
+  const browseCache = safeRead(BROWSE_CACHE_KEY, {}) || safeRead(LEGACY_BROWSE_CACHE_KEY, {});
   const homeCache = safeRead(HOME_CACHE_KEY, []);
   const recentProperties = safeRead('domihive_recent_properties', []);
   const pendingBooking = safeRead('domihive_pending_booking', null);

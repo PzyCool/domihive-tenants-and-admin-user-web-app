@@ -10,6 +10,7 @@ const PropertyCard = ({
   viewType = 'grid'
 }) => {
   const [currentImageIndex, setCurrentImageIndex] = useState(0);
+  const [showImageModal, setShowImageModal] = useState(false);
   
   if (!property) return null;
   
@@ -45,6 +46,23 @@ const PropertyCard = ({
       setCurrentImageIndex((currentImageIndex + 1) % property.images.length);
     }
   };
+
+  const handlePrevImage = (e) => {
+    e.stopPropagation();
+    if (property.images && property.images.length > 1) {
+      setCurrentImageIndex((currentImageIndex - 1 + property.images.length) % property.images.length);
+    }
+  };
+
+  const openImageModal = (e) => {
+    e.stopPropagation();
+    setShowImageModal(true);
+  };
+
+  const closeImageModal = (e) => {
+    if (e) e.stopPropagation();
+    setShowImageModal(false);
+  };
   
   const getPropertyStatus = () => {
     if (property.status === 'rented') {
@@ -72,9 +90,10 @@ const PropertyCard = ({
 
   if (viewType === 'list') {
     return (
+      <>
       <div className="property-card w-full bg-white rounded-xl shadow-md border border-gray-200 overflow-hidden hover:shadow-lg transition-all duration-300 cursor-pointer group">
         <div className="flex flex-col lg:flex-row">
-          <div className="relative lg:w-[42%] h-56 lg:h-auto min-h-[220px]">
+          <div className="relative lg:w-[42%] h-56 lg:h-[320px] min-h-[220px]">
             <img
               src={property.images?.[currentImageIndex] || 'https://images.unsplash.com/photo-1560448204-603b3fc33ddc?w=800&h=600&fit=crop'}
               alt={property.title}
@@ -99,6 +118,14 @@ const PropertyCard = ({
               <i className="far fa-image"></i>
               <span>{currentImageIndex + 1}/{Math.max(1, property.images?.length || 1)}</span>
             </div>
+
+            <button
+              type="button"
+              onClick={openImageModal}
+              className="absolute bottom-3 left-3 bg-[#0e1f42]/85 hover:bg-[#0e1f42] text-white text-xs px-3 py-1.5 rounded-full transition-colors"
+            >
+              Click to view full image
+            </button>
           </div>
 
           <div className="lg:w-[58%] p-4 md:p-5 flex flex-col">
@@ -177,6 +204,54 @@ const PropertyCard = ({
           </div>
         </div>
       </div>
+      {showImageModal && (
+        <div
+          className="fixed inset-0 z-[1200] bg-black/80 backdrop-blur-sm flex items-center justify-center p-4"
+          onClick={closeImageModal}
+        >
+          <div
+            className="relative w-full max-w-6xl max-h-[90vh] rounded-xl overflow-hidden bg-black"
+            onClick={(e) => e.stopPropagation()}
+          >
+            <img
+              src={property.images?.[currentImageIndex] || 'https://images.unsplash.com/photo-1560448204-603b3fc33ddc?w=1400&h=900&fit=crop'}
+              alt={property.title}
+              className="w-full h-auto max-h-[90vh] object-contain"
+            />
+
+            {property.images && property.images.length > 1 && (
+              <>
+                <button
+                  type="button"
+                  onClick={handlePrevImage}
+                  className="absolute left-4 top-1/2 -translate-y-1/2 h-11 w-11 rounded-full bg-black/55 hover:bg-black/70 text-white flex items-center justify-center"
+                  aria-label="Previous image"
+                >
+                  <i className="fas fa-chevron-left"></i>
+                </button>
+                <button
+                  type="button"
+                  onClick={handleNextImage}
+                  className="absolute right-4 top-1/2 -translate-y-1/2 h-11 w-11 rounded-full bg-black/55 hover:bg-black/70 text-white flex items-center justify-center"
+                  aria-label="Next image"
+                >
+                  <i className="fas fa-chevron-right"></i>
+                </button>
+              </>
+            )}
+
+            <button
+              type="button"
+              onClick={closeImageModal}
+              className="absolute top-4 right-4 h-10 w-10 rounded-full bg-black/55 hover:bg-black/70 text-white flex items-center justify-center"
+              aria-label="Close image preview"
+            >
+              <i className="fas fa-times"></i>
+            </button>
+          </div>
+        </div>
+      )}
+      </>
     );
   }
   
@@ -223,12 +298,16 @@ const PropertyCard = ({
                 {property.isNegotiable ? 'Price Negotiable' : 'Fixed Price'}
               </div>
             </div>
-            <div className="text-white/80 text-xs">
-              <i className="fas fa-info-circle mr-1"></i>
-              DomiHive Managed
-            </div>
           </div>
         </div>
+
+        <button
+          type="button"
+          onClick={openImageModal}
+          className="absolute bottom-3 left-3 bg-[#0e1f42]/85 hover:bg-[#0e1f42] text-white text-xs px-3 py-1.5 rounded-full transition-colors"
+        >
+          Click to view full image
+        </button>
       </div>
       
       <div className="p-3 flex-1 flex flex-col">
@@ -276,7 +355,7 @@ const PropertyCard = ({
             <div className="text-[11px] font-semibold text-gray-800">About this property:</div>
           </div>
           <div className="text-xs md:text-sm text-gray-600 line-clamp-2 leading-relaxed">
-            {`Modern ${property.bedrooms}-bed property in ${property.location} with ${property.bathrooms} bath${property.bathrooms > 1 ? 's' : ''}.`}
+            {property.description || `Modern ${property.bedrooms}-bed property in ${property.location} with ${property.bathrooms} bath${property.bathrooms > 1 ? 's' : ''}.`}
           </div>
         </div>
         
@@ -307,6 +386,54 @@ const PropertyCard = ({
           </div>
         </div>
       </div>
+
+      {showImageModal && (
+        <div
+          className="fixed inset-0 z-[1200] bg-black/80 backdrop-blur-sm flex items-center justify-center p-4"
+          onClick={closeImageModal}
+        >
+          <div
+            className="relative w-full max-w-6xl max-h-[90vh] rounded-xl overflow-hidden bg-black"
+            onClick={(e) => e.stopPropagation()}
+          >
+            <img
+              src={property.images?.[currentImageIndex] || 'https://images.unsplash.com/photo-1560448204-603b3fc33ddc?w=1400&h=900&fit=crop'}
+              alt={property.title}
+              className="w-full h-auto max-h-[90vh] object-contain"
+            />
+
+            {property.images && property.images.length > 1 && (
+              <>
+                <button
+                  type="button"
+                  onClick={handlePrevImage}
+                  className="absolute left-4 top-1/2 -translate-y-1/2 h-11 w-11 rounded-full bg-black/55 hover:bg-black/70 text-white flex items-center justify-center"
+                  aria-label="Previous image"
+                >
+                  <i className="fas fa-chevron-left"></i>
+                </button>
+                <button
+                  type="button"
+                  onClick={handleNextImage}
+                  className="absolute right-4 top-1/2 -translate-y-1/2 h-11 w-11 rounded-full bg-black/55 hover:bg-black/70 text-white flex items-center justify-center"
+                  aria-label="Next image"
+                >
+                  <i className="fas fa-chevron-right"></i>
+                </button>
+              </>
+            )}
+
+            <button
+              type="button"
+              onClick={closeImageModal}
+              className="absolute top-4 right-4 h-10 w-10 rounded-full bg-black/55 hover:bg-black/70 text-white flex items-center justify-center"
+              aria-label="Close image preview"
+            >
+              <i className="fas fa-times"></i>
+            </button>
+          </div>
+        </div>
+      )}
     </div>
   );
 };

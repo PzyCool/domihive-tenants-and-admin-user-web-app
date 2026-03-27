@@ -7,6 +7,7 @@ import { useProperties } from '../contexts/PropertiesContext';
 import { fetchBrowseSnapshot } from '../services/mockBrowseService';
 import SearchHeader from '../components/browse-properties/components/SearchHeader/SearchHeader';
 import PropertyGrid from '../components/browse-properties/components/PropertyGrid/PropertyGrid';
+import { buildListingFilterMeta } from '../../../shared/services/adminListings';
 
 const DEFAULT_FILTERS = {
   searchQuery: '',
@@ -15,7 +16,7 @@ const DEFAULT_FILTERS = {
   location: 'all',
   propertyType: 'all',
   bedrooms: 'all',
-  priceRange: 'all',
+  bathroomsCount: 'all',
   managementType: 'all',
   sortBy: 'newest',
   isExpanded: false,
@@ -36,7 +37,7 @@ const FILTER_KEYS = [
   'location',
   'propertyType',
   'bedrooms',
-  'priceRange',
+  'bathroomsCount',
   'managementType',
   'sortBy',
   'priceMin',
@@ -110,6 +111,13 @@ const buildSearchParamsFromState = ({ filters, currentPage, viewType }) => {
 };
 
 const applyFilters = (allProperties, filters) => {
+  const normalize = (value) =>
+    String(value || '')
+      .toLowerCase()
+      .replace(/&/g, 'and')
+      .replace(/[^a-z0-9]+/g, '_')
+      .replace(/^_+|_+$/g, '');
+
   let filtered = [...allProperties];
 
   if (filters.searchQuery) {
@@ -140,7 +148,7 @@ const applyFilters = (allProperties, filters) => {
 
   if (filters.propertyType !== 'all') {
     filtered = filtered.filter(
-      (property) => property.propertyType.toLowerCase() === filters.propertyType.toLowerCase()
+      (property) => normalize(property.propertyType) === normalize(filters.propertyType)
     );
   }
 
@@ -168,17 +176,14 @@ const applyFilters = (allProperties, filters) => {
     );
   }
 
-  if (filters.priceRange !== 'all') {
-    const [min, max] = filters.priceRange.split('-').map((segment) => {
-      if (segment.includes('+')) return parseInt(segment.replace('+', ''), 10) + 1;
-      const parsedNumber = segment.replace('₦', '').replace('M', '000000').replace('/year', '').trim();
-      return parseInt(parsedNumber, 10);
-    });
-
-    filtered = filtered.filter((property) => {
-      if (filters.priceRange.includes('+')) return property.price >= min;
-      return property.price >= min && property.price <= max;
-    });
+  if (filters.bathroomsCount !== 'all') {
+    if (filters.bathroomsCount === '4') {
+      filtered = filtered.filter((property) => Number(property.bathrooms) >= 4);
+    } else {
+      filtered = filtered.filter(
+        (property) => Number(property.bathrooms) === Number(filters.bathroomsCount)
+      );
+    }
   }
 
   if (typeof filters.priceMin === 'number' && !Number.isNaN(filters.priceMin)) {
@@ -243,6 +248,12 @@ const RentBrowse = () => {
   const [viewType, setViewType] = useState(initialFromUrl.nextViewType);
   const [currentPage, setCurrentPage] = useState(initialFromUrl.nextPage);
   const [totalPages, setTotalPages] = useState(1);
+  const [filterMeta, setFilterMeta] = useState({
+    states: [],
+    areasByState: {},
+    locationsByArea: {},
+    propertyTypeOptions: []
+  });
 
   const [selectedPropertyId, setSelectedPropertyId] = useState(null);
   const [showPropertyDetails, setShowPropertyDetails] = useState(false);
@@ -262,7 +273,9 @@ const RentBrowse = () => {
     setError('');
     try {
       const snapshot = await fetchBrowseSnapshot({ forceRefresh });
-      setAllProperties(snapshot.items || []);
+      const items = snapshot.items || [];
+      setAllProperties(items);
+      setFilterMeta(buildListingFilterMeta(items));
       setSyncedAt(snapshot.syncedAt || new Date().toISOString());
       setIsStale(false);
     } catch (syncError) {
@@ -390,6 +403,7 @@ const RentBrowse = () => {
           onFilterChange={handleFilterChange}
           viewType={viewType}
           onViewToggle={setViewType}
+          filterMeta={filterMeta}
           isSyncing={syncing || filterSyncing}
           lastSyncedAt={syncedAt}
           onRefresh={() => syncBrowse({ forceRefresh: true })}
@@ -519,3 +533,4 @@ const RentBrowse = () => {
 };
 
 export default RentBrowse;
+

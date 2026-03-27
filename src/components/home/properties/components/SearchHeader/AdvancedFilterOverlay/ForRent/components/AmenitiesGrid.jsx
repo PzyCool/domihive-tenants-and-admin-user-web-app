@@ -6,8 +6,8 @@ const AmenitiesGrid = ({ selected = [], onToggle }) => {
     { id: 'parking', label: 'Parking', icon: 'car' },
     { id: 'security', label: 'Security', icon: 'shield-alt' },
     { id: 'generator', label: 'Gen', icon: 'bolt' },
-    { id: 'water', label: 'Water', icon: 'tint' },
-    { id: 'ac', label: 'A/C', icon: 'snowflake' }
+    { id: 'ac', label: 'A/C', icon: 'snowflake' },
+    { id: 'swimming_pool', label: 'Pool', icon: 'swimmer' }
   ];
 
   const handleToggle = (amenityId) => {

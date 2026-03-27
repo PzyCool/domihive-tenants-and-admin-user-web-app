@@ -9,7 +9,8 @@ const SearchHeader = ({
   filters, 
   onFilterChange,
   viewType,
-  onViewToggle
+  onViewToggle,
+  filterMeta
 }) => {
   const [isExpanded, setIsExpanded] = useState(false);
   const [activeFiltersCount, setActiveFiltersCount] = useState(0);
@@ -17,14 +18,14 @@ const SearchHeader = ({
   
   useEffect(() => {
     let count = 0;
-    const { state, area, location, propertyType, bedrooms, priceRange, managementType, listingType } = filters;
+    const { state, area, location, propertyType, bedrooms, bathroomsCount, managementType, listingType } = filters;
     
     if (state && state !== 'all') count++;
     if (area && area !== 'all') count++;
     if (location && location !== 'all') count++;
     if (propertyType && propertyType !== 'all') count++;
     if (bedrooms && bedrooms !== 'all') count++;
-    if (priceRange && priceRange !== 'all') count++;
+    if (bathroomsCount && bathroomsCount !== 'all') count++;
     if (managementType && managementType !== 'all') count++;
     if (listingType && listingType !== 'rent') count++;
     
@@ -56,7 +57,7 @@ const SearchHeader = ({
         location: 'all',
         propertyType: 'all',
         bedrooms: 'all',
-        priceRange: 'all',
+        bathroomsCount: 'all',
         managementType: 'all',
         listingType: 'rent',
         searchQuery: filters.searchQuery || ''
@@ -103,6 +104,7 @@ const SearchHeader = ({
             filters={filters}
             onFilterChange={handleFilterChange}
             onClearFilters={handleClearFilters}
+            filterMeta={filterMeta}
           />
         )}
       </div>

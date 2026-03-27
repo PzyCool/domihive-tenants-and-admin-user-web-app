@@ -1,7 +1,7 @@
 import React from 'react';
 import LocationDropdown from './components/LocationDropdown';
 import PropertyTypeDropdown from './components/PropertyTypeDropdown';
-import PriceRangeDropdown from './components/PriceRangeDropdown';
+import BathroomsDropdown from './components/BathroomsDropdown';
 import BedroomsDropdown from './components/BedroomsDropdown';
 import ApplyFilterButton from './components/ApplyFilterButton';
 import ClearButton from './components/ClearButton';
@@ -11,7 +11,7 @@ const AREA_BY_STATE = {
   Delta: ['Delta North', 'Delta Central', 'Delta South']
 };
 
-const SecondaryRow = ({ filters, onFilterChange, onClearFilters, onApplyFilters, isSyncing = false }) => {
+const SecondaryRow = ({ filters, onFilterChange, onClearFilters, onApplyFilters, filterMeta, isSyncing = false }) => {
   // Handler functions
   const handleStateChange = (state) => {
     onFilterChange({ state, area: 'all', location: 'all' });
@@ -29,15 +29,20 @@ const SecondaryRow = ({ filters, onFilterChange, onClearFilters, onApplyFilters,
     onFilterChange({ propertyType });
   };
   
-  const handlePriceRangeChange = (priceRange) => {
-    onFilterChange({ priceRange });
+  const handleBathroomsChange = (bathroomsCount) => {
+    onFilterChange({ bathroomsCount });
   };
   
   const handleBedroomsChange = (bedrooms) => {
     onFilterChange({ bedrooms });
   };
   
-  const areaOptions = filters.state && filters.state !== 'all' ? (AREA_BY_STATE[filters.state] || []) : [];
+  const stateOptions = filterMeta?.states?.length ? filterMeta.states : Object.keys(AREA_BY_STATE);
+  const areaByState =
+    filterMeta?.areasByState && Object.keys(filterMeta.areasByState).length
+      ? filterMeta.areasByState
+      : AREA_BY_STATE;
+  const areaOptions = filters.state && filters.state !== 'all' ? (areaByState[filters.state] || []) : [];
 
   return (
     <div className="secondary-row px-4 lg:px-6 py-4 bg-gray-50 border-t border-gray-200">
@@ -53,8 +58,9 @@ const SecondaryRow = ({ filters, onFilterChange, onClearFilters, onApplyFilters,
               className="w-full px-3 py-2 rounded-lg border border-gray-300 hover:border-gray-400 transition-colors text-sm bg-white"
             >
               <option value="all">All States</option>
-              <option value="Lagos">Lagos</option>
-              <option value="Delta">Delta</option>
+              {stateOptions.map((state) => (
+                <option key={state} value={state}>{state}</option>
+              ))}
             </select>
           </div>
 
@@ -93,6 +99,7 @@ const SecondaryRow = ({ filters, onFilterChange, onClearFilters, onApplyFilters,
               value={filters.location || 'all'}
               state={filters.state}
               area={filters.area}
+              locationsByArea={filterMeta?.locationsByArea}
               onChange={handleLocationChange}
             />
           </div>
@@ -105,6 +112,7 @@ const SecondaryRow = ({ filters, onFilterChange, onClearFilters, onApplyFilters,
             </label>
             <PropertyTypeDropdown
               value={filters.propertyType || 'all'}
+              options={filterMeta?.propertyTypeOptions}
               onChange={handlePropertyTypeChange}
             />
           </div>
@@ -124,12 +132,12 @@ const SecondaryRow = ({ filters, onFilterChange, onClearFilters, onApplyFilters,
           {/* Price Range */}
           <div className="min-w-0">
             <label className="block h-6 text-xs font-semibold text-gray-700 mb-1 uppercase tracking-wide whitespace-nowrap">
-              <i className="fas fa-tag mr-1 text-[#9f7539]"></i>
-              Price Range
+              <i className="fas fa-bath mr-1 text-[#9f7539]"></i>
+              Bathrooms
             </label>
-            <PriceRangeDropdown
-              value={filters.priceRange || 'all'}
-              onChange={handlePriceRangeChange}
+            <BathroomsDropdown
+              value={filters.bathroomsCount || 'all'}
+              onChange={handleBathroomsChange}
             />
           </div>
           

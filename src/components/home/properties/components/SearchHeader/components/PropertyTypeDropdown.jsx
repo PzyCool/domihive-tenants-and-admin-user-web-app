@@ -1,9 +1,9 @@
 import React, { useState } from 'react';
 
-const PropertyTypeDropdown = ({ value, onChange }) => {
+const PropertyTypeDropdown = ({ value, options, onChange }) => {
   const [isOpen, setIsOpen] = useState(false);
   
-  const options = [
+  const fallbackOptions = [
     { id: 'all', label: 'All Types' },
     { id: 'apartment', label: 'Apartment' },
     { id: 'duplex', label: 'Duplex' },
@@ -12,8 +12,12 @@ const PropertyTypeDropdown = ({ value, onChange }) => {
     { id: 'mini_flat', label: 'Mini Flat' },
     { id: 'penthouse', label: 'Penthouse' }
   ];
+  const optionList = [{ id: 'all', label: 'All Types' }, ...((options || []).filter((item) => item?.id && item?.label))];
+  const uniqueOptionList = optionList.filter(
+    (item, index, arr) => arr.findIndex((entry) => entry.id === item.id) === index
+  );
   
-  const selectedLabel = options.find(opt => opt.id === value)?.label || 'All Types';
+  const selectedLabel = uniqueOptionList.find(opt => opt.id === value)?.label || 'All Types';
   
   return (
     <div className="relative">
@@ -29,7 +33,7 @@ const PropertyTypeDropdown = ({ value, onChange }) => {
       
       {isOpen && (
         <div className="absolute top-full mt-1 w-full bg-white rounded-lg shadow-lg border border-gray-200 py-2 z-50 max-h-60 overflow-y-auto">
-          {options.map((option) => (
+          {(uniqueOptionList.length > 1 ? uniqueOptionList : fallbackOptions).map((option) => (
             <button
               key={option.id}
               onClick={() => {
