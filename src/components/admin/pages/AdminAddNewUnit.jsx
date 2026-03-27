@@ -1,11 +1,21 @@
-import { useEffect, useMemo, useState } from "react";
+﻿import { useEffect, useMemo, useState } from "react";
 import { useNavigate, useParams } from "react-router-dom";
-import { ChevronDown, ChevronRight, DoorOpen, Building2, Landmark, House, Image, Video } from "lucide-react";
+import {
+  ChevronDown,
+  ChevronLeft,
+  ChevronRight,
+  DoorOpen,
+  Building2,
+  Landmark,
+  House,
+  Video,
+} from "lucide-react";
 import { useAdmin } from "../../../context/AdminContext";
 
 const emptyForm = {
   unitNumber: "",
   type: "Apartment (Flat)",
+  description: "",
   bedrooms: 1,
   bathrooms: 1,
   size: "",
@@ -14,23 +24,14 @@ const emptyForm = {
   billsIncluded: false,
   billsNote: "",
   status: "available",
+  furnishingEnabled: false,
+  furnishingOptions: [],
   amenities: [],
-  images: [],
-  video: null,
+  coverImages: ["", "", ""],
+  videoWalkthrough: "",
 };
 
-const AMENITIES = [
-  "Parking",
-  "Water Supply",
-  "CCTV",
-  "Security",
-  "Generator",
-  "Gym",
-  "Fence",
-  "Gate",
-  "AC",
-  "WiFi",
-];
+const AMENITIES = ["CCTV", "WiFi"];
 
 const UNIT_TYPE_OPTIONS = [
   {
@@ -66,7 +67,7 @@ const getNextUnitCode = (property) => {
     .filter((value) => value.startsWith(`${prefix}-`))
     .map((value) => Number(value.split("-")[1]))
     .filter((value) => Number.isFinite(value));
-  const nextNumber = unitCodes.length ? Math.max(...unitCodes) + 1 : 0;
+  const nextNumber = unitCodes.length ? Math.max(...unitCodes) + 1 : 1;
   return `${prefix}-${String(nextNumber).padStart(3, "0")}`;
 };
 
@@ -85,6 +86,8 @@ export default function AdminAddNewUnit() {
   const { properties, setProperties } = useAdmin();
   const [form, setForm] = useState(emptyForm);
   const [isUnitTypeOpen, setIsUnitTypeOpen] = useState(false);
+  const [activeSlide, setActiveSlide] = useState(0);
+  const [slidesSaved, setSlidesSaved] = useState(false);
 
   const property = useMemo(
     () => properties.find((item) => item.id === propertyId),
@@ -114,15 +117,48 @@ export default function AdminAddNewUnit() {
     });
   };
 
+  const toggleFurnishingOption = (option) => {
+    setForm((prev) => {
+      const hasOption = prev.furnishingOptions.includes(option);
+      return {
+        ...prev,
+        furnishingOptions: hasOption
+          ? prev.furnishingOptions.filter((item) => item !== option)
+          : [...prev.furnishingOptions, option],
+      };
+    });
+  };
+
+  const handleSlideUpload = (index, file) => {
+    if (!file) return;
+    const preview = URL.createObjectURL(file);
+    setForm((prev) => {
+      const nextSlides = [...prev.coverImages];
+      nextSlides[index] = preview;
+      return { ...prev, coverImages: nextSlides };
+    });
+    setSlidesSaved(false);
+  };
+
+  const moveSlide = (direction) => {
+    setActiveSlide((prev) => (prev + direction + 3) % 3);
+  };
+
+  const handleSaveSlides = () => {
+    setSlidesSaved(true);
+  };
+
   const handleSave = () => {
     if (!property) return;
     if (!form.unitNumber.trim()) return;
 
+    const walkthrough = form.videoWalkthrough?.trim() || "";
     const nextUnit = {
       id: `unit-${Date.now()}`,
       unitNumber: form.unitNumber.trim(),
       number: form.unitNumber.trim(),
       type: form.type,
+      description: form.description?.trim() || "",
       bedrooms: Number(form.bedrooms) || 0,
       bathrooms: Number(form.bathrooms) || 0,
       size: form.size,
@@ -130,15 +166,20 @@ export default function AdminAddNewUnit() {
       caution: Number(form.caution) || 0,
       billsIncluded: form.billsIncluded,
       billsNote: form.billsNote,
-      status: form.status,
+      publishedStatus: "unpublished",
+      tenantStatus: form.status === "available" ? "vacant" : form.status,
+      status: form.status === "available" ? "vacant" : form.status,
+      furnishingEnabled: Boolean(form.furnishingEnabled),
+      furnishingOptions: form.furnishingEnabled ? form.furnishingOptions : [],
       tenantId: null,
       tenant: null,
       amenities: form.amenities,
-      images: form.images,
-      video: form.video,
+      images: form.coverImages.filter(Boolean),
+      videoWalkthrough: walkthrough,
+      video: walkthrough,
       leaseStart: null,
       leaseEnd: null,
-      notes: "",
+      notes: form.description?.trim() || "",
       isConfigured: true,
     };
 
@@ -307,6 +348,16 @@ export default function AdminAddNewUnit() {
                 </select>
               </div>
             </div>
+
+            <div>
+              <label className="text-xs font-medium text-gray-600 dark:text-gray-400">Unit Description</label>
+              <textarea
+                className="mt-1 w-full min-h-[90px] rounded-md border border-gray-200 dark:border-white/10 bg-transparent dark:text-white px-3 py-2 text-sm outline-none focus:border-[#9F7539]"
+                placeholder="Describe this unit. This will show to users as the property description."
+                value={form.description}
+                onChange={(e) => setForm({ ...form, description: e.target.value })}
+              />
+            </div>
           </div>
         </Section>
 
@@ -358,7 +409,53 @@ export default function AdminAddNewUnit() {
         </Section>
 
         <Section title="Unit Features">
-          <div className="grid grid-cols-2 md:grid-cols-3 gap-3">
+          <div className="space-y-3">
+            <div className="rounded-md border border-gray-200 dark:border-white/10 bg-gray-50 dark:bg-white/5 p-3">
+              <div className="flex items-center justify-between">
+                <label className="text-sm font-medium text-gray-700 dark:text-gray-300">
+                  Furnishing
+                </label>
+                <label className="relative inline-flex items-center cursor-pointer">
+                  <input
+                    type="checkbox"
+                    className="sr-only peer"
+                    checked={form.furnishingEnabled}
+                    onChange={(e) =>
+                      setForm((prev) => ({
+                        ...prev,
+                        furnishingEnabled: e.target.checked,
+                        furnishingOptions: e.target.checked ? prev.furnishingOptions : [],
+                      }))
+                    }
+                  />
+                  <div className="w-10 h-6 bg-gray-300 dark:bg-white/20 rounded-full peer peer-checked:bg-[#9F7539] transition-colors" />
+                  <div className="absolute left-1 top-1 w-4 h-4 bg-white rounded-full peer-checked:translate-x-4 transition-transform" />
+                </label>
+              </div>
+
+              {form.furnishingEnabled && (
+                <div className="mt-3 flex items-center gap-4">
+                  <label className="flex items-center gap-2 text-sm text-gray-700 dark:text-gray-300 cursor-pointer">
+                    <input
+                      type="checkbox"
+                      checked={form.furnishingOptions.includes("Full")}
+                      onChange={() => toggleFurnishingOption("Full")}
+                    />
+                    Full
+                  </label>
+                  <label className="flex items-center gap-2 text-sm text-gray-700 dark:text-gray-300 cursor-pointer">
+                    <input
+                      type="checkbox"
+                      checked={form.furnishingOptions.includes("Semi")}
+                      onChange={() => toggleFurnishingOption("Semi")}
+                    />
+                    Semi
+                  </label>
+                </div>
+              )}
+            </div>
+
+            <div className="grid grid-cols-2 md:grid-cols-3 gap-3">
             {AMENITIES.map((amenity) => (
               <label key={amenity} className="flex items-center gap-2 text-sm text-gray-700 dark:text-gray-300 cursor-pointer">
                 <input
@@ -369,45 +466,93 @@ export default function AdminAddNewUnit() {
                 {amenity}
               </label>
             ))}
+            </div>
           </div>
         </Section>
 
-        <Section title="Unit Media (Optional)">
+        <Section title="Unit Media">
           <div className="space-y-4">
-            <div className="rounded-md border border-dashed border-gray-300 dark:border-white/10 bg-gray-50 dark:bg-white/5 p-6 text-center">
-              <div className="mx-auto flex w-10 h-10 items-center justify-center rounded-full bg-white dark:bg-gray-800 border border-gray-200 dark:border-white/10">
-                <Image size={18} className="text-gray-500 dark:text-gray-400" />
+            <div className="rounded-md border border-gray-200 dark:border-white/10 bg-gray-50 dark:bg-white/5 p-3">
+              <div className="flex items-center justify-between mb-2">
+                <div className="text-sm font-medium text-gray-700 dark:text-gray-300">Unit Cover Slides</div>
+                <div className="text-xs text-gray-500 dark:text-gray-400">Slide {activeSlide + 1} of 3</div>
               </div>
-              <p className="mt-2 text-sm text-gray-600 dark:text-gray-300">Upload unit photos</p>
-              <div className="mt-3 flex justify-center">
-                <label className="inline-flex items-center justify-center rounded-md border border-[#9F7539] bg-white dark:bg-gray-800 px-3 py-2 text-xs font-semibold text-[#9F7539] hover:bg-gray-100 dark:hover:bg-gray-700 cursor-pointer">
-                  Choose Images
-                  <input
-                    type="file"
-                    multiple
-                    className="hidden"
-                    onChange={(e) => setForm({ ...form, images: Array.from(e.target.files || []) })}
+
+              <div className="relative h-48 rounded-md overflow-hidden border border-gray-200 dark:border-white/10 bg-white dark:bg-[#111827]">
+                {form.coverImages[activeSlide] ? (
+                  <img
+                    src={form.coverImages[activeSlide]}
+                    alt={`Unit slide ${activeSlide + 1}`}
+                    className="h-full w-full object-cover"
                   />
-                </label>
+                ) : (
+                  <div className="h-full w-full flex items-center justify-center text-sm text-gray-500 dark:text-gray-400">
+                    No preview for slide {activeSlide + 1}
+                  </div>
+                )}
+
+                <button
+                  type="button"
+                  onClick={() => moveSlide(-1)}
+                  className="absolute left-2 top-1/2 -translate-y-1/2 h-8 w-8 rounded-full bg-black/40 text-white flex items-center justify-center hover:bg-black/55"
+                  aria-label="Previous slide"
+                >
+                  <ChevronLeft size={16} />
+                </button>
+                <button
+                  type="button"
+                  onClick={() => moveSlide(1)}
+                  className="absolute right-2 top-1/2 -translate-y-1/2 h-8 w-8 rounded-full bg-black/40 text-white flex items-center justify-center hover:bg-black/55"
+                  aria-label="Next slide"
+                >
+                  <ChevronRight size={16} />
+                </button>
+              </div>
+
+              <div className="mt-3 grid grid-cols-1 md:grid-cols-3 gap-3">
+                {[0, 1, 2].map((index) => (
+                  <div
+                    key={index}
+                    className="rounded-md border border-gray-200 dark:border-white/10 bg-white dark:bg-[#111827] p-2.5"
+                  >
+                    <p className="text-xs font-medium text-gray-600 dark:text-gray-400 mb-2">Upload Slide {index + 1}</p>
+                    <input
+                      type="file"
+                      accept="image/*"
+                      onChange={(e) => handleSlideUpload(index, e.target.files?.[0] || null)}
+                      className="w-full text-xs text-gray-600 dark:text-gray-300"
+                    />
+                  </div>
+                ))}
+              </div>
+
+              <div className="mt-3 flex items-center gap-3">
+                <button
+                  type="button"
+                  onClick={handleSaveSlides}
+                  className="rounded-md border border-[#9F7539] text-[#9F7539] px-3 py-1.5 text-sm font-medium hover:bg-[#9F7539]/10 transition-colors"
+                >
+                  Save Slide Images
+                </button>
+                {slidesSaved && <span className="text-xs text-green-600 dark:text-green-400">Slides saved.</span>}
               </div>
             </div>
 
-            <div className="rounded-md border border-dashed border-gray-300 dark:border-white/10 bg-gray-50 dark:bg-white/5 p-6 text-center">
-              <div className="mx-auto flex w-10 h-10 items-center justify-center rounded-full bg-white dark:bg-gray-800 border border-gray-200 dark:border-white/10">
-                <Video size={18} className="text-gray-500 dark:text-gray-400" />
+            <div className="rounded-md border border-gray-200 dark:border-white/10 bg-gray-50 dark:bg-white/5 p-3">
+              <div className="flex items-center gap-2 text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+                <Video size={15} />
+                Unit Walkthrough Video Link
               </div>
-              <p className="mt-2 text-sm text-gray-600 dark:text-gray-300">Upload unit video</p>
-              <div className="mt-3 flex justify-center">
-                <label className="inline-flex items-center justify-center rounded-md border border-[#9F7539] bg-white dark:bg-gray-800 px-3 py-2 text-xs font-semibold text-[#9F7539] hover:bg-gray-100 dark:hover:bg-gray-700 cursor-pointer">
-                  Choose Video
-                  <input
-                    type="file"
-                    accept="video/*"
-                    className="hidden"
-                    onChange={(e) => setForm({ ...form, video: e.target.files?.[0] || null })}
-                  />
-                </label>
-              </div>
+              <input
+                type="url"
+                className="w-full rounded-md border border-gray-200 dark:border-white/10 bg-transparent dark:text-white px-3 py-2 text-sm outline-none focus:border-[#9F7539]"
+                placeholder="https://..."
+                value={form.videoWalkthrough}
+                onChange={(e) => setForm({ ...form, videoWalkthrough: e.target.value })}
+              />
+              <p className="mt-1 text-xs text-gray-500 dark:text-gray-400">
+                Paste the unit walkthrough URL (YouTube, Vimeo, Drive, etc).
+              </p>
             </div>
           </div>
         </Section>
@@ -430,4 +575,3 @@ export default function AdminAddNewUnit() {
     </div>
   );
 }
-

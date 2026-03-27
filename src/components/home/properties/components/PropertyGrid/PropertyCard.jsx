@@ -1,7 +1,14 @@
 // src/components/home/properties/components/PropertyGrid/PropertyCard.jsx
 import React, { useState } from 'react';
 
-const PropertyCard = ({ property, onViewDetails, onToggleFavorite, onBookNowClick, isFavorite = false }) => {
+const PropertyCard = ({
+  property,
+  onViewDetails,
+  onToggleFavorite,
+  onBookNowClick,
+  isFavorite = false,
+  viewType = 'grid'
+}) => {
   const [currentImageIndex, setCurrentImageIndex] = useState(0);
   
   if (!property) return null;
@@ -62,6 +69,116 @@ const PropertyCard = ({ property, onViewDetails, onToggleFavorite, onBookNowClic
   };
   
   const estateTypeInfo = getEstateType();
+
+  if (viewType === 'list') {
+    return (
+      <div className="property-card w-full bg-white rounded-xl shadow-md border border-gray-200 overflow-hidden hover:shadow-lg transition-all duration-300 cursor-pointer group">
+        <div className="flex flex-col lg:flex-row">
+          <div className="relative lg:w-[42%] h-56 lg:h-auto min-h-[220px]">
+            <img
+              src={property.images?.[currentImageIndex] || 'https://images.unsplash.com/photo-1560448204-603b3fc33ddc?w=800&h=600&fit=crop'}
+              alt={property.title}
+              className="w-full h-full object-cover"
+              onError={(e) => {
+                e.target.onerror = null;
+                e.target.src = 'https://images.unsplash.com/photo-1560448204-603b3fc33ddc?w=800&h=600&fit=crop';
+              }}
+            />
+
+            {property.images && property.images.length > 1 && (
+              <button
+                onClick={handleNextImage}
+                className="absolute top-1/2 right-3 transform -translate-y-1/2 w-9 h-9 bg-white/85 backdrop-blur-sm rounded-full flex items-center justify-center shadow hover:scale-105 transition-transform"
+                title="Next image"
+              >
+                <i className="fas fa-chevron-right text-gray-700 text-sm"></i>
+              </button>
+            )}
+
+            <div className="absolute bottom-3 right-3 bg-[#2f2648]/90 text-white text-sm px-3 py-1.5 rounded-full flex items-center gap-2">
+              <i className="far fa-image"></i>
+              <span>{currentImageIndex + 1}/{Math.max(1, property.images?.length || 1)}</span>
+            </div>
+          </div>
+
+          <div className="lg:w-[58%] p-4 md:p-5 flex flex-col">
+            <div className="flex items-start justify-between gap-3">
+              <div>
+                <div className="text-3xl font-bold text-[#0e1f42] leading-tight">
+                  {formatPrice(property.price)}
+                </div>
+                <div className="flex items-center gap-4 text-gray-600 text-sm mt-2">
+                  <span className="inline-flex items-center gap-1.5">
+                    <i className="fas fa-bed text-[#9f7539] text-[11px]"></i>
+                    {property.bedrooms} bed
+                  </span>
+                  <span className="inline-flex items-center gap-1.5">
+                    <i className="fas fa-bath text-[#9f7539] text-[11px]"></i>
+                    {property.bathrooms} bath
+                  </span>
+                  <span className="inline-flex items-center gap-1.5">
+                    <i className="fas fa-ruler-combined text-[#9f7539] text-[11px]"></i>
+                    {property.size}
+                  </span>
+                </div>
+                <div className="text-gray-700 font-medium mt-1">{property.title}</div>
+                <div className="text-gray-600 text-sm mt-1 inline-flex items-center gap-1.5">
+                  <i className="fas fa-map-marker-alt text-[#9f7539] text-[11px]"></i>
+                  {property.location}
+                </div>
+              </div>
+
+              <button
+                onClick={handleFavoriteClick}
+                className="w-10 h-10 rounded-full border border-gray-300 flex items-center justify-center hover:border-[#9f7539] transition-colors"
+                title={isFavorite ? "Remove from favorites" : "Add to favorites"}
+              >
+                <i className={`fas fa-heart ${isFavorite ? 'text-[#9f7539]' : 'text-gray-500'} text-base`}></i>
+              </button>
+            </div>
+
+            <div className="mt-3">
+              <div className="flex items-center gap-2 mb-1">
+                <i className="fas fa-align-left text-[#9f7539] text-[11px]"></i>
+                <span className="text-[11px] font-semibold text-gray-800">About this property:</span>
+              </div>
+              <p className="text-gray-700 leading-relaxed line-clamp-3">
+                {property.description || `Modern ${property.bedrooms}-bed property in ${property.location} with ${property.bathrooms} bathrooms.`}
+              </p>
+            </div>
+
+            <div className="mt-auto pt-4 flex items-center justify-between gap-3">
+              <div>
+                <div className="text-sm text-gray-600 font-medium">{estateTypeInfo.label}</div>
+                <div className="text-[11px] text-gray-500 mt-0.5 inline-flex items-center gap-1.5">
+                  <i className="fas fa-clock text-[#9f7539]"></i>
+                  Listed {new Date(property.dateAdded).toLocaleDateString('en-NG', {
+                    month: 'short',
+                    day: 'numeric',
+                    year: 'numeric'
+                  })}
+                </div>
+              </div>
+              <div className="flex items-center gap-2">
+                <button
+                  onClick={handleViewDetails}
+                  className="px-4 py-2 border border-[#0e1f42] text-[#0e1f42] rounded-lg font-semibold text-sm hover:bg-[#0e1f42] hover:text-white transition-colors"
+                >
+                  View Details
+                </button>
+                <button
+                  onClick={handleBookNowClick}
+                  className="px-4 py-2 bg-gradient-to-r from-[#9f7539] to-[#b58a4a] text-white rounded-lg font-semibold text-sm"
+                >
+                  Book Now
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    );
+  }
   
   return (
     <div 

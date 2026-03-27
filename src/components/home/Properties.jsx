@@ -293,6 +293,7 @@ const Properties = () => {
               <div className="mb-8 md:mb-10">
                 <PropertyGrid 
                   properties={displayedProperties}
+                  viewType={viewType}
                   onPropertyClick={handlePropertyClick}
                   onFavoriteToggle={handleFavoriteToggle}
                   onBookNowClick={handleBookNowClick}

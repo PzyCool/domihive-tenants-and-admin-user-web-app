@@ -87,7 +87,7 @@ const getNextPropertyCode = (properties = []) => {
 const buildAutoUnits = (propertyCode, totalUnits) => {
   const count = Math.max(0, Number(totalUnits) || 0);
   return Array.from({ length: count }).map((_, index) => {
-    const serial = String(index).padStart(3, "0");
+    const serial = String(index + 1).padStart(3, "0");
     return {
       id: `unit-${Date.now()}-${index}`,
       unitNumber: `${propertyCode}-${serial}`,
@@ -100,7 +100,9 @@ const buildAutoUnits = (propertyCode, totalUnits) => {
       caution: 0,
       billsIncluded: false,
       billsNote: "",
-      status: "available",
+      publishedStatus: "unpublished",
+      tenantStatus: "vacant",
+      status: "vacant",
       tenantId: null,
       tenant: null,
       amenities: [],
@@ -124,7 +126,7 @@ const appendAutoUnits = (propertyCode, existingUnits, additionalCount) => {
     .map((code) => Number(code.split("-")[1]))
     .filter((value) => Number.isFinite(value));
 
-  let next = usedNumbers.length ? Math.max(...usedNumbers) + 1 : 0;
+  let next = usedNumbers.length ? Math.max(...usedNumbers) + 1 : 1;
   const generated = [];
   for (let index = 0; index < count; index += 1) {
     const serial = String(next).padStart(3, "0");
@@ -140,7 +142,9 @@ const appendAutoUnits = (propertyCode, existingUnits, additionalCount) => {
       caution: 0,
       billsIncluded: false,
       billsNote: "",
-      status: "available",
+      publishedStatus: "unpublished",
+      tenantStatus: "vacant",
+      status: "vacant",
       tenantId: null,
       tenant: null,
       amenities: [],
@@ -154,6 +158,55 @@ const appendAutoUnits = (propertyCode, existingUnits, additionalCount) => {
     next += 1;
   }
   return generated;
+};
+
+const isProtectedUnit = (unit) => {
+  const status = String(unit.status || "").toLowerCase();
+  const hasTenant = Boolean(unit.tenantId || unit.tenant);
+  return hasTenant || status === "occupied";
+};
+
+const shrinkUnitsSafely = (units, targetCount) => {
+  const currentUnits = Array.isArray(units) ? units : [];
+  if (targetCount >= currentUnits.length) {
+    return { ok: true, units: currentUnits, blockedCount: 0 };
+  }
+
+  const toRemoveCount = currentUnits.length - targetCount;
+  const removableCandidates = currentUnits
+    .map((unit, index) => ({ unit, index }))
+    .filter(({ unit }) => !isProtectedUnit(unit))
+    .sort((a, b) => {
+      const aScore = Number(Boolean(a.unit.isConfigured));
+      const bScore = Number(Boolean(b.unit.isConfigured));
+      return aScore - bScore || b.index - a.index;
+    });
+
+  if (removableCandidates.length < toRemoveCount) {
+    return {
+      ok: false,
+      units: currentUnits,
+      blockedCount: toRemoveCount - removableCandidates.length,
+    };
+  }
+
+  const indexesToRemove = new Set(
+    removableCandidates.slice(0, toRemoveCount).map(({ index }) => index)
+  );
+  const nextUnits = currentUnits.filter((_, index) => !indexesToRemove.has(index));
+  return { ok: true, units: nextUnits, blockedCount: 0 };
+};
+
+const normalizeUnitCodes = (propertyCode, units) => {
+  return (units || []).map((unit, index) => {
+    const serial = String(index + 1).padStart(3, "0");
+    const normalizedCode = `${propertyCode}-${serial}`;
+    return {
+      ...unit,
+      unitNumber: normalizedCode,
+      number: normalizedCode,
+    };
+  });
 };
 
 export default function AdminAddNewProperty() {
@@ -257,6 +310,32 @@ export default function AdminAddNewProperty() {
         return;
       }
 
+      const currentUnits = editingProperty.units || [];
+      const targetUnits = Math.max(1, Number(form.totalUnits) || 1);
+      const reduced = shrinkUnitsSafely(currentUnits, targetUnits);
+      if (!reduced.ok) {
+        setSaveError(
+          `Cannot reduce units to ${targetUnits}. ${reduced.blockedCount} unit(s) are occupied or assigned to tenants.`
+        );
+        return;
+      }
+      const unitsAfterReduction = reduced.units;
+      const unitsAfterResize =
+        targetUnits > unitsAfterReduction.length
+          ? [
+              ...unitsAfterReduction,
+              ...appendAutoUnits(
+                editingProperty.propertyCode || getNextPropertyCode(properties),
+                unitsAfterReduction,
+                targetUnits - unitsAfterReduction.length
+              ),
+            ]
+          : unitsAfterReduction;
+      const normalizedUnits = normalizeUnitCodes(
+        editingProperty.propertyCode || getNextPropertyCode(properties),
+        unitsAfterResize
+      );
+
       setProperties((prev) =>
         prev.map((property) =>
           property.id === editingProperty.id
@@ -283,17 +362,7 @@ export default function AdminAddNewProperty() {
                   form.coverImages.find(Boolean) ||
                   property.image ||
                   "https://images.unsplash.com/photo-1564013799919-ab600027ffc6?w=1400&h=800&fit=crop",
-                units:
-                  Number(form.totalUnits) > (property.units || []).length
-                    ? [
-                        ...(property.units || []),
-                        ...appendAutoUnits(
-                          property.propertyCode || getNextPropertyCode(prev),
-                          property.units || [],
-                          Number(form.totalUnits) - (property.units || []).length
-                        ),
-                      ]
-                    : property.units || [],
+                units: normalizedUnits,
               }
             : property
         )

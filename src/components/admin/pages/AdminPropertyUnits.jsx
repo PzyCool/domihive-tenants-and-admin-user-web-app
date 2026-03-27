@@ -9,13 +9,14 @@ import { useState } from "react";
 export default function AdminPropertyUnits() {
   const { propertyId } = useParams();
   const navigate = useNavigate();
-  const { properties, tenants } = useAdmin();
+  const { properties, tenants, setProperties } = useAdmin();
   const [filtersOpen, setFiltersOpen] = useState(true);
   const [search, setSearch] = useState("");
   const [unitStatus, setUnitStatus] = useState("all");
   const [bedroomFilter, setBedroomFilter] = useState("all");
   const [tenancyFilter, setTenancyFilter] = useState("all");
   const [sortBy, setSortBy] = useState("newest");
+  const [unpublishTapCounts, setUnpublishTapCounts] = useState({});
 
   const property = properties.find((item) => item.id === propertyId);
 
@@ -28,8 +29,8 @@ export default function AdminPropertyUnits() {
     return (property.units || []).map((unit) => {
       const tenant =
         tenants.find((item) => item.id === unit.tenantId || item.unitId === unit.id) || null;
-      const normalizedStatus = String(unit.status || "").toLowerCase();
-      const unitStatus = normalizedStatus || "vacant";
+      const normalizedStatus = String(unit.tenantStatus || unit.status || "").toLowerCase();
+      const unitStatus = normalizedStatus === "available" ? "vacant" : (normalizedStatus || "vacant");
 
       return {
         ...unit,
@@ -37,10 +38,14 @@ export default function AdminPropertyUnits() {
         propertyTitle: property.title,
         propertyLocation: `${property.location}, ${property.area}`,
         propertyState: property.state,
-        propertyImage: property.image,
+        propertyImage:
+          (Array.isArray(unit.images) && unit.images.find(Boolean)) ||
+          unit.image ||
+          property.image,
         bedrooms: resolveBedrooms(unit),
         rent: unit.rent ?? property.rent ?? 0,
         tenantName: tenant?.name || unit.tenant || null,
+        publishedStatus: unit.publishedStatus || "unpublished",
         isConfigured: unit.isConfigured ?? true,
         unitStatus,
         status: unitStatus,
@@ -56,13 +61,51 @@ export default function AdminPropertyUnits() {
     setSortBy("newest");
   };
 
+  const handlePublishAction = (unitId, currentStatus) => {
+    const normalized = String(currentStatus || "unpublished").toLowerCase();
+
+    if (normalized !== "published") {
+      setProperties((prev) =>
+        prev.map((prop) =>
+          prop.id === propertyId
+            ? {
+                ...prop,
+                units: (prop.units || []).map((u) =>
+                  u.id === unitId ? { ...u, publishedStatus: "published" } : u
+                ),
+              }
+            : prop
+        )
+      );
+      setUnpublishTapCounts((prev) => ({ ...prev, [unitId]: 0 }));
+      return;
+    }
+
+    const nextCount = (unpublishTapCounts[unitId] || 0) + 1;
+    if (nextCount >= 3) {
+      setProperties((prev) =>
+        prev.map((prop) =>
+          prop.id === propertyId
+            ? {
+                ...prop,
+                units: (prop.units || []).map((u) =>
+                  u.id === unitId ? { ...u, publishedStatus: "unpublished" } : u
+                ),
+              }
+            : prop
+        )
+      );
+      setUnpublishTapCounts((prev) => ({ ...prev, [unitId]: 0 }));
+      return;
+    }
+
+    setUnpublishTapCounts((prev) => ({ ...prev, [unitId]: nextCount }));
+  };
+
   const statusOptions = [
     { value: "all", label: "All Status" },
-    { value: "available", label: "Available" },
-    { value: "vacant", label: "Vacant" },
-    { value: "occupied", label: "Occupied" },
-    { value: "reserved", label: "Reserved" },
-    { value: "maintenance", label: "Maintenance" },
+    { value: "published", label: "Published" },
+    { value: "unpublished", label: "Unpublished" },
   ];
 
   const bedroomOptions = [
@@ -73,8 +116,9 @@ export default function AdminPropertyUnits() {
   ];
 
   const tenancyOptions = [
-    { value: "with-tenant", label: "Assigned Tenant" },
-    { value: "without-tenant", label: "Vacant Tenant" },
+    { value: "vacant", label: "Vacant" },
+    { value: "occupied", label: "Occupied" },
+    { value: "reserved", label: "Reserved" },
   ];
 
   const sortOptions = [
@@ -98,7 +142,9 @@ export default function AdminPropertyUnits() {
     }
 
     if (unitStatus !== "all") {
-      list = list.filter((unit) => String(unit.unitStatus || "").toLowerCase() === unitStatus);
+      list = list.filter(
+        (unit) => String(unit.publishedStatus || "unpublished").toLowerCase() === unitStatus
+      );
     }
 
     if (bedroomFilter !== "all") {
@@ -109,10 +155,10 @@ export default function AdminPropertyUnits() {
       });
     }
 
-    if (tenancyFilter === "with-tenant") {
-      list = list.filter((unit) => Boolean(unit.tenantName));
-    } else if (tenancyFilter === "without-tenant") {
-      list = list.filter((unit) => !unit.tenantName);
+    if (tenancyFilter !== "all") {
+      list = list.filter(
+        (unit) => String(unit.unitStatus || unit.status || "").toLowerCase() === tenancyFilter
+      );
     }
 
     if (sortBy === "unit-asc") {
@@ -189,7 +235,12 @@ export default function AdminPropertyUnits() {
 
       <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
         {filteredUnits.map((unit) => (
-          <UnitCard key={unit.id} unit={unit} />
+          <UnitCard
+            key={unit.id}
+            unit={unit}
+            onPublishAction={() => handlePublishAction(unit.id, unit.publishedStatus)}
+            unpublishTapCount={unpublishTapCounts[unit.id] || 0}
+          />
         ))}
       </div>
     </div>

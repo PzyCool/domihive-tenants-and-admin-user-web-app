@@ -23,11 +23,21 @@ const PropertyGrid = ({
   }
   
   return (
-    <div className="flex gap-3 overflow-x-auto pb-3 -mx-3 px-3 snap-x snap-mandatory sm:-mx-0 sm:px-0 sm:grid sm:grid-cols-2 lg:grid-cols-3 sm:gap-6 sm:overflow-visible">
+    <div
+      className={
+        viewType === 'list'
+          ? 'space-y-4'
+          : 'flex gap-3 overflow-x-auto pb-3 -mx-3 px-3 snap-x snap-mandatory sm:-mx-0 sm:px-0 sm:grid sm:grid-cols-2 lg:grid-cols-3 sm:gap-6 sm:overflow-visible'
+      }
+    >
       {properties.map((property) => (
-        <div key={property.id} className="w-[85%] flex-shrink-0 snap-start sm:w-full">
+        <div
+          key={property.id}
+          className={viewType === 'list' ? 'w-full' : 'w-[85%] flex-shrink-0 snap-start sm:w-full'}
+        >
           <PropertyCard
             property={property}
+            viewType={viewType}
             onViewDetails={() => onPropertyClick?.(property.id)}
             onToggleFavorite={(prop, fav) => onFavoriteToggle?.(prop, fav)}
             onBookNowClick={onBookNowClick}
