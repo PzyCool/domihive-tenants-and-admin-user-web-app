@@ -1,11 +1,11 @@
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { useNavigate, useParams } from "react-router-dom";
-import { ChevronRight, Image, Video } from "lucide-react";
+import { ChevronDown, ChevronRight, DoorOpen, Building2, Landmark, House, Image, Video } from "lucide-react";
 import { useAdmin } from "../../../context/AdminContext";
 
 const emptyForm = {
   unitNumber: "",
-  type: "Apartment",
+  type: "Apartment (Flat)",
   bedrooms: 1,
   bathrooms: 1,
   size: "",
@@ -32,6 +32,44 @@ const AMENITIES = [
   "WiFi",
 ];
 
+const UNIT_TYPE_OPTIONS = [
+  {
+    value: "Self-Contain (Studio)",
+    label: "Self-Contain (Studio)",
+    description: "Single open space with private bathroom",
+    icon: DoorOpen,
+  },
+  {
+    value: "Mini Flat",
+    label: "Mini Flat",
+    description: "Separate bedroom, living area, kitchen and bathroom",
+    icon: House,
+  },
+  {
+    value: "Apartment (Flat)",
+    label: "Apartment (Flat)",
+    description: "Standard residential unit with separate rooms",
+    icon: Building2,
+  },
+  {
+    value: "Penthouse",
+    label: "Penthouse",
+    description: "Luxury top-floor unit with premium features",
+    icon: Landmark,
+  },
+];
+
+const getNextUnitCode = (property) => {
+  const prefix = property.propertyCode || "A0";
+  const unitCodes = (property.units || [])
+    .map((unit) => String(unit.unitNumber || unit.number || ""))
+    .filter((value) => value.startsWith(`${prefix}-`))
+    .map((value) => Number(value.split("-")[1]))
+    .filter((value) => Number.isFinite(value));
+  const nextNumber = unitCodes.length ? Math.max(...unitCodes) + 1 : 0;
+  return `${prefix}-${String(nextNumber).padStart(3, "0")}`;
+};
+
 const Section = ({ title, children }) => (
   <section className="rounded-md border border-gray-200 dark:border-white/5 bg-white dark:bg-[#111827] transition-colors">
     <div className="border-b border-gray-100 dark:border-white/5 px-4 py-3">
@@ -44,15 +82,25 @@ const Section = ({ title, children }) => (
 export default function AdminAddNewUnit() {
   const navigate = useNavigate();
   const { propertyId } = useParams();
-  const { properties, setProperties, locations } = useAdmin();
+  const { properties, setProperties } = useAdmin();
   const [form, setForm] = useState(emptyForm);
+  const [isUnitTypeOpen, setIsUnitTypeOpen] = useState(false);
 
   const property = useMemo(
     () => properties.find((item) => item.id === propertyId),
     [properties, propertyId]
   );
 
-  const propertyTypes = locations?.propertyTypes || ["Apartment", "Duplex", "Studio"];
+  const selectedUnitType =
+    UNIT_TYPE_OPTIONS.find((option) => option.value === form.type) || UNIT_TYPE_OPTIONS[2];
+
+  useEffect(() => {
+    if (!property) return;
+    setForm((prev) => {
+      if (prev.unitNumber) return prev;
+      return { ...prev, unitNumber: getNextUnitCode(property) };
+    });
+  }, [property]);
 
   const toggleAmenity = (name) => {
     setForm((prev) => {
@@ -91,6 +139,7 @@ export default function AdminAddNewUnit() {
       leaseStart: null,
       leaseEnd: null,
       notes: "",
+      isConfigured: true,
     };
 
     setProperties((prev) =>
@@ -147,24 +196,69 @@ export default function AdminAddNewUnit() {
                 <label className="text-xs font-medium text-gray-600 dark:text-gray-400">Unit Code / Number</label>
                 <input
                   className="mt-1 w-full rounded-md border border-gray-200 dark:border-white/10 bg-transparent dark:text-white px-3 py-2 text-sm outline-none focus:border-[#9F7539]"
-                  placeholder="e.g. A-203"
+                  placeholder="Auto-generated unit code"
                   value={form.unitNumber}
                   onChange={(e) => setForm({ ...form, unitNumber: e.target.value })}
                 />
               </div>
               <div>
                 <label className="text-xs font-medium text-gray-600 dark:text-gray-400">Unit Type</label>
-                <select
-                  className="mt-1 w-full rounded-md border border-gray-200 dark:border-white/10 bg-transparent dark:text-white px-3 py-2 text-sm outline-none focus:border-[#9F7539] cursor-pointer"
-                  value={form.type}
-                  onChange={(e) => setForm({ ...form, type: e.target.value })}
-                >
-                  {propertyTypes.map((type) => (
-                    <option key={type} className="dark:bg-[#111827]">
-                      {type}
-                    </option>
-                  ))}
-                </select>
+                <div className="relative mt-1">
+                  <button
+                    type="button"
+                    onClick={() => setIsUnitTypeOpen((prev) => !prev)}
+                    className="w-full rounded-md border border-gray-200 dark:border-white/10 bg-white dark:bg-[#0f172a] px-3 py-2 text-left"
+                  >
+                    <div className="flex items-center justify-between gap-2">
+                      <div className="flex items-start gap-2 min-w-0">
+                        <selectedUnitType.icon size={16} className="mt-0.5 text-[#9F7539]" />
+                        <div className="min-w-0">
+                          <div className="text-sm font-medium text-gray-800 dark:text-white truncate">
+                            {selectedUnitType.label}
+                          </div>
+                          <div className="text-xs text-gray-500 dark:text-gray-400 truncate">
+                            {selectedUnitType.description}
+                          </div>
+                        </div>
+                      </div>
+                      <ChevronDown size={16} className="text-gray-500 dark:text-gray-300 shrink-0" />
+                    </div>
+                  </button>
+
+                  {isUnitTypeOpen && (
+                    <div className="absolute z-30 mt-1 w-full rounded-md border border-gray-200 dark:border-white/10 bg-white dark:bg-[#0f172a] shadow-lg max-h-72 overflow-auto">
+                      {UNIT_TYPE_OPTIONS.map((option) => {
+                        const Icon = option.icon;
+                        const selected = form.type === option.value;
+                        return (
+                          <button
+                            key={option.value}
+                            type="button"
+                            onClick={() => {
+                              setForm({ ...form, type: option.value });
+                              setIsUnitTypeOpen(false);
+                            }}
+                            className={`w-full text-left p-2.5 border-b last:border-b-0 border-gray-100 dark:border-white/10 transition-colors ${
+                              selected ? "bg-[#9F7539]/10" : "hover:bg-gray-50 dark:hover:bg-white/5"
+                            }`}
+                          >
+                            <div className="flex items-start gap-2">
+                              <Icon size={16} className={`mt-0.5 ${selected ? "text-[#9F7539]" : "text-gray-500 dark:text-gray-300"}`} />
+                              <div className="min-w-0">
+                                <div className={`text-sm font-medium ${selected ? "text-[#9F7539]" : "text-gray-800 dark:text-white"}`}>
+                                  {option.label}
+                                </div>
+                                <div className="text-xs text-gray-500 dark:text-gray-400">
+                                  {option.description}
+                                </div>
+                              </div>
+                            </div>
+                          </button>
+                        );
+                      })}
+                    </div>
+                  )}
+                </div>
               </div>
             </div>
 

@@ -1,12 +1,13 @@
-import React, { useMemo } from "react";
+import React, { useMemo, useState } from "react";
 import { Link, useNavigate, useParams } from "react-router-dom";
-import { ChevronRight, Eye } from "lucide-react";
+import { ChevronLeft, ChevronRight, Eye } from "lucide-react";
 import { useAdmin } from "../../../context/AdminContext";
 
 export default function AdminPropertyView() {
   const { propertyId } = useParams();
   const navigate = useNavigate();
   const { properties, clients, tenants } = useAdmin();
+  const [imageIndex, setImageIndex] = useState(0);
 
   const property = properties.find((item) => item.id === propertyId);
 
@@ -35,6 +36,17 @@ export default function AdminPropertyView() {
     };
   }, [property, clients, tenants]);
 
+  const slides = useMemo(() => {
+    if (!property) return [];
+    const fromSlides = Array.isArray(property.images) ? property.images.filter(Boolean) : [];
+    if (fromSlides.length > 0) return fromSlides;
+    return property.image ? [property.image] : [];
+  }, [property]);
+
+  const currentSlide = slides.length
+    ? slides[((imageIndex % slides.length) + slides.length) % slides.length]
+    : "";
+
   if (!property || !details) {
     return <div className="text-sm text-gray-500 dark:text-gray-400">Property not found.</div>;
   }
@@ -48,10 +60,35 @@ export default function AdminPropertyView() {
       </div>
 
       <div className="bg-white dark:bg-[#111827] rounded-xl border border-gray-100 dark:border-white/10 overflow-hidden">
-        <img src={property.image} alt={property.title} className="h-72 w-full object-cover" />
+        <div className="relative h-72 w-full">
+          <img src={currentSlide} alt={property.title} className="h-72 w-full object-cover" />
+          {slides.length > 1 && (
+            <>
+              <button
+                type="button"
+                onClick={() => setImageIndex((prev) => (prev - 1 + slides.length) % slides.length)}
+                className="absolute left-4 top-1/2 -translate-y-1/2 h-10 w-10 rounded-full bg-black/45 hover:bg-black/60 text-white flex items-center justify-center"
+                aria-label="Previous image"
+              >
+                <ChevronLeft size={18} />
+              </button>
+              <button
+                type="button"
+                onClick={() => setImageIndex((prev) => (prev + 1) % slides.length)}
+                className="absolute right-4 top-1/2 -translate-y-1/2 h-10 w-10 rounded-full bg-black/45 hover:bg-black/60 text-white flex items-center justify-center"
+                aria-label="Next image"
+              >
+                <ChevronRight size={18} />
+              </button>
+            </>
+          )}
+        </div>
         <div className="p-5 space-y-5">
           <div>
             <h1 className="text-2xl font-bold text-[#0e1f42] dark:text-white">{property.title}</h1>
+            <div className="text-xs font-semibold text-[#9F7539] mt-1">
+              Property Code: {property.propertyCode || "No Code"}
+            </div>
             <p className="text-sm text-gray-500 dark:text-gray-400 mt-1">
               {property.address || property.location}, {property.area}, {property.state}
             </p>
@@ -113,12 +150,20 @@ export default function AdminPropertyView() {
           </div>
 
           <div className="flex items-center justify-between gap-2">
-            <button
-              onClick={() => navigate(`/admin/properties/${property.id}/units`)}
-              className="bg-[#9F7539] text-white px-4 py-2 rounded-md text-sm font-semibold"
-            >
-              View Units
-            </button>
+            <div className="flex items-center gap-2">
+              <button
+                onClick={() => navigate(`/admin/add-property`, { state: { editPropertyId: property.id } })}
+                className="border border-gray-200 dark:border-white/10 px-4 py-2 rounded-md text-sm font-semibold text-gray-700 dark:text-gray-300"
+              >
+                Edit Property
+              </button>
+              <button
+                onClick={() => navigate(`/admin/properties/${property.id}/units`)}
+                className="bg-[#9F7539] text-white px-4 py-2 rounded-md text-sm font-semibold"
+              >
+                View Units
+              </button>
+            </div>
             <button
               onClick={() => navigate("/admin/properties")}
               className="border border-gray-200 dark:border-white/10 px-4 py-2 rounded-md text-sm font-semibold text-gray-700 dark:text-gray-300"

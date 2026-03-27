@@ -1,6 +1,6 @@
 import React, { useMemo, useState } from "react";
 import { useNavigate } from "react-router-dom";
-import { Eye, Plus } from "lucide-react";
+import { ChevronLeft, ChevronRight, Eye, Plus } from "lucide-react";
 import { useAdmin } from "../../../context/AdminContext";
 import PropertySummaryCards from "../properties/PropertySummaryCards";
 import PropertyFilters from "../properties/PropertyFilters";
@@ -14,6 +14,7 @@ export default function AdminProperties() {
   const [stateFilter, setStateFilter] = useState("all");
   const [locationFilter, setLocationFilter] = useState("all");
   const [sortBy, setSortBy] = useState("newest");
+  const [slideIndexes, setSlideIndexes] = useState({});
 
   const safeStatus = (status) => String(status || "").toLowerCase();
 
@@ -123,6 +124,32 @@ export default function AdminProperties() {
     [properties]
   );
 
+  const getPropertySlides = (property) => {
+    const slides = Array.isArray(property.images) ? property.images.filter(Boolean) : [];
+    if (slides.length > 0) return slides;
+    return property.image ? [property.image] : [];
+  };
+
+  const getCurrentSlide = (property) => {
+    const slides = getPropertySlides(property);
+    if (!slides.length) return "";
+    const rawIndex = slideIndexes[property.id] || 0;
+    const safeIndex = ((rawIndex % slides.length) + slides.length) % slides.length;
+    return slides[safeIndex];
+  };
+
+  const slidePropertyImage = (property, direction) => {
+    const slides = getPropertySlides(property);
+    if (slides.length <= 1) return;
+    setSlideIndexes((prev) => {
+      const current = prev[property.id] || 0;
+      return {
+        ...prev,
+        [property.id]: (current + direction + slides.length) % slides.length,
+      };
+    });
+  };
+
   return (
     <div className="space-y-5">
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
@@ -169,11 +196,36 @@ export default function AdminProperties() {
       <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
         {filteredProperties.map((property) => (
           <div key={property.id} className="bg-white dark:bg-[#111827] border border-gray-100 dark:border-white/10 rounded-xl overflow-hidden">
-            <img src={property.image} alt={property.title} className="h-56 w-full object-cover" />
+            <div className="relative h-56 w-full">
+              <img src={getCurrentSlide(property)} alt={property.title} className="h-56 w-full object-cover" />
+              {getPropertySlides(property).length > 1 && (
+                <>
+                  <button
+                    type="button"
+                    onClick={() => slidePropertyImage(property, -1)}
+                    className="absolute left-3 top-1/2 -translate-y-1/2 h-9 w-9 rounded-full bg-black/45 hover:bg-black/60 text-white flex items-center justify-center"
+                    aria-label="Previous slide"
+                  >
+                    <ChevronLeft size={18} />
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => slidePropertyImage(property, 1)}
+                    className="absolute right-3 top-1/2 -translate-y-1/2 h-9 w-9 rounded-full bg-black/45 hover:bg-black/60 text-white flex items-center justify-center"
+                    aria-label="Next slide"
+                  >
+                    <ChevronRight size={18} />
+                  </button>
+                </>
+              )}
+            </div>
             <div className="p-4 space-y-3">
               <div className="flex items-start justify-between gap-3">
                 <div>
                   <h3 className="font-semibold text-[#0e1f42] dark:text-white">{property.title}</h3>
+                  <div className="text-[11px] mt-0.5 text-[#9F7539] font-semibold">
+                    {property.propertyCode || "No Code"}
+                  </div>
                   <p className="text-xs text-gray-500 dark:text-gray-400 mt-1">
                     {property.address || property.location}, {property.area}, {property.state}
                   </p>

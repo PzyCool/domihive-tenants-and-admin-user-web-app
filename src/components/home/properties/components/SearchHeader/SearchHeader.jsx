@@ -40,6 +40,9 @@ const SearchHeader = ({
   const handleToggleExpand = () => {
     const newExpandedState = !isExpanded;
     setIsExpanded(newExpandedState);
+    if (newExpandedState) {
+      setShowAdvancedFilters(false);
+    }
     if (onFilterChange) {
       onFilterChange({ isExpanded: newExpandedState });
     }
@@ -62,7 +65,16 @@ const SearchHeader = ({
   };
 
   const handleAdvancedToggle = () => {
-    setShowAdvancedFilters(!showAdvancedFilters);
+    setShowAdvancedFilters((prev) => {
+      const nextOpen = !prev;
+      if (nextOpen) {
+        setIsExpanded(false);
+        if (onFilterChange) {
+          onFilterChange({ isExpanded: false });
+        }
+      }
+      return nextOpen;
+    });
   };
   
   return (

@@ -135,8 +135,7 @@ const AdminClients = () => {
               {filtered.map((client) => (
                 <tr
                   key={client.id}
-                  className="border-t border-gray-100 dark:border-white/10 hover:bg-gray-50/60 dark:hover:bg-white/5 cursor-pointer"
-                  onClick={() => navigate(`/admin/clients/${client.id}`)}
+                  className="border-t border-gray-100 dark:border-white/10 hover:bg-gray-50/60 dark:hover:bg-white/5"
                 >
                   <td className="px-5 py-4">
                     <div className="flex items-center gap-3">

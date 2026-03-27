@@ -41,6 +41,7 @@ export default function AdminPropertyUnits() {
         bedrooms: resolveBedrooms(unit),
         rent: unit.rent ?? property.rent ?? 0,
         tenantName: tenant?.name || unit.tenant || null,
+        isConfigured: unit.isConfigured ?? true,
         unitStatus,
         status: unitStatus,
       };

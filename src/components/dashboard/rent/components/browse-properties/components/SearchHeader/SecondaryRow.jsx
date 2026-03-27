@@ -41,11 +41,9 @@ const SecondaryRow = ({ filters, onFilterChange, onClearFilters, onApplyFilters,
 
   return (
     <div className="secondary-row px-4 lg:px-6 py-4 bg-gray-50 border-t border-gray-200">
-      <div className="flex flex-col lg:flex-row gap-4">
-        {/* Filter Grid - 5 columns */}
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-6 gap-4 flex-1">
-          <div>
-            <label className="block text-xs font-semibold text-gray-700 mb-1 uppercase tracking-wide">
+      <div className="grid grid-cols-8 items-end gap-3">
+        <div className="min-w-0">
+            <label className="block h-6 text-xs font-semibold text-gray-700 mb-1 uppercase tracking-wide whitespace-nowrap">
               <i className="fas fa-map mr-1 text-[#9f7539]"></i>
               State
             </label>
@@ -61,8 +59,8 @@ const SecondaryRow = ({ filters, onFilterChange, onClearFilters, onApplyFilters,
           </div>
 
           
-          <div>
-  <label className="block text-xs font-semibold text-gray-700 mb-1 uppercase tracking-wide">
+          <div className="min-w-0">
+  <label className="block h-6 text-xs font-semibold text-gray-700 mb-1 uppercase tracking-wide whitespace-nowrap">
     <i className="fas fa-map-marker-alt mr-1 text-[#9f7539]"></i>
     Area
   </label>
@@ -86,8 +84,8 @@ const SecondaryRow = ({ filters, onFilterChange, onClearFilters, onApplyFilters,
 </div>
           
           {/* Location */}
-          <div>
-            <label className="block text-xs font-semibold text-gray-700 mb-1 uppercase tracking-wide">
+          <div className="min-w-0">
+            <label className="block h-6 text-xs font-semibold text-gray-700 mb-1 uppercase tracking-wide whitespace-nowrap">
               <i className="fas fa-location-dot mr-1 text-[#9f7539]"></i>
               Location
             </label>
@@ -100,8 +98,8 @@ const SecondaryRow = ({ filters, onFilterChange, onClearFilters, onApplyFilters,
           </div>
           
           {/* Property Type */}
-          <div>
-            <label className="block text-xs font-semibold text-gray-700 mb-1 uppercase tracking-wide">
+          <div className="min-w-0">
+            <label className="block h-6 text-xs font-semibold text-gray-700 mb-1 uppercase tracking-wide whitespace-nowrap">
               <i className="fas fa-home mr-1 text-[#9f7539]"></i>
               Property Type
             </label>
@@ -112,8 +110,8 @@ const SecondaryRow = ({ filters, onFilterChange, onClearFilters, onApplyFilters,
           </div>
           
           {/* Bedrooms */}
-          <div>
-            <label className="block text-xs font-semibold text-gray-700 mb-1 uppercase tracking-wide">
+          <div className="min-w-0">
+            <label className="block h-6 text-xs font-semibold text-gray-700 mb-1 uppercase tracking-wide whitespace-nowrap">
               <i className="fas fa-bed mr-1 text-[#9f7539]"></i>
               Bedrooms
             </label>
@@ -124,8 +122,8 @@ const SecondaryRow = ({ filters, onFilterChange, onClearFilters, onApplyFilters,
           </div>
           
           {/* Price Range */}
-          <div>
-            <label className="block text-xs font-semibold text-gray-700 mb-1 uppercase tracking-wide">
+          <div className="min-w-0">
+            <label className="block h-6 text-xs font-semibold text-gray-700 mb-1 uppercase tracking-wide whitespace-nowrap">
               <i className="fas fa-tag mr-1 text-[#9f7539]"></i>
               Price Range
             </label>
@@ -135,10 +133,7 @@ const SecondaryRow = ({ filters, onFilterChange, onClearFilters, onApplyFilters,
             />
           </div>
           
-        </div>
-        
-        {/* Action Buttons */}
-        <div className="flex items-end gap-2">
+        <div className="col-span-2 flex items-end justify-end gap-2 min-w-0">
           <ClearButton onClick={onClearFilters} disabled={isSyncing} />
           <ApplyFilterButton 
             onClick={() => {

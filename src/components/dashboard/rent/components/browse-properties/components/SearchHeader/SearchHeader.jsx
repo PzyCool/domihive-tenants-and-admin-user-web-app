@@ -1,4 +1,4 @@
-﻿import React, { useEffect, useMemo, useState } from 'react';
+﻿import React, { useEffect, useState } from 'react';
 import PrimaryRow from './PrimaryRow';
 import SecondaryRow from './SecondaryRow';
 import AdvancedFilterOverlay from './AdvancedFilterOverlay/AdvancedFilterOverlay';
@@ -72,7 +72,21 @@ const SearchHeader = ({
   const handleToggleExpand = () => {
     const nextExpanded = !isExpanded;
     setIsExpanded(nextExpanded);
+    if (nextExpanded) {
+      setShowAdvancedFilters(false);
+    }
     onFilterChange?.({ isExpanded: nextExpanded });
+  };
+
+  const handleAdvancedToggle = () => {
+    setShowAdvancedFilters((prev) => {
+      const nextOpen = !prev;
+      if (nextOpen) {
+        setIsExpanded(false);
+        onFilterChange?.({ isExpanded: false });
+      }
+      return nextOpen;
+    });
   };
 
   const handleClearFilters = () => {
@@ -97,46 +111,6 @@ const SearchHeader = ({
     setSearchDraft('');
   };
 
-  const activeFilterChips = useMemo(() => {
-    const chips = [];
-    if (filters.state && filters.state !== 'all') chips.push({ key: 'state', label: `State: ${filters.state}` });
-    if (filters.area && filters.area !== 'all') chips.push({ key: 'area', label: `Area: ${filters.area}` });
-    if (filters.location && filters.location !== 'all') chips.push({ key: 'location', label: `Location: ${filters.location}` });
-    if (filters.propertyType && filters.propertyType !== 'all') chips.push({ key: 'propertyType', label: `Type: ${filters.propertyType}` });
-    if (filters.bedrooms && filters.bedrooms !== 'all') chips.push({ key: 'bedrooms', label: `Beds: ${filters.bedrooms}` });
-    if (Array.isArray(filters.advancedBedrooms) && filters.advancedBedrooms.length)
-      chips.push({ key: 'advancedBedrooms', label: `Advanced Beds: ${filters.advancedBedrooms.join(', ')}` });
-    if (filters.priceRange && filters.priceRange !== 'all') chips.push({ key: 'priceRange', label: `Price: ${filters.priceRange}` });
-    if (filters.managementType && filters.managementType !== 'all') chips.push({ key: 'managementType', label: `Management: ${filters.managementType}` });
-    if (filters.furnishing) chips.push({ key: 'furnishing', label: `Furnishing: ${filters.furnishing}` });
-    if (filters.propertyAge) chips.push({ key: 'propertyAge', label: `Age: ${filters.propertyAge}` });
-    if (filters.petsAllowed) chips.push({ key: 'petsAllowed', label: 'Pets allowed' });
-    if (Array.isArray(filters.amenities) && filters.amenities.length)
-      chips.push({ key: 'amenities', label: `Amenities: ${filters.amenities.length}` });
-    if (Array.isArray(filters.bathrooms) && filters.bathrooms.length)
-      chips.push({ key: 'bathrooms', label: `Baths: ${filters.bathrooms.join(', ')}` });
-    return chips;
-  }, [filters]);
-
-  const clearSingleFilter = (chipKey) => {
-    const resetMap = {
-      state: 'all',
-      area: 'all',
-      location: 'all',
-      propertyType: 'all',
-      bedrooms: 'all',
-      advancedBedrooms: [],
-      priceRange: 'all',
-      managementType: 'all',
-      furnishing: '',
-      propertyAge: '',
-      petsAllowed: false,
-      amenities: [],
-      bathrooms: []
-    };
-    onFilterChange?.({ [chipKey]: resetMap[chipKey] });
-  };
-
   return (
     <div
       className="search-header w-full bg-white border-b border-gray-200 transition-all duration-300 ease-in-out"
@@ -156,33 +130,13 @@ const SearchHeader = ({
         isExpanded={isExpanded}
         onToggleExpand={handleToggleExpand}
         showAdvancedFilters={showAdvancedFilters}
-        onAdvancedToggle={() => setShowAdvancedFilters((prev) => !prev)}
+        onAdvancedToggle={handleAdvancedToggle}
         searchDraft={searchDraft}
         onSearchDraftChange={setSearchDraft}
         isSyncing={isSyncing}
         lastSyncedAt={lastSyncedAt}
         onRefresh={onRefresh}
       />
-
-      {activeFilterChips.length > 0 && (
-        <div className="px-4 lg:px-6 py-2 border-t border-gray-100 bg-[#fcfcfc] flex flex-wrap gap-2">
-          {activeFilterChips.map((chip) => (
-            <button
-              key={chip.key}
-              onClick={() => clearSingleFilter(chip.key)}
-              className="text-xs px-2.5 py-1 rounded-full border border-[#e2e8f0] bg-white hover:border-[#9f7539]/40 text-[#475467]"
-            >
-              {chip.label} <span className="ml-1">×</span>
-            </button>
-          ))}
-          <button
-            onClick={handleClearFilters}
-            className="text-xs px-2.5 py-1 rounded-full border border-[#f1d6af] bg-[#fff7ed] text-[#9f7539] font-semibold"
-          >
-            Clear all
-          </button>
-        </div>
-      )}
 
       <div
         className={`
