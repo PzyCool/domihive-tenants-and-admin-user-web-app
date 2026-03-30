@@ -81,13 +81,18 @@ const PropertyCard = ({
   };
   
   const getPropertyStatus = () => {
-    if (property.status === 'rented') {
-      return { label: 'Rented', color: 'bg-gray-500', icon: 'fas fa-check-circle' };
+    const normalized = String(property.tenantStatus || property.status || '').toLowerCase();
+    if (normalized === 'reserved') {
+      return { label: 'Reserved - Application in progress', color: 'bg-amber-500', icon: 'fas fa-hourglass-half' };
+    }
+    if (normalized === 'occupied' || normalized === 'rented') {
+      return { label: 'Occupied', color: 'bg-gray-500', icon: 'fas fa-lock' };
     }
     return { label: 'Available', color: 'bg-green-500', icon: 'fas fa-calendar-check' };
   };
   
   const propertyStatus = getPropertyStatus();
+  const isBookable = property.canBook !== false && !['reserved', 'occupied', 'rented'].includes(String(property.tenantStatus || property.status || '').toLowerCase());
   
   const getEstateType = () => {
     if (property.isEstate) {
@@ -212,7 +217,8 @@ const PropertyCard = ({
                 </button>
                 <button
                   onClick={handleBookNowClick}
-                  className="px-4 py-2 bg-gradient-to-r from-[#9f7539] to-[#b58a4a] text-white rounded-lg font-semibold text-sm"
+                  disabled={!isBookable}
+                  className={`px-4 py-2 rounded-lg font-semibold text-sm ${isBookable ? 'bg-gradient-to-r from-[#9f7539] to-[#b58a4a] text-white' : 'bg-gray-200 text-gray-500 cursor-not-allowed'}`}
                 >
                   Book Now
                 </button>
@@ -395,10 +401,15 @@ const PropertyCard = ({
             </button>
             <button
               onClick={handleBookNowClick}
-              className="flex-1 bg-gradient-to-r from-[#9f7539] to-[#b58a4a] text-white font-semibold py-2 rounded-lg hover:from-[#b58a4a] hover:to-[#9f7539] transition-all flex items-center justify-center gap-2 text-xs shadow-sm hover:shadow"
+              disabled={!isBookable}
+              className={`flex-1 font-semibold py-2 rounded-lg transition-all flex items-center justify-center gap-2 text-xs shadow-sm ${
+                isBookable
+                  ? 'bg-gradient-to-r from-[#9f7539] to-[#b58a4a] text-white hover:from-[#b58a4a] hover:to-[#9f7539] hover:shadow'
+                  : 'bg-gray-200 text-gray-500 cursor-not-allowed'
+              }`}
             >
               <i className="fas fa-calendar-check text-[11px]"></i>
-              Book Now
+              {isBookable ? 'Book Now' : 'Not Available'}
             </button>
           </div>
         </div>

@@ -1,5 +1,12 @@
 import React, { createContext, useContext, useEffect, useMemo, useState } from 'react';
-import { readAdminStorage, writeAdminStorage } from './adminPersistence';
+import {
+  ADMIN_STORAGE_BACKUP_KEY,
+  ADMIN_STORAGE_KEY,
+  readAdminStorage,
+  writeAdminStorage
+} from './adminPersistence';
+
+const ADMIN_APPLICATION_INBOX_KEY = 'domihive_admin_applications_inbox_v1';
 
 const AdminContext = createContext(null);
 const defaultProperties = [
@@ -922,7 +929,7 @@ export const AdminProvider = ({ children }) => {
   const [properties, setProperties] = useState(() => persisted?.properties || []);
   const [clients, setClients] = useState(() => persisted?.clients || []);
   const [locations, setLocations] = useState(() => persisted?.locations || defaultLocations);
-  const [slots, setSlots] = useState(() => persisted?.slots || []);
+  const [slots, setSlots] = useState(() => persisted?.slots || defaultSlots);
   const [inspections, setInspections] = useState(() => persisted?.inspections || []);
   const [applications, setApplications] = useState(() => persisted?.applications || []);
   const [tenants, setTenants] = useState(() => persisted?.tenants || []);
@@ -930,6 +937,26 @@ export const AdminProvider = ({ children }) => {
   const [recentActivities, setRecentActivities] = useState(() => persisted?.recentActivities || []);
   const [maintenanceRequests, setMaintenanceRequests] = useState(() => persisted?.maintenanceRequests || []);
   const [payments, setPayments] = useState(() => persisted?.payments || []);
+
+  const readInboxApplications = () => {
+    try {
+      const raw = localStorage.getItem(ADMIN_APPLICATION_INBOX_KEY);
+      if (!raw) return [];
+      const parsed = JSON.parse(raw);
+      return Array.isArray(parsed) ? parsed : [];
+    } catch (_error) {
+      return [];
+    }
+  };
+
+  const mergeApplications = (baseApplications = []) => {
+    const inboxApplications = readInboxApplications();
+    if (!inboxApplications.length) return baseApplications;
+    const merged = [...inboxApplications, ...baseApplications].filter(
+      (item, index, arr) => arr.findIndex((x) => x?.id === item?.id) === index
+    );
+    return merged;
+  };
 
   useEffect(() => {
     writeAdminStorage({
@@ -958,6 +985,51 @@ export const AdminProvider = ({ children }) => {
     maintenanceRequests,
     payments
   ]);
+
+  // Keep admin pages in sync when tenant-side flow writes to shared admin storage.
+  useEffect(() => {
+    const syncFromStorage = (event) => {
+      if (
+        event?.key &&
+        event.key !== ADMIN_STORAGE_KEY &&
+        event.key !== ADMIN_STORAGE_BACKUP_KEY
+      ) {
+        return;
+      }
+      const latest = readAdminStorage();
+      if (!latest) return;
+      if (Array.isArray(latest.properties)) setProperties(latest.properties);
+      if (Array.isArray(latest.clients)) setClients(latest.clients);
+      if (latest.locations) setLocations(latest.locations);
+      if (Array.isArray(latest.slots)) setSlots(latest.slots);
+      if (Array.isArray(latest.inspections)) setInspections(latest.inspections);
+      if (Array.isArray(latest.applications)) {
+        const nextApplications = mergeApplications(latest.applications);
+        setApplications(nextApplications);
+        if (nextApplications.length !== latest.applications.length) {
+          writeAdminStorage({ ...latest, applications: nextApplications });
+        }
+      }
+      if (Array.isArray(latest.tenants)) setTenants(latest.tenants);
+      if (latest.policies) setPolicies(latest.policies);
+      if (Array.isArray(latest.recentActivities)) setRecentActivities(latest.recentActivities);
+      if (Array.isArray(latest.maintenanceRequests)) setMaintenanceRequests(latest.maintenanceRequests);
+      if (Array.isArray(latest.payments)) setPayments(latest.payments);
+    };
+
+    window.addEventListener('storage', syncFromStorage);
+    window.addEventListener('domihive:admin-storage-updated', syncFromStorage);
+    window.addEventListener('domihive:admin-application-submitted', syncFromStorage);
+
+    // Initial same-tab hydration for any queued inbox writes.
+    syncFromStorage();
+
+    return () => {
+      window.removeEventListener('storage', syncFromStorage);
+      window.removeEventListener('domihive:admin-storage-updated', syncFromStorage);
+      window.removeEventListener('domihive:admin-application-submitted', syncFromStorage);
+    };
+  }, []);
 
   const value = useMemo(
     () => ({

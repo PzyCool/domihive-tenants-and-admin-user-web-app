@@ -102,13 +102,18 @@ const PropertyCard = ({ property, onViewDetails, onToggleFavorite, onBookNowClic
   
   // Get property status (available/rented)
   const getPropertyStatus = () => {
-    if (property.status === 'rented') {
-      return { label: 'Rented', color: 'bg-gray-500', icon: 'fas fa-check-circle' };
+    const normalized = String(property.tenantStatus || property.status || '').toLowerCase();
+    if (normalized === 'reserved') {
+      return { label: 'Reserved - Application in progress', color: 'bg-amber-500', icon: 'fas fa-hourglass-half' };
+    }
+    if (normalized === 'occupied' || normalized === 'rented') {
+      return { label: 'Occupied', color: 'bg-gray-500', icon: 'fas fa-lock' };
     }
     return { label: 'Available', color: 'bg-green-500', icon: 'fas fa-calendar-check' };
   };
   
   const propertyStatus = getPropertyStatus();
+  const isBookable = property.canBook !== false && !['reserved', 'occupied', 'rented'].includes(String(property.tenantStatus || property.status || '').toLowerCase());
   
   // Get estate type (for estate badge)
   const getEstateType = () => {
@@ -308,11 +313,16 @@ const PropertyCard = ({ property, onViewDetails, onToggleFavorite, onBookNowClic
               View Details
             </button>
             <button
-              onClick={handleBookNowClick} // UPDATE THIS LINE
-              className="flex-1 bg-gradient-to-r from-[#9f7539] to-[#b58a4a] text-white font-semibold py-2.5 rounded-lg hover:from-[#b58a4a] hover:to-[#9f7539] transition-all flex items-center justify-center gap-2 text-sm shadow-sm hover:shadow"
+              onClick={handleBookNowClick}
+              disabled={!isBookable}
+              className={`flex-1 font-semibold py-2.5 rounded-lg transition-all flex items-center justify-center gap-2 text-sm shadow-sm ${
+                isBookable
+                  ? 'bg-gradient-to-r from-[#9f7539] to-[#b58a4a] text-white hover:from-[#b58a4a] hover:to-[#9f7539] hover:shadow'
+                  : 'bg-gray-200 text-gray-500 cursor-not-allowed'
+              }`}
             >
               <i className="fas fa-calendar-check text-xs"></i>
-              Book Now
+              {isBookable ? 'Book Now' : 'Not Available'}
             </button>
           </div>
         </div>

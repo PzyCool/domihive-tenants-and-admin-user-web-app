@@ -15,10 +15,10 @@ import FloatingCallButton from './components/FloatingCallButton';
 // Import hooks
 import { usePropertyDetails } from './hooks/usePropertyDetails';
 
-const PropertyDetailsModal = ({ propertyId, isOpen, onClose }) => {
+const PropertyDetailsModal = ({ propertyId, isOpen, onClose, onBookInspection }) => {
   const { property, loading, error } = usePropertyDetails(propertyId);
   const containerRef = React.useRef(null);
-  const [activeSection, setActiveSection] = React.useState('overview');
+  const [activeSection, setActiveSection] = React.useState(null);
   const [viewedSections, setViewedSections] = React.useState({ media: false, location: false });
   const [validationMessage, setValidationMessage] = React.useState('');
   const [attentionSection, setAttentionSection] = React.useState(null);
@@ -29,8 +29,10 @@ const PropertyDetailsModal = ({ propertyId, isOpen, onClose }) => {
     { id: 'reviews', label: 'Reviews', icon: 'fa-star' },
     { id: 'location', label: 'Location', icon: 'fa-location-dot' }
   ];
-  const isOverview = activeSection === 'overview';
+  const isDrawerOpen = Boolean(activeSection);
   const activeSectionLabel = sectionItems.find((item) => item.id === activeSection)?.label || 'Section';
+  const isDesktopViewport = typeof window !== 'undefined' ? window.innerWidth >= 1024 : true;
+  const drawerLeftInset = isDesktopViewport ? Math.max(0, floatingLeft + 72) : 0;
   
   // Close modal on Escape key
   useEffect(() => {
@@ -51,7 +53,7 @@ const PropertyDetailsModal = ({ propertyId, isOpen, onClose }) => {
 
   useEffect(() => {
     if (isOpen) {
-      setActiveSection('overview');
+      setActiveSection(null);
       setViewedSections({ media: false, location: false });
       setValidationMessage('');
       setAttentionSection(null);
@@ -149,9 +151,19 @@ const PropertyDetailsModal = ({ propertyId, isOpen, onClose }) => {
     }
 
     return undefined;
-  }, [isOpen, loading, property, isOverview]);
+  }, [isOpen, loading, property, isDrawerOpen]);
 
   const handleProtectedBookInspection = (resolvedPropertyId) => {
+    const normalized = String(property?.tenantStatus || property?.status || '').toLowerCase();
+    const isBookable = property?.canBook !== false && !['reserved', 'occupied', 'rented'].includes(normalized);
+    if (!isBookable) {
+      setValidationMessage(
+        normalized === 'reserved'
+          ? 'This unit is currently reserved by another applicant.'
+          : 'This unit is currently occupied and unavailable for booking.'
+      );
+      return;
+    }
     if (!viewedSections.media) {
       setValidationMessage('Please click the Media floating icon to view photos and videos before you continue.');
       setAttentionSection('media');
@@ -165,7 +177,11 @@ const PropertyDetailsModal = ({ propertyId, isOpen, onClose }) => {
     setValidationMessage('');
     setAttentionSection(null);
     if (resolvedPropertyId) {
-      onClose();
+      if (onBookInspection) {
+        onBookInspection(resolvedPropertyId);
+      } else {
+        onClose();
+      }
     }
   };
   
@@ -201,52 +217,38 @@ const PropertyDetailsModal = ({ propertyId, isOpen, onClose }) => {
           ) : property ? (
             <div ref={containerRef} className="container mx-auto px-4 lg:px-6 py-6 relative">
               <div className="mb-5">
-                {isOverview ? (
-                  <button
-                    type="button"
-                    onClick={onClose}
-                    className="inline-flex items-center gap-2 text-[#0e1f42] hover:text-[#9f7539] transition-colors"
-                  >
-                    <i className="fas fa-arrow-left"></i>
-                    <span>Return to Browse</span>
-                  </button>
-                ) : (
-                  <button
-                    type="button"
-                    onClick={() => setActiveSection('overview')}
-                    className="inline-flex h-9 w-9 items-center justify-center rounded-full border border-[#e2e8f0] bg-white text-[#0e1f42] hover:text-[#9f7539] hover:border-[#9f7539] transition-colors"
-                    title="Back to Property Details"
-                  >
-                    <i className="fas fa-arrow-left"></i>
-                  </button>
-                )}
+                <button
+                  type="button"
+                  onClick={onClose}
+                  className="property-back-btn inline-flex items-center gap-2 text-[var(--text-color,#0e1f42)] hover:text-[#9f7539] transition-colors"
+                >
+                  <i className="fas fa-arrow-left"></i>
+                  <span>Return to Browse</span>
+                </button>
               </div>
 
-              {isOverview && (
-                <div
-                  className="hidden lg:flex fixed top-1/2 -translate-y-1/2 z-[1200] w-fit flex-col gap-3"
-                  style={{ left: `${floatingLeft}px` }}
-                >
-                  {sectionItems.map((item) => (
-                    <button
-                      key={item.id}
-                      type="button"
-                      onClick={() => setActiveSection(item.id)}
-                      className={`w-11 h-11 rounded-full border flex items-center justify-center shadow-md transition-all ${
-                        activeSection === item.id
-                          ? 'bg-[#9f7539] text-white border-[#9f7539]'
-                          : 'bg-white text-[#0e1f42] border-[#e2e8f0] hover:border-[#9f7539] hover:text-[#9f7539]'
-                      } ${attentionSection === item.id ? 'ring-2 ring-[#9f7539] animate-pulse' : ''}`}
-                      title={item.label}
-                    >
-                      <i className={`fas ${item.icon}`}></i>
-                    </button>
-                  ))}
-                </div>
-              )}
+              <div
+                className="hidden lg:flex fixed top-1/2 -translate-y-1/2 z-[1400] w-fit flex-col gap-3"
+                style={{ left: `${floatingLeft}px` }}
+              >
+                {sectionItems.map((item) => (
+                  <button
+                    key={item.id}
+                    type="button"
+                    onClick={() => setActiveSection(item.id)}
+                    className={`w-11 h-11 rounded-full border flex items-center justify-center shadow-md transition-all ${
+                      activeSection === item.id
+                        ? 'bg-[#9f7539] text-white border-[#9f7539]'
+                        : 'bg-white text-[#0e1f42] border-[#e2e8f0] hover:border-[#9f7539] hover:text-[#9f7539]'
+                    } ${attentionSection === item.id ? 'ring-2 ring-[#9f7539] animate-pulse' : ''}`}
+                    title={item.label}
+                  >
+                    <i className={`fas ${item.icon}`}></i>
+                  </button>
+                ))}
+              </div>
 
               <div>
-                  {isOverview && (
                     <>
                   <PropertyGallery images={property.images} />
                   <FloatingCallButton phoneNumber="+2349010851071" />
@@ -256,9 +258,9 @@ const PropertyDetailsModal = ({ propertyId, isOpen, onClose }) => {
                     <div className="flex items-center gap-2 overflow-x-auto pb-1">
                       <button
                         type="button"
-                        onClick={() => setActiveSection('overview')}
+                        onClick={() => setActiveSection(null)}
                         className={`px-3 py-2 rounded-full text-sm border transition-colors ${
-                          activeSection === 'overview'
+                          !isDrawerOpen
                             ? 'bg-[#9f7539] text-white border-[#9f7539]'
                             : 'bg-white text-[#0e1f42] border-[#e2e8f0]'
                         }`}
@@ -282,7 +284,7 @@ const PropertyDetailsModal = ({ propertyId, isOpen, onClose }) => {
                     </div>
                   </div>
 
-                  <div className="rounded-2xl border border-[#e2e8f0] bg-[#f8fafc] p-6 mt-6">
+                  <div className="property-overview-shell rounded-2xl border border-[#e2e8f0] bg-[#f8fafc] p-6 mt-6">
                     <p className="text-[#64748b] max-w-2xl">
                       Please review both <span className="font-semibold text-[#0e1f42]">Media</span> and <span className="font-semibold text-[#0e1f42]">Location</span> before booking inspection.
                     </p>
@@ -294,21 +296,12 @@ const PropertyDetailsModal = ({ propertyId, isOpen, onClose }) => {
                       )}
                       <ActionSection
                         propertyId={property?.id}
+                        property={property}
                         onBookInspection={handleProtectedBookInspection}
                       />
                     </div>
                   </div>
                     </>
-                  )}
-
-                  {!isOverview && (
-                    <div className="py-4 animate-fadeIn">
-                      <h3 className="mb-5 text-xl font-semibold text-[#0e1f42]">{activeSectionLabel}</h3>
-                      {activeSection === 'media' && <MediaTab property={property} />}
-                      {activeSection === 'reviews' && <ReviewsTab property={property} />}
-                      {activeSection === 'location' && <LocationTab property={property} />}
-                    </div>
-                  )}
               </div>
             </div>
           ) : (
@@ -327,6 +320,36 @@ const PropertyDetailsModal = ({ propertyId, isOpen, onClose }) => {
           )}
         </div>
       </div>
+
+      {isDrawerOpen && (
+        <div className="fixed inset-0 z-[1300] bg-black/40">
+          <div
+            className="absolute inset-y-0 right-0 bg-white border-l border-[#e2e8f0] shadow-xl overflow-y-auto"
+            style={{
+              left: `${drawerLeftInset}px`,
+              width: `calc(100vw - ${drawerLeftInset}px)`
+            }}
+          >
+            <div className="sticky top-0 z-10 px-6 py-4 min-h-[72px] border-b border-[#e2e8f0] bg-white flex items-center justify-between">
+              <h3 className="text-lg font-semibold text-[#0e1f42]">{activeSectionLabel}</h3>
+              <button
+                type="button"
+                onClick={() => setActiveSection(null)}
+                className="property-drawer-close-btn inline-flex h-9 w-9 items-center justify-center rounded-full border border-[#e2e8f0] text-[#0e1f42] hover:text-[#9f7539] hover:border-[#9f7539] transition-colors"
+                title="Close drawer"
+              >
+                <i className="fas fa-times text-base"></i>
+              </button>
+            </div>
+
+            <div className="p-5">
+              {activeSection === 'media' && <MediaTab property={property} />}
+              {activeSection === 'reviews' && <ReviewsTab property={property} />}
+              {activeSection === 'location' && <LocationTab property={property} />}
+            </div>
+          </div>
+        </div>
+      )}
       
       {/* Floating Call Button */}
       {/* <FloatingCallButton phoneNumber="+2349010851071" />  */}

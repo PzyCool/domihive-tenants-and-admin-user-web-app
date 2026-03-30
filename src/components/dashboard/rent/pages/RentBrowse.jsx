@@ -331,9 +331,24 @@ const RentBrowse = () => {
   const handleBookNowClick = (propertyId) => {
     const matchedProperty =
       allProperties.find((property) => (property.id || property.propertyId) === propertyId) || null;
+    const normalized = String(matchedProperty?.tenantStatus || matchedProperty?.status || '').toLowerCase();
+    const isBookable =
+      matchedProperty?.canBook !== false && !['reserved', 'occupied', 'rented'].includes(normalized);
+    if (!isBookable) {
+      window.alert(
+        normalized === 'reserved'
+          ? 'This unit is currently reserved by another applicant.'
+          : 'This unit is occupied and not available for booking.'
+      );
+      return;
+    }
     setSelectedPropertyForBooking(matchedProperty || { id: propertyId });
     setShowBookInspection(true);
     setShowPropertyDetails(false);
+  };
+
+  const handleBookFromDetails = (propertyId) => {
+    handleBookNowClick(propertyId);
   };
 
   const handlePropertyClick = (propertyId) => {
@@ -350,7 +365,7 @@ const RentBrowse = () => {
     return (
       <div className="rent-browse-container min-h-screen bg-gradient-to-br from-gray-50 to-gray-100">
         <BookInspectionPage
-          propertyId={selectedPropertyForBooking?.id || selectedPropertyForBooking?.propertyId}
+          propertyId={selectedPropertyForBooking?.propertyId || selectedPropertyForBooking?.id}
           propertyData={selectedPropertyForBooking}
         />
       </div>
@@ -364,6 +379,7 @@ const RentBrowse = () => {
           propertyId={selectedPropertyId}
           isOpen={showPropertyDetails}
           onClose={() => setShowPropertyDetails(false)}
+          onBookInspection={handleBookFromDetails}
         />
       </div>
     );

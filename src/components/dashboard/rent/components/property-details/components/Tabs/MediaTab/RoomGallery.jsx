@@ -1,4 +1,4 @@
-// src/dashboards/rent/components/property-details/components/tabs/MediaTab/RoomGallery.jsx
+﻿// src/dashboards/rent/components/property-details/components/tabs/MediaTab/RoomGallery.jsx
 import React, { useState } from 'react';
 import { lockBodyScroll, unlockBodyScroll } from '../../../../../../../../utils/scrollLock';
 
@@ -74,7 +74,7 @@ const RoomGallery = ({ property }) => {
 
   const nextImage = () => {
     if (selectedRoom) {
-      setModalImageIndex((prev) => 
+      setModalImageIndex((prev) =>
         prev === selectedRoom.images.length - 1 ? 0 : prev + 1
       );
     }
@@ -82,7 +82,7 @@ const RoomGallery = ({ property }) => {
 
   const prevImage = () => {
     if (selectedRoom) {
-      setModalImageIndex((prev) => 
+      setModalImageIndex((prev) =>
         prev === 0 ? selectedRoom.images.length - 1 : prev - 1
       );
     }
@@ -92,7 +92,6 @@ const RoomGallery = ({ property }) => {
     setModalImageIndex(index);
   };
 
-  // Close modal when clicking outside
   const handleBackdropClick = (e) => {
     if (e.target === e.currentTarget) {
       closeModal();
@@ -103,7 +102,7 @@ const RoomGallery = ({ property }) => {
     <>
       <div className="room-gallery mb-8">
         <h3 className="text-2xl font-bold text-[#0e1f42] mb-6">Room by Room Gallery</h3>
-        
+
         <div className="space-y-8">
           {rooms.map((room) => (
             <div key={room.id} className="bg-white rounded-2xl border border-[#e2e8f0] p-6 hover:shadow-lg transition-shadow duration-300">
@@ -111,11 +110,11 @@ const RoomGallery = ({ property }) => {
                 <h4 className="text-xl font-bold text-[#0e1f42] mb-2">{room.name}</h4>
                 <p className="text-[#64748b]">{room.description}</p>
               </div>
-              
+
               <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
                 {room.images.slice(0, 4).map((image, index) => (
-                  <div 
-                    key={index} 
+                  <div
+                    key={index}
                     className="rounded-xl overflow-hidden cursor-pointer group"
                     onClick={() => openModal(room, index)}
                   >
@@ -127,43 +126,31 @@ const RoomGallery = ({ property }) => {
                   </div>
                 ))}
               </div>
-              
-              {room.images.length > 4 && (
-                <button 
-                  onClick={() => openModal(room, 0)}
-                  className="mt-6 px-4 py-2 text-[#9f7539] hover:text-[#b58a4a] font-medium transition-colors duration-300 flex items-center gap-2 hover:underline"
-                >
-                  View more photos of {room.name} ({room.images.length} total) →
-                </button>
-              )}
             </div>
           ))}
         </div>
       </div>
 
-      {/* Modal for viewing all photos */}
       {selectedRoom && (
-        <div 
+        <div
           className="fixed inset-0 z-[1400] flex items-center justify-center p-4 bg-black bg-opacity-75"
           onClick={handleBackdropClick}
         >
           <div className="relative w-full max-w-4xl h-full max-h-[80vh] bg-white rounded-2xl overflow-hidden">
-            {/* Close button */}
             <button
               onClick={closeModal}
               className="absolute top-4 right-4 z-10 p-2 bg-white/80 backdrop-blur-sm rounded-full hover:bg-white transition-colors duration-200 shadow-lg"
             >
-              <svg 
-                className="w-6 h-6 text-gray-800" 
-                fill="none" 
-                stroke="currentColor" 
+              <svg
+                className="w-6 h-6 text-gray-800"
+                fill="none"
+                stroke="currentColor"
                 viewBox="0 0 24 24"
               >
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
               </svg>
             </button>
 
-            {/* Main Image */}
             <div className="relative h-2/3 bg-gray-900">
               <img
                 src={selectedRoom.images[modalImageIndex]}
@@ -171,7 +158,6 @@ const RoomGallery = ({ property }) => {
                 className="w-full h-full object-contain"
               />
 
-              {/* Navigation arrows */}
               {selectedRoom.images.length > 1 && (
                 <>
                   <button
@@ -193,13 +179,11 @@ const RoomGallery = ({ property }) => {
                 </>
               )}
 
-              {/* Image counter */}
               <div className="absolute bottom-4 left-1/2 transform -translate-x-1/2 px-3 py-1 bg-black/50 backdrop-blur-sm rounded-full text-white text-sm">
                 {modalImageIndex + 1} / {selectedRoom.images.length}
               </div>
             </div>
 
-            {/* Thumbnails */}
             <div className="h-1/3 bg-gray-50 p-4 overflow-y-auto">
               <h4 className="text-lg font-semibold text-[#0e1f42] mb-3">
                 {selectedRoom.name} - All Photos
@@ -210,8 +194,8 @@ const RoomGallery = ({ property }) => {
                     key={index}
                     onClick={() => handleThumbnailClick(index)}
                     className={`relative rounded-lg overflow-hidden cursor-pointer border-2 transition-all duration-200 ${
-                      index === modalImageIndex 
-                        ? 'border-[#9f7539] scale-105' 
+                      index === modalImageIndex
+                        ? 'border-[#9f7539] scale-105'
                         : 'border-transparent hover:border-gray-300'
                     }`}
                   >

@@ -43,6 +43,11 @@ export const writeAdminStorage = (data) => {
     });
     window.localStorage.setItem(ADMIN_STORAGE_KEY, payload);
     window.localStorage.setItem(ADMIN_STORAGE_BACKUP_KEY, payload);
+    window.dispatchEvent(
+      new CustomEvent("domihive:admin-storage-updated", {
+        detail: { key: ADMIN_STORAGE_KEY }
+      })
+    );
   } catch (_error) {
     // ignore quota/serialization errors
   }

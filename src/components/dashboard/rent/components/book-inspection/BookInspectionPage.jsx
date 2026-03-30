@@ -9,10 +9,17 @@ import DocumentVerification from './DocumentVerification';
 import UserContextBanner from './UserContextBanner';
 import SuccessModal from './SuccessModal';
 import FloatingCallButton from '../property-details/components/FloatingCallButton';
+import {
+  readInspectionBookings,
+  writeInspectionBookings,
+  dedupeInspectionBookings,
+  INSPECTION_BOOKING_STATUSES
+} from '../../../../shared/utils/inspectionBookings';
 
 const BookInspectionPage = ({ propertyId, propertyData, onBack }) => {
   const { user } = useAuth();
   const { createApplicationFromBooking } = useApplications();
+  const resolvedPropertyId = propertyData?.propertyId || propertyId;
   const [showSuccessModal, setShowSuccessModal] = useState(false);
   const [agreeTerms, setAgreeTerms] = useState(false);
   
@@ -54,23 +61,56 @@ const BookInspectionPage = ({ propertyId, propertyData, onBack }) => {
     const completeFormData = {
       ...formValues,
       agreeTerms,
-      propertyId,
+      propertyId: resolvedPropertyId,
       bookingId: 'DOMI-INSP-' + Date.now() + '-' + Math.random().toString(36).substr(2, 6).toUpperCase(),
       bookingDate: new Date().toISOString(),
-      status: 'pending'
+      inspectionStatus: INSPECTION_BOOKING_STATUSES.PENDING_CONFIRMATION,
+      status: INSPECTION_BOOKING_STATUSES.PENDING_CONFIRMATION,
+      applicantName: user?.name || 'Applicant',
+      applicantPhone: user?.phone || '',
+      applicantEmail: user?.email || '',
+      propertyTitle: propertyData?.title || 'Selected Property',
+      unitCode: propertyData?.unitCode || propertyData?.unitNumber || '—',
+      location: propertyData?.location || 'Lagos, Nigeria',
+      unitDescription: propertyData?.description || ''
     };
     
-    setShowSuccessModal(true);
-    
     // Save to localStorage
+    let persistedBooking = completeFormData;
     try {
-      const bookings = JSON.parse(localStorage.getItem('domihive_inspection_bookings')) || [];
-      bookings.unshift(completeFormData);
-      localStorage.setItem('domihive_inspection_bookings', JSON.stringify(bookings));
-      sessionStorage.setItem('domihive_current_booking', JSON.stringify(completeFormData));
+      const bookings = readInspectionBookings();
+      const identityMatch = (existing) =>
+        String(existing?.applicantName || '').trim().toLowerCase() ===
+          String(completeFormData?.applicantName || '').trim().toLowerCase() &&
+        String(existing?.propertyId || '') === String(completeFormData?.propertyId || '') &&
+        String(existing?.unitCode || existing?.unitNumber || '').trim().toLowerCase() ===
+          String(completeFormData?.unitCode || completeFormData?.unitNumber || '').trim().toLowerCase();
+
+      const matchedIndex = bookings.findIndex(identityMatch);
+      let nextBookings;
+      if (matchedIndex >= 0) {
+        const existing = bookings[matchedIndex];
+        const preservedId = existing?.bookingId || existing?.id || completeFormData.bookingId;
+        const updated = {
+          ...existing,
+          ...completeFormData,
+          bookingId: preservedId
+        };
+        nextBookings = [...bookings];
+        nextBookings[matchedIndex] = updated;
+        persistedBooking = updated;
+      } else {
+        nextBookings = [completeFormData, ...bookings];
+        persistedBooking = completeFormData;
+      }
+
+      writeInspectionBookings(dedupeInspectionBookings(nextBookings));
+      sessionStorage.setItem('domihive_current_booking', JSON.stringify(persistedBooking));
     } catch (error) {
       console.error('Error saving booking:', error);
     }
+
+    setShowSuccessModal(true);
 
     const fallbackProperty = {
       id: propertyId || 'PROP-UNKNOWN',
@@ -81,7 +121,7 @@ const BookInspectionPage = ({ propertyId, propertyData, onBack }) => {
     };
 
     createApplicationFromBooking({
-      booking: completeFormData,
+      booking: persistedBooking,
       property: propertyData || fallbackProperty,
       applicantName: user?.name
     });
@@ -143,7 +183,7 @@ const BookInspectionPage = ({ propertyId, propertyData, onBack }) => {
               >
                 {/* Inspection Details */}
                 <InspectionForm 
-                  propertyId={propertyId}
+                  propertyId={resolvedPropertyId}
                   formValues={formValues}
                   onFormChange={handleFormChange}
                 />
@@ -195,7 +235,8 @@ const BookInspectionPage = ({ propertyId, propertyData, onBack }) => {
           ...formValues,
           propertyTitle: demoProperty.title,
           location: demoProperty.location,
-          numberOfPeople: formValues.numberOfPeople || '2'
+          numberOfPeople: formValues.numberOfPeople || '2',
+          unitCode: propertyData?.unitCode || ''
         }}
       />
     </div>

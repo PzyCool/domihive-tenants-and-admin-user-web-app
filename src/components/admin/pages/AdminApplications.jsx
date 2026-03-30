@@ -1,7 +1,7 @@
 // src/components/admin/pages/AdminApplications.jsx
 import React, { useMemo, useState } from "react";
 import { useAdmin } from "../../../context/AdminContext";
-import { Download, FilePlusCorner, UserPlus, Search, ChevronDown } from "lucide-react";
+import { Download, FilePlusCorner, UserPlus, Search, Eye, X } from "lucide-react";
 
 const AdminApplications = () => {
   const { applications, setApplications } = useAdmin();
@@ -10,6 +10,7 @@ const AdminApplications = () => {
   const [search, setSearch] = useState("");
   const [statusFilter, setStatusFilter] = useState("all"); // all | Submitted | Under Review | Approved | Rejected
   const [sortBy, setSortBy] = useState("newest"); // newest | oldest | sla
+  const [selectedApplication, setSelectedApplication] = useState(null);
 
   const updateStatus = (id, status) => {
     setApplications((prev) => prev.map((a) => (a.id === id ? { ...a, status } : a)));
@@ -248,6 +249,13 @@ const AdminApplications = () => {
                   <td className="py-3 px-4">
                     <div className="flex justify-end gap-2">
                       <button
+                        onClick={() => setSelectedApplication(app)}
+                        className="h-8 w-8 rounded-md border border-gray-200 dark:border-white/10 text-gray-700 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-white/5 flex items-center justify-center"
+                        title="View details"
+                      >
+                        <Eye size={14} />
+                      </button>
+                      <button
                         onClick={() => updateStatus(app.id, "Under Review")}
                         className="px-3 py-1.5 rounded-md border border-gray-200 dark:border-white/10 text-gray-700 dark:text-gray-300 text-xs font-medium hover:bg-gray-50 dark:hover:bg-white/5"
                       >
@@ -334,6 +342,12 @@ const AdminApplications = () => {
             {/* Actions */}
             <div className="mt-4 grid grid-cols-3 gap-2">
               <button
+                onClick={() => setSelectedApplication(app)}
+                className="py-2 rounded-lg border border-gray-200 dark:border-white/10 text-xs font-semibold text-gray-700 dark:text-gray-300 dark:hover:bg-white/5 transition-colors flex items-center justify-center"
+              >
+                <Eye size={14} />
+              </button>
+              <button
                 onClick={() => updateStatus(app.id, "Under Review")}
                 className="py-2 rounded-lg border border-gray-200 dark:border-white/10 text-xs font-semibold text-gray-700 dark:text-gray-300 dark:hover:bg-white/5 transition-colors"
               >
@@ -363,6 +377,58 @@ const AdminApplications = () => {
           </div>
         )}
       </div>
+
+      {selectedApplication && (
+        <div className="fixed inset-0 z-[1300]">
+          {/* no backdrop blur, only dim overlay */}
+          <div
+            className="absolute inset-0 bg-black/35"
+            onClick={() => setSelectedApplication(null)}
+          />
+          <aside className="absolute top-0 right-0 h-full w-full max-w-xl bg-white dark:bg-[#0b1220] border-l border-gray-200 dark:border-white/10 shadow-2xl overflow-y-auto">
+            <div className="px-6 py-4 min-h-[76px] border-b border-gray-200 dark:border-white/10 flex items-center justify-between">
+              <h3 className="text-lg font-semibold text-[#0e1f42] dark:text-white">Application Details</h3>
+              <button
+                onClick={() => setSelectedApplication(null)}
+                className="h-8 w-8 rounded-md border border-gray-200 dark:border-white/10 text-gray-600 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-white/5 flex items-center justify-center"
+              >
+                <X size={16} />
+              </button>
+            </div>
+
+            <div className="p-5 space-y-4 text-sm">
+              <div>
+                <p className="text-xs text-gray-500 dark:text-gray-400">Applicant</p>
+                <p className="font-semibold text-[#0e1f42] dark:text-white">{selectedApplication.applicant}</p>
+              </div>
+              <div>
+                <p className="text-xs text-gray-500 dark:text-gray-400">Application ID</p>
+                <p className="font-semibold text-[#0e1f42] dark:text-white">{selectedApplication.id}</p>
+              </div>
+              <div>
+                <p className="text-xs text-gray-500 dark:text-gray-400">Property</p>
+                <p className="font-semibold text-[#0e1f42] dark:text-white">{selectedApplication.propertyTitle}</p>
+              </div>
+              <div>
+                <p className="text-xs text-gray-500 dark:text-gray-400">Submitted</p>
+                <p className="text-[#0e1f42] dark:text-white">
+                  {new Date(selectedApplication.submittedAt).toLocaleString()}
+                </p>
+              </div>
+              <div>
+                <p className="text-xs text-gray-500 dark:text-gray-400">Status</p>
+                <p className="text-[#0e1f42] dark:text-white">{selectedApplication.status}</p>
+              </div>
+              <div>
+                <p className="text-xs text-gray-500 dark:text-gray-400">SLA</p>
+                <p className="text-[#0e1f42] dark:text-white">
+                  {selectedApplication.isOverdue ? "Overdue" : `Due in ${selectedApplication.hoursLeft}h`}
+                </p>
+              </div>
+            </div>
+          </aside>
+        </div>
+      )}
 
     </div>
   );

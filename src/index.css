@@ -342,6 +342,23 @@ body.dashboard-themed[data-theme="true-black"] .property-details-card {
   color: var(--text-color, #f8fafc) !important;
 }
 
+/* Property details drawer close button contrast fix */
+body.dashboard-themed[data-theme="dark-gray"] .property-drawer-close-btn,
+body.dashboard-themed[data-theme="gold-dark"] .property-drawer-close-btn,
+body.dashboard-themed[data-theme="true-black"] .property-drawer-close-btn {
+  color: #ffffff !important;
+  border-color: rgba(255, 255, 255, 0.28) !important;
+  background: rgba(255, 255, 255, 0.06) !important;
+}
+
+body.dashboard-themed[data-theme="dark-gray"] .property-drawer-close-btn:hover,
+body.dashboard-themed[data-theme="gold-dark"] .property-drawer-close-btn:hover,
+body.dashboard-themed[data-theme="true-black"] .property-drawer-close-btn:hover {
+  color: var(--accent-color, #9f7539) !important;
+  border-color: var(--accent-color, #9f7539) !important;
+  background: rgba(255, 255, 255, 0.1) !important;
+}
+
 body.dashboard-themed[data-theme="dark-gray"] .property-details-card h1,
 body.dashboard-themed[data-theme="true-black"] .property-details-card h1,
 body.dashboard-themed[data-theme="dark-gray"] .property-details-card h2,
@@ -514,6 +531,13 @@ body.dashboard-themed[data-theme="true-black"]
   .bg-\[\#f8fafc\] {
   background: rgba(255, 255, 255, 0.05) !important;
   border-color: rgba(255, 255, 255, 0.12) !important;
+}
+
+body.dashboard-themed[data-theme="dark-gray"] .property-overview-shell,
+body.dashboard-themed[data-theme="true-black"] .property-overview-shell {
+  background: var(--card-bg, #111827) !important;
+  border-color: rgba(255, 255, 255, 0.12) !important;
+  color: var(--text-color, #f8fafc) !important;
 }
 
 body.dashboard-themed[data-theme="dark-gray"] .action-helper,
@@ -2088,6 +2112,7 @@ body.dashboard-themed[data-theme="true-black"] .property-payment-tab.active {
 
 /* My Applications cards */
 body.dashboard-themed[data-theme="dark-gray"] .application-card,
+body.dashboard-themed[data-theme="gold-dark"] .application-card,
 body.dashboard-themed[data-theme="true-black"] .application-card {
   background: var(--card-bg) !important;
   border-color: rgba(255, 255, 255, 0.12) !important;
@@ -2095,15 +2120,21 @@ body.dashboard-themed[data-theme="true-black"] .application-card {
 }
 
 body.dashboard-themed[data-theme="dark-gray"] .application-card h3,
+body.dashboard-themed[data-theme="gold-dark"] .application-card h3,
 body.dashboard-themed[data-theme="true-black"] .application-card h3,
 body.dashboard-themed[data-theme="dark-gray"] .application-card p,
+body.dashboard-themed[data-theme="gold-dark"] .application-card p,
 body.dashboard-themed[data-theme="true-black"] .application-card p,
 body.dashboard-themed[data-theme="dark-gray"] .application-card span,
+body.dashboard-themed[data-theme="gold-dark"] .application-card span,
 body.dashboard-themed[data-theme="true-black"] .application-card span {
   color: var(--text-color) !important;
 }
 
 body.dashboard-themed[data-theme="dark-gray"]
+  .application-card
+  .app-status-badge,
+body.dashboard-themed[data-theme="gold-dark"]
   .application-card
   .app-status-badge,
 body.dashboard-themed[data-theme="true-black"]
@@ -2115,6 +2146,7 @@ body.dashboard-themed[data-theme="true-black"]
 }
 
 body.dashboard-themed[data-theme="dark-gray"] .app-track-badge,
+body.dashboard-themed[data-theme="gold-dark"] .app-track-badge,
 body.dashboard-themed[data-theme="true-black"] .app-track-badge {
   background: rgba(255, 255, 255, 0.08) !important;
   border-color: var(--accent-color, #9f7539) !important;
@@ -2122,6 +2154,7 @@ body.dashboard-themed[data-theme="true-black"] .app-track-badge {
 }
 
 body.dashboard-themed[data-theme="dark-gray"] .application-card-footer,
+body.dashboard-themed[data-theme="gold-dark"] .application-card-footer,
 body.dashboard-themed[data-theme="true-black"] .application-card-footer {
   background: rgba(255, 255, 255, 0.05) !important;
   border-color: rgba(255, 255, 255, 0.12) !important;
@@ -2129,11 +2162,13 @@ body.dashboard-themed[data-theme="true-black"] .application-card-footer {
 }
 
 body.dashboard-themed[data-theme="dark-gray"] .application-card-footer i,
+body.dashboard-themed[data-theme="gold-dark"] .application-card-footer i,
 body.dashboard-themed[data-theme="true-black"] .application-card-footer i {
   color: var(--accent-color, #9f7539) !important;
 }
 
 body.dashboard-themed[data-theme="dark-gray"] .application-card .bg-white,
+body.dashboard-themed[data-theme="gold-dark"] .application-card .bg-white,
 body.dashboard-themed[data-theme="true-black"] .application-card .bg-white {
   background: var(--card-bg) !important;
   color: var(--text-color) !important;
@@ -2141,12 +2176,14 @@ body.dashboard-themed[data-theme="true-black"] .application-card .bg-white {
 
 /* My Applications page dark theme */
 body.dashboard-themed[data-theme="dark-gray"] .applications-page,
+body.dashboard-themed[data-theme="gold-dark"] .applications-page,
 body.dashboard-themed[data-theme="true-black"] .applications-page {
   background: var(--page-bg) !important;
   color: var(--text-color) !important;
 }
 
 body.dashboard-themed[data-theme="dark-gray"] .applications-card,
+body.dashboard-themed[data-theme="gold-dark"] .applications-card,
 body.dashboard-themed[data-theme="true-black"] .applications-card {
   background: var(--card-bg) !important;
   border-color: rgba(255, 255, 255, 0.12) !important;
@@ -2154,10 +2191,25 @@ body.dashboard-themed[data-theme="true-black"] .applications-card {
 }
 
 body.dashboard-themed[data-theme="dark-gray"] .applications-card h1,
+body.dashboard-themed[data-theme="gold-dark"] .applications-card h1,
 body.dashboard-themed[data-theme="true-black"] .applications-card h1,
 body.dashboard-themed[data-theme="dark-gray"] .applications-card p,
+body.dashboard-themed[data-theme="gold-dark"] .applications-card p,
 body.dashboard-themed[data-theme="true-black"] .applications-card p {
   color: var(--text-color, #f8fafc) !important;
+}
+
+/* Archived requests: allow critical color accents to override global paragraph rule */
+body.dashboard-themed[data-theme="dark-gray"] .applications-card p.archived-price,
+body.dashboard-themed[data-theme="true-black"] .applications-card p.archived-price,
+body.dashboard-themed[data-theme="gold-dark"] .applications-card p.archived-price {
+  color: var(--accent-color, #9f7539) !important;
+}
+
+body.dashboard-themed[data-theme="dark-gray"] .applications-card p.archived-note,
+body.dashboard-themed[data-theme="true-black"] .applications-card p.archived-note,
+body.dashboard-themed[data-theme="gold-dark"] .applications-card p.archived-note {
+  color: #ef4444 !important;
 }
 
 body.dashboard-themed[data-theme="dark-gray"] .property-payment-status,
@@ -2275,6 +2327,75 @@ body.dashboard-themed[data-theme="true-black"] .maintenance-policy-box p {
 body.dashboard-themed[data-theme="dark-gray"] .maintenance-policy-link,
 body.dashboard-themed[data-theme="true-black"] .maintenance-policy-link {
   color: var(--accent-color, #9f7539) !important;
+}
+
+/* Book inspection success modal - dark theme support */
+body.dashboard-themed[data-theme="dark-gray"] .inspection-success-modal-card,
+body.dashboard-themed[data-theme="gold-dark"] .inspection-success-modal-card,
+body.dashboard-themed[data-theme="true-black"] .inspection-success-modal-card {
+  background: var(--card-bg, #111827) !important;
+  border-color: rgba(255, 255, 255, 0.14) !important;
+  color: var(--text-color, #f8fafc) !important;
+}
+
+body.dashboard-themed[data-theme="dark-gray"] .inspection-success-body,
+body.dashboard-themed[data-theme="gold-dark"] .inspection-success-body,
+body.dashboard-themed[data-theme="true-black"] .inspection-success-body {
+  background: var(--card-bg, #111827) !important;
+  color: var(--text-color, #f8fafc) !important;
+}
+
+body.dashboard-themed[data-theme="dark-gray"] .inspection-success-intro,
+body.dashboard-themed[data-theme="gold-dark"] .inspection-success-intro,
+body.dashboard-themed[data-theme="true-black"] .inspection-success-intro,
+body.dashboard-themed[data-theme="dark-gray"] .inspection-success-footnote,
+body.dashboard-themed[data-theme="gold-dark"] .inspection-success-footnote,
+body.dashboard-themed[data-theme="true-black"] .inspection-success-footnote {
+  color: var(--text-muted, #cbd5e1) !important;
+}
+
+body.dashboard-themed[data-theme="dark-gray"] .inspection-success-summary,
+body.dashboard-themed[data-theme="gold-dark"] .inspection-success-summary,
+body.dashboard-themed[data-theme="true-black"] .inspection-success-summary {
+  background: rgba(255, 255, 255, 0.05) !important;
+  border-color: rgba(255, 255, 255, 0.16) !important;
+}
+
+body.dashboard-themed[data-theme="dark-gray"] .inspection-success-summary-title,
+body.dashboard-themed[data-theme="gold-dark"] .inspection-success-summary-title,
+body.dashboard-themed[data-theme="true-black"] .inspection-success-summary-title,
+body.dashboard-themed[data-theme="dark-gray"] .inspection-success-label,
+body.dashboard-themed[data-theme="gold-dark"] .inspection-success-label,
+body.dashboard-themed[data-theme="true-black"] .inspection-success-label {
+  color: var(--text-color, #f8fafc) !important;
+}
+
+body.dashboard-themed[data-theme="dark-gray"] .inspection-success-value,
+body.dashboard-themed[data-theme="gold-dark"] .inspection-success-value,
+body.dashboard-themed[data-theme="true-black"] .inspection-success-value {
+  color: var(--text-muted, #cbd5e1) !important;
+}
+
+body.dashboard-themed[data-theme="dark-gray"] .inspection-success-close,
+body.dashboard-themed[data-theme="gold-dark"] .inspection-success-close,
+body.dashboard-themed[data-theme="true-black"] .inspection-success-close {
+  color: #ffffff !important;
+}
+
+body.dashboard-themed[data-theme="dark-gray"] .inspection-success-secondary-btn,
+body.dashboard-themed[data-theme="gold-dark"] .inspection-success-secondary-btn,
+body.dashboard-themed[data-theme="true-black"] .inspection-success-secondary-btn {
+  background: rgba(255, 255, 255, 0.06) !important;
+  border-color: rgba(255, 255, 255, 0.2) !important;
+  color: var(--text-color, #f8fafc) !important;
+}
+
+body.dashboard-themed[data-theme="dark-gray"] .inspection-success-secondary-btn:hover,
+body.dashboard-themed[data-theme="gold-dark"] .inspection-success-secondary-btn:hover,
+body.dashboard-themed[data-theme="true-black"] .inspection-success-secondary-btn:hover {
+  background: rgba(255, 255, 255, 0.12) !important;
+  border-color: var(--accent-color, #9f7539) !important;
+  color: #ffffff !important;
 }
 /* Borders on dark themes */
 body.dashboard-themed[data-theme="dark-gray"] .border,

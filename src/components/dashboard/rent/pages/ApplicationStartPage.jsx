@@ -21,10 +21,12 @@ const ApplicationStartPage = () => {
     );
   }
 
-  const handleSaveDraft = (id, formData) => {
+  const handleSaveDraft = (id, payload) => {
     updateApplication(id, {
       status: 'APPLICATION_STARTED',
-      applicantProfile: formData,
+      applicantProfile: payload?.formData || {},
+      applicantDocs: payload?.documents || {},
+      applicationStep: payload?.step || 1,
       updatedAt: 'Just now'
     });
   };

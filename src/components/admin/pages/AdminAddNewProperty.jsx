@@ -10,6 +10,7 @@ const initialForm = {
   area: "",
   location: "",
   address: "",
+  postalCode: "",
   estateType: "Estate",
   type: "Block of Flats",
   clientId: "",
@@ -257,6 +258,7 @@ export default function AdminAddNewProperty() {
       area: editingProperty.area || "",
       location: editingProperty.location || "",
       address: editingProperty.address || "",
+      postalCode: editingProperty.postalCode || "",
       estateType: editingProperty.estateType || editingProperty.tag || "Estate",
       type: editingProperty.type || "Block of Flats",
       clientId: editingProperty.clientId || "",
@@ -351,6 +353,7 @@ export default function AdminAddNewProperty() {
                 area: form.area,
                 location: form.location,
                 address: form.address,
+                postalCode: form.postalCode.trim(),
                 estateType: form.estateType,
                 tag: form.estateType,
                 type: form.type,
@@ -391,6 +394,7 @@ export default function AdminAddNewProperty() {
       area: form.area,
       location: form.location,
       address: form.address,
+      postalCode: form.postalCode.trim(),
       estateType: form.estateType,
       tag: form.estateType,
       type: form.type,
@@ -647,6 +651,16 @@ export default function AdminAddNewProperty() {
               placeholder="e.g. 12 Allen Avenue, Ikeja GRA"
               value={form.address}
               onChange={(e) => setForm({ ...form, address: e.target.value })}
+            />
+          </div>
+
+          <div className="mt-3">
+            <label className="text-xs font-medium text-gray-600 dark:text-gray-400">Postal Code</label>
+            <input
+              className="mt-1 w-full rounded-md border border-gray-200 dark:border-white/10 bg-transparent dark:text-white px-3 py-2 text-sm outline-none focus:border-[#9F7539]"
+              placeholder="e.g. 106104"
+              value={form.postalCode}
+              onChange={(e) => setForm({ ...form, postalCode: e.target.value })}
             />
           </div>
         </Section>

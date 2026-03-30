@@ -1,86 +1,66 @@
 // src/dashboards/rent/components/book-inspection/InspectionForm.jsx
 import React, { useState, useEffect } from 'react';
-
-// Nigerian Public Holidays 2024-2028 (from your JS)
-const NIGERIAN_HOLIDAYS = {
-  "2024": [
-    "2024-01-01", "2024-03-29", "2024-04-01", "2024-05-01", 
-    "2024-05-27", "2024-06-12", "2024-06-16", "2024-09-16", 
-    "2024-10-01", "2024-12-25", "2024-12-26"
-  ],
-  "2025": [
-    "2025-01-01", "2025-04-18", "2025-04-21", "2025-05-01", 
-    "2025-05-27", "2025-06-12", "2025-06-06", "2025-09-05", 
-    "2025-10-01", "2025-12-25", "2025-12-26"
-  ]
-};
+import { getPropertySlotAvailability } from './utils/inspectionSlots';
 
 const InspectionForm = ({ propertyId, formValues, onFormChange }) => {
   const [availableDates, setAvailableDates] = useState([]);
   const [availableTimes, setAvailableTimes] = useState([]);
+  const [timesByDate, setTimesByDate] = useState({});
+  const [maxPeopleAllowed, setMaxPeopleAllowed] = useState(3);
   const [loadingDates, setLoadingDates] = useState(true);
   
   // Destructure form values from props
   const { inspectionDate, inspectionTime, numberOfPeople, inspectionNotes } = formValues;
   
-  // Generate available dates (2 weeks ahead, no weekends/holidays)
+  // Load available dates from admin-configured inspection slots
   useEffect(() => {
-    const generateAvailableDates = () => {
-      const dates = [];
-      const today = new Date();
-      today.setHours(0, 0, 0, 0);
-      const maxDays = 14;
-      
-      for (let i = 1; i <= maxDays; i++) {
-        const date = new Date(today);
-        date.setDate(today.getDate() + i);
-        
-        // Skip weekends
-        if (date.getDay() === 0 || date.getDay() === 6) continue;
-        
-        // Skip public holidays
-        const year = date.getFullYear().toString();
-        const dateString = date.toISOString().split('T')[0];
-        if (NIGERIAN_HOLIDAYS[year]?.includes(dateString)) continue;
-        
-        // Simulate available slots (random between 3-8)
-        const availableSlots = Math.floor(Math.random() * 6) + 3;
-        
-        dates.push({
-          date: dateString,
-          dateObj: new Date(date),
-          availableSlots,
-          isNextDay: i === 1
-        });
+    const loadConfiguredSlots = () => {
+      if (!propertyId) {
+        setAvailableDates([]);
+        setTimesByDate({});
+        setMaxPeopleAllowed(3);
+        setLoadingDates(false);
+        return;
       }
-      
-      setAvailableDates(dates);
+
+      const {
+        dates,
+        timesByDate: nextTimesByDate,
+        maxPeopleAllowed: nextMaxPeopleAllowed
+      } = getPropertySlotAvailability(propertyId);
+
+      const enhancedDates = dates.map((item, idx) => ({
+        ...item,
+        isNextDay: idx === 0
+      }));
+
+      setAvailableDates(enhancedDates);
+      setTimesByDate(nextTimesByDate);
+      setMaxPeopleAllowed(Number(nextMaxPeopleAllowed) || 3);
       setLoadingDates(false);
     };
-    
-    // Simulate API loading
-    setTimeout(generateAvailableDates, 500);
-  }, []);
+
+    setLoadingDates(true);
+    window.setTimeout(loadConfiguredSlots, 220);
+  }, [propertyId]);
+
+  useEffect(() => {
+    const selected = Number(numberOfPeople);
+    if (!selected || selected <= (Number(maxPeopleAllowed) || 3)) return;
+    if (onFormChange) {
+      onFormChange('numberOfPeople', String(maxPeopleAllowed));
+    }
+  }, [maxPeopleAllowed, numberOfPeople, onFormChange]);
   
-  // Generate available times for selected date
+  // Generate available times for selected date from configured slots
   useEffect(() => {
     if (!inspectionDate) {
       setAvailableTimes([]);
       return;
     }
-    
-    const generateAvailableTimes = () => {
-      const timeSlots = ['09:00', '10:00', '11:00', '12:00', '14:00', '15:00', '16:00'];
-      
-      // Randomly remove some times to simulate booked slots
-      const availableCount = Math.floor(Math.random() * 4) + 3;
-      const shuffled = [...timeSlots].sort(() => 0.5 - Math.random());
-      
-      setAvailableTimes(shuffled.slice(0, availableCount));
-    };
-    
-    generateAvailableTimes();
-  }, [inspectionDate]);
+
+    setAvailableTimes(Array.isArray(timesByDate[inspectionDate]) ? timesByDate[inspectionDate] : []);
+  }, [inspectionDate, timesByDate]);
   
   const formatDateDisplay = (dateString) => {
     const date = new Date(dateString);
@@ -93,6 +73,7 @@ const InspectionForm = ({ propertyId, formValues, onFormChange }) => {
   };
   
   const formatTimeDisplay = (timeString) => {
+    if (String(timeString).includes(' - ')) return timeString;
     const [hours, minutes] = timeString.split(':');
     const hour = parseInt(hours);
     const ampm = hour >= 12 ? 'PM' : 'AM';
@@ -333,12 +314,19 @@ const InspectionForm = ({ propertyId, formValues, onFormChange }) => {
           className="w-full p-3 border border-[#e2e8f0] rounded-lg focus:border-[#9f7539] focus:ring-2 focus:ring-[#9f7539]/20 transition-colors"
         >
           <option value="">Select number</option>
-          <option value="1">1 person</option>
-          <option value="2">2 people</option>
-          <option value="3">3 people</option>
-          <option value="4">4 people</option>
-          <option value="5">5+ people</option>
+          {Array.from({ length: Number(maxPeopleAllowed) || 3 }, (_, index) => {
+            const value = String(index + 1);
+            const label = index === 0 ? '1 person' : `${index + 1} people`;
+            return (
+              <option key={value} value={value}>
+                {label}
+              </option>
+            );
+          })}
         </select>
+        <p className="mt-1 text-xs text-[#64748b]">
+          Maximum allowed for this property: {maxPeopleAllowed} {Number(maxPeopleAllowed) === 1 ? 'person' : 'people'}
+        </p>
       </div>
       
       {/* Additional Notes */}

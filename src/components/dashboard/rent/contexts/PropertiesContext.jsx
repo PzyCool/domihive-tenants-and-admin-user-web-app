@@ -1,6 +1,7 @@
 import React, { createContext, useContext, useMemo, useState, useEffect } from 'react';
 import { useAuth } from '../../../../context/AuthContext';
 import { useApplications } from './ApplicationsContext';
+import { applyMoveInLifecycleToUnit } from '../../../shared/utils/unitLifecycle';
 
 const EMPTY_PROPERTIES = [];
 
@@ -104,6 +105,7 @@ export const PropertiesProvider = ({ children }) => {
             moveOutInspection: null,
             refundStatus: null,
             image: app.property.image || '',
+            unitCode: app.property.unitCode || '',
             isPrimaryJourneyProperty: index === 0
           };
         })
@@ -121,17 +123,22 @@ export const PropertiesProvider = ({ children }) => {
   };
 
   const completeMoveInChecklist = (propertyId, checklist) => {
+    let movedInProperty = null;
     setProperties((prev) =>
-      prev.map((prop) =>
-        prop.propertyId === propertyId
-          ? {
-              ...prop,
-              moveInChecklist: { ...prop.moveInChecklist, ...checklist },
-              tenancyStatus: 'ACTIVE'
-            }
-          : prop
-      )
+      prev.map((prop) => {
+        if (prop.propertyId !== propertyId) return prop;
+        movedInProperty = prop;
+        return {
+          ...prop,
+          moveInChecklist: { ...prop.moveInChecklist, ...checklist },
+          tenancyStatus: 'ACTIVE'
+        };
+      })
     );
+
+    if (movedInProperty) {
+      applyMoveInLifecycleToUnit({ property: movedInProperty });
+    }
   };
 
   const submitMoveOutNotice = (propertyId, notice) => {

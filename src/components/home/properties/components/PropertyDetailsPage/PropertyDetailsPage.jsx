@@ -41,6 +41,16 @@ const PropertyDetailsPage = ({ propertyId, listingType, onBookInspection, onClos
   }, [activeSection, attentionSection]);
 
   const handleProtectedBookInspection = (resolvedPropertyId) => {
+    const normalized = String(property?.tenantStatus || property?.status || '').toLowerCase();
+    const isBookable = property?.canBook !== false && !['reserved', 'occupied', 'rented'].includes(normalized);
+    if (!isBookable) {
+      setValidationMessage(
+        normalized === 'reserved'
+          ? 'This unit is currently reserved by another applicant.'
+          : 'This unit is currently occupied and unavailable for booking.'
+      );
+      return;
+    }
     if (!viewedSections.media) {
       setValidationMessage('Please click the Media floating icon to view photos and videos before you continue.');
       setAttentionSection('media');
@@ -183,7 +193,7 @@ const PropertyDetailsPage = ({ propertyId, listingType, onBookInspection, onClos
 
         <div className="py-4 animate-fadeIn">
           {isOverview && (
-            <div className="rounded-2xl border border-[#e2e8f0] bg-[#f8fafc] p-6">
+            <div className="property-overview-shell rounded-2xl border border-[#e2e8f0] bg-[#f8fafc] p-6">
               <div className="flex flex-col md:flex-row md:items-start md:justify-between gap-4">
                 <div>
                   <p className="text-[#64748b] max-w-2xl">{property.description}</p>

@@ -9,7 +9,6 @@ import {
   FileText,
   Building2,
   MapPinned,
-  CalendarClock,
   ClipboardCheck,
   House,
   LogOut,
@@ -34,7 +33,6 @@ const navSections = [
     title: 'OPERATIONS CORE',
     items: [
       { to: '/admin/locations-filters', label: 'Locations & Filters', icon: MapPinned },
-      { to: '/admin/inspection-slots', label: 'Inspection Slots', icon: CalendarClock },
       { to: '/admin/inspections', label: 'Inspections', icon: ClipboardCheck },
     ],
   },

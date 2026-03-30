@@ -14,6 +14,7 @@ import {
   Building2,
   Hotel,
   ShoppingBag,
+  Trash2,
 } from 'lucide-react';
 
 const notifications = [{}, {}];
@@ -45,7 +46,7 @@ const AdminHeader = ({ toggleSidebar, isMobile }) => {
     if (path.includes('/units')) return 'Units';
     if (path.includes('/locations-filters')) return 'Locations & Filters';
     if (path.includes('/inspection-slots')) return 'Inspection Slots';
-    if (path.includes('/inspections')) return 'Inspections';
+    if (path.includes('/inspections')) return 'Inspection Bookings';
     if (path.includes('/applications')) return 'Applications';
     if (path.includes('/tenants')) return 'Tenants';
     if (path.includes('/content-policies')) return 'Content & Policies';
@@ -111,6 +112,28 @@ const AdminHeader = ({ toggleSidebar, isMobile }) => {
     navigate(dashboard.path);
   };
 
+  const handleCleanSlate = () => {
+    const confirmed = window.confirm(
+      'This will delete all DomiHive local data (admin + user journey) on this browser. Continue?'
+    );
+    if (!confirmed) return;
+
+    const localKeys = Object.keys(window.localStorage).filter((key) => key.startsWith('domihive_'));
+    localKeys.forEach((key) => window.localStorage.removeItem(key));
+
+    const sessionKeys = Object.keys(window.sessionStorage).filter((key) => key.startsWith('domihive_'));
+    sessionKeys.forEach((key) => window.sessionStorage.removeItem(key));
+
+    try {
+      window.localStorage.clear();
+      window.sessionStorage.clear();
+    } catch (_error) {
+      // ignore
+    }
+
+    window.setTimeout(() => window.location.reload(), 50);
+  };
+
   return (
     <header className="dashboard-header bg-white/80 dark:bg-[#111827]/75 border-b border-gray-200 dark:border-white/10 px-4 lg:px-6 py-3 lg:py-4 sticky top-0 z-[1200] backdrop-blur-md">
       <div className="flex items-center justify-between">
@@ -133,6 +156,15 @@ const AdminHeader = ({ toggleSidebar, isMobile }) => {
         </div>
 
         <div className="flex items-center gap-3 lg:gap-4">
+          <button
+            onClick={handleCleanSlate}
+            className="flex items-center gap-2 px-3 py-2 rounded-lg border border-red-200 dark:border-red-500/30 text-red-600 dark:text-red-300 hover:border-red-400 dark:hover:border-red-500/50 hover:bg-red-50 dark:hover:bg-red-500/10 transition-colors"
+            title="Clean Slate"
+          >
+            <Trash2 size={14} />
+            <span className="text-sm font-semibold hidden lg:inline">Clean Slate</span>
+          </button>
+
           <div className="relative" ref={switcherRef}>
             <button
               onClick={() => {

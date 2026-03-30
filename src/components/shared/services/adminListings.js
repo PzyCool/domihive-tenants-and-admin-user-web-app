@@ -80,9 +80,7 @@ const combineSlides = (property, unit) => {
 
 const isPublishedUnit = (property, unit) => {
   const unitPublished = String(unit?.publishedStatus || "").toLowerCase() === "published";
-  const tenancy = String(unit?.tenantStatus || unit?.status || "vacant").toLowerCase();
-  const available = tenancy === "vacant" || tenancy === "available";
-  return unitPublished && available;
+  return unitPublished;
 };
 
 export const getPublishedUnitListings = () => {
@@ -96,6 +94,7 @@ export const getPublishedUnitListings = () => {
       if (!isPublishedUnit(property, unit)) return;
 
       const typeLabel = unit?.type || property?.type || "Apartment";
+      const buildingTypeLabel = String(property?.type || "").trim();
       const locationText = getLocationText(property);
       const listingId = `listing-${property.id}-${unit.id}`;
       const dateAdded = unit?.updatedAt || property?.updatedAt || new Date().toISOString();
@@ -122,8 +121,11 @@ export const getPublishedUnitListings = () => {
         locationName: property.location || "",
         location: locationText,
         address: property.address || "",
+        postalCode: property.postalCode || "",
         propertyType: toSlug(typeLabel) || "apartment",
         propertyTypeLabel: typeLabel,
+        buildingType: toSlug(buildingTypeLabel) || "",
+        buildingTypeLabel: buildingTypeLabel || "",
         managementType: getManagementType(property),
         isEstate: getManagementType(property) === "estate_property",
         propertyAge: getPropertyAge(property),
@@ -136,7 +138,11 @@ export const getPublishedUnitListings = () => {
         isVerified: true,
         isFeatured: false,
         isNegotiable: false,
-        status: "available",
+        status: String(unit?.tenantStatus || unit?.status || 'vacant').toLowerCase(),
+        tenantStatus: String(unit?.tenantStatus || unit?.status || 'vacant').toLowerCase(),
+        canBook: ['vacant', 'available'].includes(
+          String(unit?.tenantStatus || unit?.status || 'vacant').toLowerCase()
+        ),
         forRent: true
       });
     });

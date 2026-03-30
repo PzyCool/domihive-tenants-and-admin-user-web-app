@@ -8,11 +8,13 @@ const VideoSection = ({ property }) => {
   const videoRef = useRef(null);
   const containerRef = useRef(null);
 
+  const unitTypeLabel = String(property?.propertyTypeLabel || property?.propertyType || 'unit').trim();
+
   const videos = [
     {
       id: 1,
       title: 'Property Walkthrough',
-      description: 'Full tour of the apartment from exterior to interior',
+      description: `Full tour of the ${unitTypeLabel.toLowerCase()} interior`,
       thumbnail: 'https://images.unsplash.com/photo-1615873968403-89e068629265?ixlib=rb-4.0.3&auto=format&fit=crop&w=800&q=80',
       duration: '5:30',
       type: 'walkthrough',

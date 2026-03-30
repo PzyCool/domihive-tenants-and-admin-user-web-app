@@ -2,6 +2,8 @@ import React, { useMemo, useState } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
 import { useApplications } from '../contexts/ApplicationsContext';
 import ApplicationSuccessModal from '../components/applications/ApplicationSuccessModal';
+import { readAdminStorage, writeAdminStorage } from '../../../../context/adminPersistence';
+const ADMIN_APPLICATION_INBOX_KEY = 'domihive_admin_applications_inbox_v1';
 
 const PAYMENT_METHODS = [
   { id: 'card', label: 'Credit/Debit Card', description: 'Pay securely with your card' },
@@ -24,6 +26,53 @@ const formatExpiry = (value) => {
   const digits = value.replace(/\D/g, '').slice(0, 4);
   if (digits.length <= 2) return digits;
   return `${digits.slice(0, 2)}/${digits.slice(2)}`;
+};
+
+const syncSubmittedApplicationToAdmin = ({ application, applicationId }) => {
+  try {
+    const adminData = readAdminStorage() || {};
+    const existing = Array.isArray(adminData.applications) ? adminData.applications : [];
+    const submittedAtISO = new Date().toISOString();
+    const nextRow = {
+      id: `tenant-${applicationId}`,
+      applicant: application?.applicantName || 'Applicant',
+      applicantId: application?.applicantName || 'applicant',
+      propertyId: application?.property?.id || '',
+      propertyTitle: application?.property?.title || 'Property',
+      unitId: application?.property?.unitCode || '',
+      unitNumber: application?.property?.unitCode || '—',
+      submittedAt: submittedAtISO,
+      status: 'Submitted',
+      slaHours: 72,
+      rent: Number(application?.property?.price || 0),
+      priority: 'Medium',
+      assignedTo: '',
+      notes: 'Submitted from tenant dashboard flow.'
+    };
+
+    const withoutExisting = existing.filter((item) => item.id !== nextRow.id);
+    const nextApplications = [nextRow, ...withoutExisting];
+    writeAdminStorage({
+      ...adminData,
+      applications: nextApplications
+    });
+
+    // Secondary inbox channel for reliability (same-tab and cross-tab).
+    try {
+      const rawInbox = localStorage.getItem(ADMIN_APPLICATION_INBOX_KEY);
+      const parsedInbox = rawInbox ? JSON.parse(rawInbox) : [];
+      const inbox = Array.isArray(parsedInbox) ? parsedInbox : [];
+      const mergedInbox = [nextRow, ...inbox.filter((item) => item?.id !== nextRow.id)].slice(0, 300);
+      localStorage.setItem(ADMIN_APPLICATION_INBOX_KEY, JSON.stringify(mergedInbox));
+      window.dispatchEvent(
+        new CustomEvent('domihive:admin-application-submitted', { detail: nextRow })
+      );
+    } catch (_inboxError) {
+      // keep primary write path only
+    }
+  } catch (_error) {
+    // Keep tenant flow resilient even if admin sync fails.
+  }
 };
 
 const ApplicationPaymentPage = () => {
@@ -87,7 +136,7 @@ const ApplicationPaymentPage = () => {
 
     window.setTimeout(() => {
       updateApplication(applicationId, {
-        status: 'UNDER_REVIEW',
+        status: 'APPLICATION_SUBMITTED',
         submittedAtISO: new Date().toISOString(),
         payment: {
           method: selectedMethod,
@@ -99,9 +148,10 @@ const ApplicationPaymentPage = () => {
       addNotification({
         type: 'application',
         title: 'Application Submitted',
-        message: `${application.property.title} is now under review (72 hours SLA).`,
+        message: `${application.property.title} has been submitted successfully.`,
         cta: { label: 'Track Application', path: `/dashboard/rent/applications/${applicationId}/track` }
       });
+      syncSubmittedApplicationToAdmin({ application, applicationId });
 
       setIsProcessing(false);
       setShowSuccessModal(true);
