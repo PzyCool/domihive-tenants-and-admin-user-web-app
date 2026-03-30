@@ -23,6 +23,13 @@ const addYearsToDate = (dateValue, years) => {
 };
 
 const sleep = (ms) => new Promise((resolve) => setTimeout(resolve, ms));
+const fileToDataUrl = (file) =>
+  new Promise((resolve, reject) => {
+    const reader = new FileReader();
+    reader.onload = () => resolve(String(reader.result || ""));
+    reader.onerror = () => reject(new Error("Failed to read file"));
+    reader.readAsDataURL(file);
+  });
 
 export default function AdminCreateContract() {
   const navigate = useNavigate();
@@ -122,9 +129,14 @@ export default function AdminCreateContract() {
     }));
   };
 
-  const handleProfileUpload = (file) => {
+  const handleProfileUpload = async (file) => {
     if (!file) return;
-    const preview = URL.createObjectURL(file);
+    let preview = "";
+    try {
+      preview = await fileToDataUrl(file);
+    } catch (_error) {
+      return;
+    }
     setForm((prev) => ({
       ...prev,
       profileImageFile: file,

@@ -223,6 +223,14 @@ const normalizeUnitCodes = (propertyCode, units) => {
   });
 };
 
+const fileToDataUrl = (file) =>
+  new Promise((resolve, reject) => {
+    const reader = new FileReader();
+    reader.onload = () => resolve(String(reader.result || ""));
+    reader.onerror = () => reject(new Error("Failed to read file"));
+    reader.readAsDataURL(file);
+  });
+
 export default function AdminAddNewProperty() {
   const navigate = useNavigate();
   const locationState = useLocation();
@@ -286,9 +294,14 @@ export default function AdminAddNewProperty() {
     });
   };
 
-  const handleSlideUpload = (index, file) => {
+  const handleSlideUpload = async (index, file) => {
     if (!file) return;
-    const preview = URL.createObjectURL(file);
+    let preview = "";
+    try {
+      preview = await fileToDataUrl(file);
+    } catch (_error) {
+      return;
+    }
     setForm((prev) => {
       const nextSlides = [...prev.coverImages];
       nextSlides[index] = preview;

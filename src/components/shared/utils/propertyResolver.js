@@ -11,6 +11,10 @@ const blockedHostPattern = /(propertypro\.ng|privateproperty\.com\.ng|privatepro
 
 const safeImageUrl = (url, fallbackIndex = 0) => {
   if (!url || typeof url !== 'string') return FALLBACK_IMAGES[fallbackIndex % FALLBACK_IMAGES.length];
+  const lowered = url.toLowerCase();
+  if (lowered.startsWith('blob:') || lowered.startsWith('file:')) {
+    return FALLBACK_IMAGES[fallbackIndex % FALLBACK_IMAGES.length];
+  }
   if (blockedHostPattern.test(url)) return FALLBACK_IMAGES[fallbackIndex % FALLBACK_IMAGES.length];
   return url;
 };

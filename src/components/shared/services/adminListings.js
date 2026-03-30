@@ -3,6 +3,14 @@ import { readAdminStorage } from "../../../context/adminPersistence";
 const FALLBACK_IMAGE =
   "https://images.unsplash.com/photo-1560448204-603b3fc33ddc?w=1200&h=800&fit=crop";
 
+const safeMediaUrl = (value) => {
+  const url = String(value || '').trim();
+  if (!url) return '';
+  const lowered = url.toLowerCase();
+  if (lowered.startsWith('blob:') || lowered.startsWith('file:')) return '';
+  return url;
+};
+
 const toSlug = (value = "") =>
   String(value)
     .toLowerCase()
@@ -72,8 +80,12 @@ const getPropertyAge = (property) => {
 };
 
 const combineSlides = (property, unit) => {
-  const propertySlides = Array.isArray(property?.images) ? property.images.filter(Boolean).slice(0, 3) : [];
-  const unitSlides = Array.isArray(unit?.images) ? unit.images.filter(Boolean).slice(0, 3) : [];
+  const propertySlides = Array.isArray(property?.images)
+    ? property.images.map(safeMediaUrl).filter(Boolean).slice(0, 3)
+    : [];
+  const unitSlides = Array.isArray(unit?.images)
+    ? unit.images.map(safeMediaUrl).filter(Boolean).slice(0, 3)
+    : [];
   const merged = [...propertySlides, ...unitSlides].filter(Boolean);
   return merged.length ? Array.from(new Set(merged)) : [FALLBACK_IMAGE];
 };

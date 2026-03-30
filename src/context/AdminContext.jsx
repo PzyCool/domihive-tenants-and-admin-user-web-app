@@ -924,10 +924,58 @@ const defaultPayments = [
   }
 ];
 
+const isBrokenLocalUrl = (value) => {
+  const url = String(value || '').trim().toLowerCase();
+  return url.startsWith('blob:') || url.startsWith('file:');
+};
+
+const sanitizeMediaUrl = (value, fallback = '') => {
+  if (!value || isBrokenLocalUrl(value)) return fallback;
+  return value;
+};
+
+const sanitizeProperties = (list = []) =>
+  (Array.isArray(list) ? list : []).map((property) => {
+    const propertyImages = Array.isArray(property?.images)
+      ? property.images.map((img) => sanitizeMediaUrl(img)).filter(Boolean)
+      : [];
+    const safePrimaryImage =
+      sanitizeMediaUrl(property?.image) ||
+      propertyImages[0] ||
+      'https://images.unsplash.com/photo-1560448204-603b3fc33ddc?w=1200&h=800&fit=crop';
+
+    const units = Array.isArray(property?.units)
+      ? property.units.map((unit) => {
+          const unitImages = Array.isArray(unit?.images)
+            ? unit.images.map((img) => sanitizeMediaUrl(img)).filter(Boolean)
+            : [];
+          return {
+            ...unit,
+            images: unitImages
+          };
+        })
+      : [];
+
+    return {
+      ...property,
+      image: safePrimaryImage,
+      images: propertyImages,
+      units
+    };
+  });
+
+const sanitizeClients = (list = []) =>
+  (Array.isArray(list) ? list : []).map((client) => ({
+    ...client,
+    avatar:
+      sanitizeMediaUrl(client?.avatar) ||
+      'https://randomuser.me/api/portraits/lego/1.jpg'
+  }));
+
 export const AdminProvider = ({ children }) => {
   const persisted = useMemo(() => readAdminStorage(), []);
-  const [properties, setProperties] = useState(() => persisted?.properties || []);
-  const [clients, setClients] = useState(() => persisted?.clients || []);
+  const [properties, setProperties] = useState(() => sanitizeProperties(persisted?.properties || []));
+  const [clients, setClients] = useState(() => sanitizeClients(persisted?.clients || []));
   const [locations, setLocations] = useState(() => persisted?.locations || defaultLocations);
   const [slots, setSlots] = useState(() => persisted?.slots || defaultSlots);
   const [inspections, setInspections] = useState(() => persisted?.inspections || []);
@@ -998,17 +1046,14 @@ export const AdminProvider = ({ children }) => {
       }
       const latest = readAdminStorage();
       if (!latest) return;
-      if (Array.isArray(latest.properties)) setProperties(latest.properties);
-      if (Array.isArray(latest.clients)) setClients(latest.clients);
+      if (Array.isArray(latest.properties)) setProperties(sanitizeProperties(latest.properties));
+      if (Array.isArray(latest.clients)) setClients(sanitizeClients(latest.clients));
       if (latest.locations) setLocations(latest.locations);
       if (Array.isArray(latest.slots)) setSlots(latest.slots);
       if (Array.isArray(latest.inspections)) setInspections(latest.inspections);
       if (Array.isArray(latest.applications)) {
         const nextApplications = mergeApplications(latest.applications);
         setApplications(nextApplications);
-        if (nextApplications.length !== latest.applications.length) {
-          writeAdminStorage({ ...latest, applications: nextApplications });
-        }
       }
       if (Array.isArray(latest.tenants)) setTenants(latest.tenants);
       if (latest.policies) setPolicies(latest.policies);
@@ -1018,7 +1063,6 @@ export const AdminProvider = ({ children }) => {
     };
 
     window.addEventListener('storage', syncFromStorage);
-    window.addEventListener('domihive:admin-storage-updated', syncFromStorage);
     window.addEventListener('domihive:admin-application-submitted', syncFromStorage);
 
     // Initial same-tab hydration for any queued inbox writes.
@@ -1026,7 +1070,6 @@ export const AdminProvider = ({ children }) => {
 
     return () => {
       window.removeEventListener('storage', syncFromStorage);
-      window.removeEventListener('domihive:admin-storage-updated', syncFromStorage);
       window.removeEventListener('domihive:admin-application-submitted', syncFromStorage);
     };
   }, []);

@@ -71,6 +71,14 @@ const getNextUnitCode = (property) => {
   return `${prefix}-${String(nextNumber).padStart(3, "0")}`;
 };
 
+const fileToDataUrl = (file) =>
+  new Promise((resolve, reject) => {
+    const reader = new FileReader();
+    reader.onload = () => resolve(String(reader.result || ""));
+    reader.onerror = () => reject(new Error("Failed to read file"));
+    reader.readAsDataURL(file);
+  });
+
 const Section = ({ title, children }) => (
   <section className="rounded-md border border-gray-200 dark:border-white/5 bg-white dark:bg-[#111827] transition-colors">
     <div className="border-b border-gray-100 dark:border-white/5 px-4 py-3">
@@ -129,9 +137,14 @@ export default function AdminAddNewUnit() {
     });
   };
 
-  const handleSlideUpload = (index, file) => {
+  const handleSlideUpload = async (index, file) => {
     if (!file) return;
-    const preview = URL.createObjectURL(file);
+    let preview = "";
+    try {
+      preview = await fileToDataUrl(file);
+    } catch (_error) {
+      return;
+    }
     setForm((prev) => {
       const nextSlides = [...prev.coverImages];
       nextSlides[index] = preview;

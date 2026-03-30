@@ -79,6 +79,14 @@ const Section = ({ title, children }) => (
   </section>
 );
 
+const fileToDataUrl = (file) =>
+  new Promise((resolve, reject) => {
+    const reader = new FileReader();
+    reader.onload = () => resolve(String(reader.result || ""));
+    reader.onerror = () => reject(new Error("Failed to read file"));
+    reader.readAsDataURL(file);
+  });
+
 export default function AdminPropertyDetails() {
   const { properties, setProperties, tenants, clients } = useAdmin();
   const navigate = useNavigate();
@@ -204,9 +212,14 @@ export default function AdminPropertyDetails() {
     setActiveSlide((prev) => (prev + direction + 3) % 3);
   };
 
-  const handleSlideUpload = (index, file) => {
+  const handleSlideUpload = async (index, file) => {
     if (!file) return;
-    const preview = URL.createObjectURL(file);
+    let preview = "";
+    try {
+      preview = await fileToDataUrl(file);
+    } catch (_error) {
+      return;
+    }
     setForm((prev) => {
       const nextSlides = [...prev.coverImages];
       nextSlides[index] = preview;
