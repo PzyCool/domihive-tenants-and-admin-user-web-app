@@ -2,6 +2,7 @@ import React, { useEffect, useMemo, useState } from "react";
 import { Link, useNavigate, useSearchParams } from "react-router-dom";
 import { Loader2, UserCircle2 } from "lucide-react";
 import { useAdmin } from "../../../context/AdminContext";
+import { formatDateDDMMYY } from "../../shared/utils/dateFormat";
 
 const cardClass =
   "bg-white dark:bg-[#111827] border border-gray-100 dark:border-white/10 rounded-xl p-4";
@@ -176,7 +177,7 @@ export default function AdminCreateContract() {
       form.profileImagePreview || "https://randomuser.me/api/portraits/lego/1.jpg",
     email: form.newClientEmail.trim(),
     phone: form.newClientPhone.trim(),
-    clientSince: new Date().toLocaleDateString("en-US", { month: "short", year: "numeric" }),
+    clientSince: formatDateDDMMYY(new Date()),
     location: "Lagos, Nigeria",
     description: "Newly onboarded property client",
     bankName: form.bankName.trim(),
@@ -362,12 +363,12 @@ export default function AdminCreateContract() {
           </div>
           <div>
             <label className={labelClass}>Start Date</label>
-            <input type="date" className={inputClass} value={form.startDate} onChange={(e) => handleStartDateChange(e.target.value)} />
+            <input type="date" lang="en-GB" className={inputClass} value={form.startDate} onChange={(e) => handleStartDateChange(e.target.value)} />
             {errors.startDate && <p className="text-[11px] text-red-500 mt-1">{errors.startDate}</p>}
           </div>
           <div>
             <label className={labelClass}>End Date</label>
-            <input type="date" className={inputClass} value={form.endDate} onChange={(e) => setField("endDate", e.target.value)} />
+            <input type="date" lang="en-GB" className={inputClass} value={form.endDate} onChange={(e) => setField("endDate", e.target.value)} />
             {errors.endDate && <p className="text-[11px] text-red-500 mt-1">{errors.endDate}</p>}
           </div>
         </div>

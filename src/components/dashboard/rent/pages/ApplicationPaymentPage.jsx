@@ -3,6 +3,7 @@ import { useNavigate, useParams } from 'react-router-dom';
 import { useApplications } from '../contexts/ApplicationsContext';
 import ApplicationSuccessModal from '../components/applications/ApplicationSuccessModal';
 import { readAdminStorage, writeAdminStorage } from '../../../../context/adminPersistence';
+import { getPublishedUnitListings } from '../../../shared/services/adminListings';
 const ADMIN_APPLICATION_INBOX_KEY = 'domihive_admin_applications_inbox_v1';
 
 const PAYMENT_METHODS = [
@@ -28,7 +29,19 @@ const formatExpiry = (value) => {
   return `${digits.slice(0, 2)}/${digits.slice(2)}`;
 };
 
-const syncSubmittedApplicationToAdmin = ({ application, applicationId }) => {
+const normalizeMoneyAmount = (value) => {
+  const amount = Number(value || 0);
+  if (!Number.isFinite(amount) || amount <= 0) return 0;
+  // In this app flow, decimal values below 1000 represent "million" shorthand from admin input.
+  if (amount > 0 && amount < 1000 && !Number.isInteger(amount)) {
+    return Math.round(amount * 1_000_000);
+  }
+  return Math.round(amount);
+};
+
+const formatNaira = (value) => `₦${normalizeMoneyAmount(value).toLocaleString()}`;
+
+const syncSubmittedApplicationToAdmin = ({ application, applicationId, paymentSnapshot }) => {
   try {
     const adminData = readAdminStorage() || {};
     const existing = Array.isArray(adminData.applications) ? adminData.applications : [];
@@ -47,7 +60,60 @@ const syncSubmittedApplicationToAdmin = ({ application, applicationId }) => {
       rent: Number(application?.property?.price || 0),
       priority: 'Medium',
       assignedTo: '',
-      notes: 'Submitted from tenant dashboard flow.'
+      notes: 'Submitted from tenant dashboard flow.',
+      inspectionDate: application?.inspectionDate || '',
+      inspectionDateISO: application?.inspectionDateISO || '',
+      attendees: Number(application?.attendees || 1),
+      cautionFee: Number(
+        application?.cautionFee ??
+          application?.property?.cautionFee ??
+          application?.property?.caution ??
+          0
+      ),
+      serviceCharge: Number(
+        application?.serviceCharge ?? application?.property?.serviceCharge ?? 0
+      ),
+      applicantProfile:
+        application?.applicantProfile && typeof application.applicantProfile === 'object'
+          ? { ...application.applicantProfile }
+          : {},
+      applicantDocs:
+        application?.applicantDocs && typeof application.applicantDocs === 'object'
+          ? {
+              governmentIdFileName: application.applicantDocs.governmentIdFileName || '',
+              // Avoid localStorage quota overflow by not persisting heavy document previews here.
+              governmentIdPreview:
+                typeof application.applicantDocs.governmentIdPreview === 'string' &&
+                application.applicantDocs.governmentIdPreview.length < 450_000
+                  ? application.applicantDocs.governmentIdPreview
+                  : '',
+              governmentIdMimeType: application.applicantDocs.governmentIdMimeType || ''
+            }
+          : { governmentIdFileName: '', governmentIdPreview: '', governmentIdMimeType: '' },
+      payment:
+        paymentSnapshot && typeof paymentSnapshot === 'object'
+          ? { ...paymentSnapshot }
+          : {
+              method: application?.payment?.method || '',
+              amount: Number(application?.payment?.amount || 0),
+              receiptName: application?.payment?.receiptName || null
+            },
+      property:
+        application?.property && typeof application.property === 'object'
+          ? {
+              ...application.property,
+              price: Number(application?.property?.price || 0),
+              cautionFee: Number(
+                application?.property?.cautionFee ??
+                  application?.property?.caution ??
+                  application?.cautionFee ??
+                  0
+              ),
+              serviceCharge: Number(
+                application?.property?.serviceCharge ?? application?.serviceCharge ?? 0
+              )
+            }
+          : null
     };
 
     const withoutExisting = existing.filter((item) => item.id !== nextRow.id);
@@ -84,6 +150,16 @@ const ApplicationPaymentPage = () => {
     () => applications.find((app) => app.id === applicationId),
     [applications, applicationId]
   );
+  const listingFallback = useMemo(() => {
+    const listings = getPublishedUnitListings();
+    const appPropertyId = String(application?.property?.id || application?.propertyId || '');
+    const appUnitCode = String(application?.property?.unitCode || application?.unitCode || '');
+    return (
+      listings.find((item) => String(item?.id) === appPropertyId) ||
+      listings.find((item) => String(item?.unitCode || '') === appUnitCode) ||
+      null
+    );
+  }, [application?.property?.id, application?.propertyId, application?.property?.unitCode, application?.unitCode]);
 
   const [selectedMethod, setSelectedMethod] = useState('card');
   const [cardInfo, setCardInfo] = useState({
@@ -105,9 +181,26 @@ const ApplicationPaymentPage = () => {
   }
 
   const breakdownLines = [
-    { label: 'Annual Rent', amount: Number(application?.property?.price || 0) },
-    { label: 'Caution Fee', amount: Number(application?.cautionFee || 0) },
-    { label: 'Service Charge', amount: Number(application?.serviceCharge || 0) }
+    { label: 'Annual Rent', amount: normalizeMoneyAmount(application?.property?.price || 0) },
+    {
+      label: 'Caution Fee',
+      amount: normalizeMoneyAmount(
+        application?.cautionFee ??
+          application?.property?.cautionFee ??
+          application?.property?.caution ??
+          listingFallback?.cautionFee ??
+          0
+      )
+    },
+    {
+      label: 'Service Charge',
+      amount: normalizeMoneyAmount(
+        application?.serviceCharge ??
+          application?.property?.serviceCharge ??
+          listingFallback?.serviceCharge ??
+          0
+      )
+    }
   ];
   const total = breakdownLines.reduce((sum, line) => sum + line.amount, 0);
 
@@ -135,14 +228,15 @@ const ApplicationPaymentPage = () => {
     setIsProcessing(true);
 
     window.setTimeout(() => {
+      const paymentSnapshot = {
+        method: selectedMethod,
+        amount: total,
+        receiptName: receiptFile?.name || null
+      };
       updateApplication(applicationId, {
         status: 'APPLICATION_SUBMITTED',
         submittedAtISO: new Date().toISOString(),
-        payment: {
-          method: selectedMethod,
-          amount: total,
-          receiptName: receiptFile?.name || null
-        }
+        payment: paymentSnapshot
       });
 
       addNotification({
@@ -151,7 +245,7 @@ const ApplicationPaymentPage = () => {
         message: `${application.property.title} has been submitted successfully.`,
         cta: { label: 'Track Application', path: `/dashboard/rent/applications/${applicationId}/track` }
       });
-      syncSubmittedApplicationToAdmin({ application, applicationId });
+      syncSubmittedApplicationToAdmin({ application, applicationId, paymentSnapshot });
 
       setIsProcessing(false);
       setShowSuccessModal(true);
@@ -243,7 +337,7 @@ const ApplicationPaymentPage = () => {
               </div>
               <div className="flex items-center justify-between">
                 <span>Amount</span>
-                <span className="text-[#0e1f42] font-semibold">NGN {total.toLocaleString()}</span>
+                <span className="text-[#0e1f42] font-semibold">{formatNaira(total)}</span>
               </div>
             </div>
 
@@ -324,12 +418,12 @@ const ApplicationPaymentPage = () => {
             {breakdownLines.map((line) => (
               <div key={line.label} className="flex justify-between">
                 <span>{line.label}</span>
-                <span>{`NGN ${line.amount.toLocaleString()}`}</span>
+                <span>{formatNaira(line.amount)}</span>
               </div>
             ))}
             <div className="border-t border-[#e2e8f0] pt-2 flex justify-between font-semibold text-[#0e1f42]">
               <span>Total Amount</span>
-              <span>{`NGN ${total.toLocaleString()}`}</span>
+              <span>{formatNaira(total)}</span>
             </div>
           </div>
         </div>

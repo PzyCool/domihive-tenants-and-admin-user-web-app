@@ -1,5 +1,6 @@
 export const ADMIN_STORAGE_KEY = "domihive_admin_data_v1";
 export const ADMIN_STORAGE_BACKUP_KEY = "domihive_admin_data_v1_backup";
+const MAX_INLINE_STRING = 220000;
 
 const safeParse = (raw) => {
   if (!raw) return null;
@@ -33,17 +34,57 @@ export const readAdminStorage = () => {
 
 export const writeAdminStorage = (data) => {
   if (typeof window === "undefined") return;
-  try {
-    const payload = JSON.stringify({
-      ...data,
+  const stripInlineData = (value, mode = "soft") => {
+    if (Array.isArray(value)) return value.map((item) => stripInlineData(item, mode));
+    if (value && typeof value === "object") {
+      return Object.fromEntries(
+        Object.entries(value).map(([key, next]) => [key, stripInlineData(next, mode)])
+      );
+    }
+    if (typeof value === "string" && value.startsWith("data:")) {
+      if (mode === "hard") return "";
+      if (value.length > MAX_INLINE_STRING) return "";
+    }
+    return value;
+  };
+
+  const buildPayload = (next) =>
+    JSON.stringify({
+      ...next,
       _meta: {
         version: 1,
         updatedAt: new Date().toISOString()
       }
     });
-    window.localStorage.setItem(ADMIN_STORAGE_KEY, payload);
-    window.localStorage.setItem(ADMIN_STORAGE_BACKUP_KEY, payload);
-  } catch (_error) {
-    // ignore quota/serialization errors
+
+  try {
+    // 1) Try full payload first.
+    const fullPayload = buildPayload(data);
+    window.localStorage.setItem(ADMIN_STORAGE_KEY, fullPayload);
+    window.localStorage.setItem(ADMIN_STORAGE_BACKUP_KEY, fullPayload);
+    return;
+  } catch (_fullWriteError) {
+    // Fall through to compact modes.
+  }
+
+  try {
+    // 2) Soft compact: remove very large data URLs only.
+    const compactSoft = stripInlineData(data, "soft");
+    const softPayload = buildPayload(compactSoft);
+    window.localStorage.setItem(ADMIN_STORAGE_KEY, softPayload);
+    window.localStorage.setItem(ADMIN_STORAGE_BACKUP_KEY, softPayload);
+    return;
+  } catch (_softWriteError) {
+    // Fall through to hard compact mode.
+  }
+
+  try {
+    // 3) Hard compact: remove all inline data URLs, keep all business records.
+    const compactHard = stripInlineData(data, "hard");
+    const hardPayload = buildPayload(compactHard);
+    window.localStorage.setItem(ADMIN_STORAGE_KEY, hardPayload);
+    window.localStorage.setItem(ADMIN_STORAGE_BACKUP_KEY, hardPayload);
+  } catch (_hardWriteError) {
+    // Final fallback: keep app running; data stays in-memory until user trims media volume.
   }
 };

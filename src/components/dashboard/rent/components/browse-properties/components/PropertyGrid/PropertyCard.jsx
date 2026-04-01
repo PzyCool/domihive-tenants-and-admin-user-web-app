@@ -1,4 +1,5 @@
 import React, { useState } from 'react';
+import { formatDateDDMMYY } from '../../../../../../shared/utils/dateFormat';
 
 const PropertyCard = ({ property, onViewDetails, onToggleFavorite, onBookNowClick }) => { // ADD onBookNowClick prop
   const [isFavorite, setIsFavorite] = useState(false);
@@ -233,11 +234,7 @@ const PropertyCard = ({ property, onViewDetails, onToggleFavorite, onBookNowClic
               <span className="text-sm text-gray-700 font-medium block line-clamp-2">{property.location}</span>
               <div className="text-xs text-gray-500 mt-0.5">
                 <i className="fas fa-clock mr-1"></i>
-                Listed {new Date(property.dateAdded).toLocaleDateString('en-NG', { 
-                  month: 'short', 
-                  day: 'numeric',
-                  year: 'numeric'
-                })}
+                Listed {formatDateDDMMYY(property.dateAdded)}
               </div>
             </div>
           </div>

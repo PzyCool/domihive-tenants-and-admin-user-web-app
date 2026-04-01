@@ -1,5 +1,6 @@
 import React, { createContext, useContext, useMemo, useState, useEffect } from 'react';
 import { useAuth } from '../../../../context/AuthContext';
+import { getUserStorageKey } from '../../../shared/utils/userStorageKey';
 
 const MessagesContext = createContext();
 
@@ -11,7 +12,7 @@ export const useMessages = () => {
 
 export const MessagesProvider = ({ children }) => {
   const { user } = useAuth();
-  const userKey = user?.id || 'guest';
+  const userKey = getUserStorageKey(user);
   const threadsStorageKey = `domihive_message_threads_${userKey}`;
   const [threads, setThreads] = useState([]);
 

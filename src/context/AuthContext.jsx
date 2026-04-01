@@ -16,6 +16,14 @@ export const AuthProvider = ({ children }) => {
   const [loading, setLoading] = useState(true);
   const [authToken, setAuthToken] = useState(null);
 
+  const buildStableUserId = (payload = {}) => {
+    if (payload?.id) return String(payload.id);
+    if (payload?.phone) return `user_phone_${String(payload.phone)}`;
+    if (payload?.email) return `user_email_${String(payload.email).toLowerCase()}`;
+    if (payload?.username) return `user_username_${String(payload.username).toLowerCase()}`;
+    return `user_${Date.now()}`;
+  };
+
   // Load user from localStorage on mount
   useEffect(() => {
     const loadUser = () => {
@@ -24,7 +32,13 @@ export const AuthProvider = ({ children }) => {
         const storedToken = localStorage.getItem('domihive_auth_token');
         
         if (storedUser && storedToken) {
-          setUser(JSON.parse(storedUser));
+          const parsed = JSON.parse(storedUser);
+          const hydrated = {
+            ...parsed,
+            id: buildStableUserId(parsed)
+          };
+          localStorage.setItem('domihive_user', JSON.stringify(hydrated));
+          setUser(hydrated);
           setAuthToken(storedToken);
         }
       } catch (error) {
@@ -86,7 +100,7 @@ export const AuthProvider = ({ children }) => {
       await new Promise(resolve => setTimeout(resolve, 1500));
       
       const newUser = {
-        id: `user_${Date.now()}`,
+        id: buildStableUserId(userData),
         name: userData.name,
         username: userData.username,
         email: userData.email,
@@ -140,9 +154,10 @@ export const AuthProvider = ({ children }) => {
   const updateUser = (updatedData) => {
     if (!user) return;
     
-    const updatedUser = { 
+    const updatedUser = {
       ...user, 
       ...updatedData,
+      id: user.id || buildStableUserId(user),
       updatedAt: new Date().toISOString()
     };
     

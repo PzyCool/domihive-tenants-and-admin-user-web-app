@@ -1,4 +1,5 @@
 import { applyInspectionLifecycleToUnit } from "./unitLifecycle";
+import { formatDateDDMMYY } from "./dateFormat";
 export const INSPECTION_BOOKINGS_KEY = "domihive_inspection_bookings";
 
 export const INSPECTION_BOOKING_STATUSES = {
@@ -85,14 +86,7 @@ export const dedupeInspectionBookings = (bookings = []) => {
 };
 
 const formatDateWords = (dateISO) => {
-  const date = new Date(dateISO);
-  if (Number.isNaN(date.getTime())) return "";
-  return date.toLocaleDateString("en-US", {
-    weekday: "long",
-    month: "long",
-    day: "numeric",
-    year: "numeric"
-  });
+  return formatDateDDMMYY(dateISO);
 };
 
 export const toInspectionRow = (booking) => {

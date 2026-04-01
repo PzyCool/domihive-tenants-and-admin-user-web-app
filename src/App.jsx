@@ -21,6 +21,8 @@ import MyProperties from './components/dashboard/rent/pages/MyProperties';
 import PropertyDashboard from './components/dashboard/rent/pages/PropertyDashboard';
 import PropertyPayments from './components/dashboard/rent/pages/PropertyPayments';
 import PropertyVacate from './components/dashboard/rent/pages/PropertyVacate';
+import PropertyLeaseManagement from './components/dashboard/rent/pages/PropertyLeaseManagement';
+import PropertyRenewal from './components/dashboard/rent/pages/PropertyRenewal';
 import MaintenancePage from './components/dashboard/rent/pages/MaintenancePage';
 import MaintenanceDetailPage from './components/dashboard/rent/pages/MaintenanceDetailPage';
 import MaintenancePolicyPage from './components/dashboard/rent/pages/MaintenancePolicyPage';
@@ -284,6 +286,22 @@ function App() {
               element={(
                 <RequirePropertyAccess>
                   <PropertyVacate />
+                </RequirePropertyAccess>
+              )}
+            />
+            <Route
+              path="my-properties/:propertyId/lease-management"
+              element={(
+                <RequirePropertyAccess>
+                  <PropertyLeaseManagement />
+                </RequirePropertyAccess>
+              )}
+            />
+            <Route
+              path="my-properties/:propertyId/renewal"
+              element={(
+                <RequirePropertyAccess>
+                  <PropertyRenewal />
                 </RequirePropertyAccess>
               )}
             />

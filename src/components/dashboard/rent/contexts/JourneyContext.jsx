@@ -1,5 +1,6 @@
 import React, { createContext, useContext, useEffect, useMemo, useRef, useState } from 'react';
 import { useAuth } from '../../../../context/AuthContext';
+import { getUserStorageKey } from '../../../shared/utils/userStorageKey';
 import { useApplications } from './ApplicationsContext';
 import { useProperties } from './PropertiesContext';
 
@@ -138,7 +139,7 @@ export const JourneyProvider = ({ children }) => {
   const { user } = useAuth();
   const { applications } = useApplications();
   const { properties } = useProperties();
-  const userKey = user?.id || 'guest';
+  const userKey = getUserStorageKey(user);
   const storageKey = `domihive_journey_notifications_${userKey}`;
 
   const [notifications, setNotifications] = useState([]);

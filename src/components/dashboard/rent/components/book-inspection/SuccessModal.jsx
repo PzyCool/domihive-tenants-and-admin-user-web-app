@@ -2,6 +2,7 @@
 import React from 'react';
 import { useNavigate } from 'react-router-dom';
 import { lockBodyScroll, unlockBodyScroll } from '../../../../../utils/scrollLock';
+import { formatDateDDMMYY } from '../../../../shared/utils/dateFormat';
 
 const SuccessModal = ({ isOpen, onClose, bookingData }) => {
   const navigate = useNavigate();
@@ -28,12 +29,7 @@ const SuccessModal = ({ isOpen, onClose, bookingData }) => {
     const dateObj = new Date(`${date}T00:00:00`);
     const dateLabel = Number.isNaN(dateObj.getTime())
       ? date
-      : dateObj.toLocaleDateString('en-US', {
-          weekday: 'short',
-          month: 'short',
-          day: 'numeric',
-          year: 'numeric'
-        });
+      : formatDateDDMMYY(dateObj);
     return `${dateLabel} at ${formatTimeDisplay(time)}`;
   };
 

@@ -1,6 +1,7 @@
 import React, { useMemo, useState } from 'react';
 import { useMessages } from '../contexts/MessagesContext';
 import { useProperties } from '../contexts/PropertiesContext';
+import { formatDateDDMMYY } from '../../../shared/utils/dateFormat';
 
 const statusClasses = {
   OPEN: 'bg-[var(--accent-color,#9F7539)] text-white border border-[var(--accent-color,#9F7539)]',
@@ -8,9 +9,7 @@ const statusClasses = {
 };
 
 const formatDate = (iso) => {
-  if (!iso) return '';
-  const d = new Date(iso);
-  return d.toLocaleDateString();
+  return formatDateDDMMYY(iso);
 };
 
 const MessagesPage = () => {

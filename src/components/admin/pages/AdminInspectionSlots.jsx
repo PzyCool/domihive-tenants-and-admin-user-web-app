@@ -7,23 +7,12 @@ import {
   isAutoBaseSlot
 } from "../../shared/utils/inspectionSchedule";
 import { readInspectionBookings } from "../../shared/utils/inspectionBookings";
-
-const getOrdinal = (day) => {
-  const mod10 = day % 10;
-  const mod100 = day % 100;
-  if (mod10 === 1 && mod100 !== 11) return `${day}st`;
-  if (mod10 === 2 && mod100 !== 12) return `${day}nd`;
-  if (mod10 === 3 && mod100 !== 13) return `${day}rd`;
-  return `${day}th`;
-};
+import { formatDateDDMMYY } from "../../shared/utils/dateFormat";
 
 const formatDisplayDate = (dateStr) => {
   const date = new Date(dateStr);
   if (Number.isNaN(date.getTime())) return dateStr;
-  const weekday = date.toLocaleDateString("en-US", { weekday: "long" });
-  const month = date.toLocaleDateString("en-US", { month: "long" });
-  const year = date.getFullYear();
-  return `${weekday}, ${getOrdinal(date.getDate())} of ${month} ${year}`;
+  return formatDateDDMMYY(date);
 };
 
 const AdminInspectionSlots = () => {
@@ -162,12 +151,7 @@ const AdminInspectionSlots = () => {
   );
   const maxPeopleAllowed = Number(selectedPropertyObj?.inspectionMaxPeople) || 3;
 
-  const todayLabel = new Date().toLocaleDateString("en-US", {
-    weekday: "long",
-    month: "long",
-    day: "numeric",
-    year: "numeric"
-  });
+  const todayLabel = formatDateDDMMYY(new Date());
 
   const handleMaxPeopleChange = (value) => {
     const parsed = Number(value);

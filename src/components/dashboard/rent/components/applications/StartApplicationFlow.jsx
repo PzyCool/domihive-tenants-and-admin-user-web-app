@@ -7,6 +7,7 @@ const INITIAL_FORM = {
   phone: '',
   dateOfBirth: '',
   sex: '',
+  maritalStatus: '',
   occupants: '1',
   occupation: '',
   employed: 'yes',
@@ -17,13 +18,15 @@ const INITIAL_FORM = {
   emergencyEmail: ''
 };
 
+const MAX_DOC_PREVIEW_BYTES = 350 * 1024;
+
 const StartApplicationFlow = ({ application, onSaveDraft, onProceed, onClose }) => {
   const { user } = useAuth();
   const [formData, setFormData] = useState(INITIAL_FORM);
   const [docs, setDocs] = useState({
     governmentIdFileName: '',
-    proofOfIncomeFileName: '',
-    additionalDocsFileName: ''
+    governmentIdPreview: '',
+    governmentIdMimeType: ''
   });
   const [step, setStep] = useState(Number(application?.applicationStep || 1));
 
@@ -38,8 +41,8 @@ const StartApplicationFlow = ({ application, onSaveDraft, onProceed, onClose }) 
     });
     setDocs({
       governmentIdFileName: application?.applicantDocs?.governmentIdFileName || '',
-      proofOfIncomeFileName: application?.applicantDocs?.proofOfIncomeFileName || '',
-      additionalDocsFileName: application?.applicantDocs?.additionalDocsFileName || ''
+      governmentIdPreview: application?.applicantDocs?.governmentIdPreview || '',
+      governmentIdMimeType: application?.applicantDocs?.governmentIdMimeType || ''
     });
     setStep(Number(application?.applicationStep || 1));
   }, [application?.id, user?.name, user?.email, user?.phone]);
@@ -48,8 +51,40 @@ const StartApplicationFlow = ({ application, onSaveDraft, onProceed, onClose }) 
     setFormData((prev) => ({ ...prev, [field]: value }));
   };
 
-  const handleDocPick = (field, file) => {
-    setDocs((prev) => ({ ...prev, [field]: file?.name || '' }));
+  const handleDocPick = (file) => {
+    if (!file) {
+      setDocs((prev) => ({
+        ...prev,
+        governmentIdFileName: '',
+        governmentIdPreview: '',
+        governmentIdMimeType: ''
+      }));
+      return;
+    }
+    const baseNext = {
+      governmentIdFileName: file.name || '',
+      governmentIdPreview: '',
+      governmentIdMimeType: file.type || ''
+    };
+
+    if (file.size > MAX_DOC_PREVIEW_BYTES) {
+      setDocs((prev) => ({ ...prev, ...baseNext }));
+      return;
+    }
+
+    const reader = new FileReader();
+    reader.onload = () => {
+      const dataUrl = typeof reader.result === 'string' ? reader.result : '';
+      setDocs((prev) => ({
+        ...prev,
+        ...baseNext,
+        governmentIdPreview: dataUrl
+      }));
+    };
+    reader.onerror = () => {
+      setDocs((prev) => ({ ...prev, ...baseNext }));
+    };
+    reader.readAsDataURL(file);
   };
 
   const persistDraft = (nextStep = step) => {
@@ -65,8 +100,7 @@ const StartApplicationFlow = ({ application, onSaveDraft, onProceed, onClose }) 
     Boolean(formData.email?.trim()) &&
     Boolean(formData.phone?.trim());
 
-  const canContinueFromStep2 =
-    Boolean(docs.governmentIdFileName) && Boolean(docs.proofOfIncomeFileName);
+  const canContinueFromStep2 = Boolean(docs.governmentIdFileName);
 
   const handleProceed = () => {
     persistDraft(3);
@@ -75,34 +109,44 @@ const StartApplicationFlow = ({ application, onSaveDraft, onProceed, onClose }) 
   };
 
   return (
-    <div className="bg-white rounded-3xl border border-[#e2e8f0] p-6 relative">
-      {onClose && (
-        <button
-          onClick={onClose}
-          className="absolute top-4 right-4 text-gray-500 hover:text-gray-800"
-        >
-          <i className="fas fa-times"></i>
-        </button>
-      )}
-
-      <div className="mb-6 grid grid-cols-3 gap-2 text-xs">
-        {[
-          { id: 1, label: 'Form' },
-          { id: 2, label: 'Documents' },
-          { id: 3, label: 'Payment' }
-        ].map((item) => (
-          <div
-            key={item.id}
-            className={`rounded-xl border px-3 py-2 text-center font-semibold ${
-              step >= item.id
-                ? 'border-[var(--accent-color,#9f7539)] text-[var(--accent-color,#9f7539)] bg-[#fffaf0]'
-                : 'border-[#e2e8f0] text-[#98a2b3]'
-            }`}
-          >
-            Step {item.id}: {item.label}
-          </div>
-        ))}
+    <div className="space-y-4">
+      <div className="rounded-2xl border border-[var(--border-color,#e2e8f0)] bg-[var(--card-bg,#ffffff)] p-4">
+        <div className="relative flex items-center justify-between gap-2">
+          <div className="absolute left-0 right-0 top-4 h-[2px] bg-[var(--border-color,#e2e8f0)]" />
+          {[
+            { id: 1, label: 'Form' },
+            { id: 2, label: 'Documents' },
+            { id: 3, label: 'Payment' }
+          ].map((item) => {
+            const isComplete = step > item.id;
+            const isActive = step === item.id;
+            return (
+              <div key={item.id} className="relative z-[1] flex flex-col items-center gap-1 min-w-0 flex-1">
+                <div
+                  className={`h-8 w-8 rounded-full border-2 flex items-center justify-center text-xs font-bold transition-colors ${
+                    isComplete || isActive
+                      ? 'border-[var(--accent-color,#9f7539)] bg-[var(--accent-color,#9f7539)] text-white'
+                      : 'border-[var(--border-color,#e2e8f0)] bg-[var(--card-bg,#ffffff)] text-[var(--text-muted,#98a2b3)]'
+                  }`}
+                >
+                  {item.id}
+                </div>
+                <div
+                  className={`text-xs font-semibold ${
+                    isComplete || isActive
+                      ? 'text-[var(--accent-color,#9f7539)]'
+                      : 'text-[var(--text-muted,#98a2b3)]'
+                  }`}
+                >
+                  {item.label}
+                </div>
+              </div>
+            );
+          })}
+        </div>
       </div>
+
+      <div className="bg-white rounded-3xl border border-[#e2e8f0] p-6 relative">
 
       <div className="space-y-7">
         {step === 1 && (
@@ -142,6 +186,7 @@ const StartApplicationFlow = ({ application, onSaveDraft, onProceed, onClose }) 
                   Date of Birth
                   <input
                     type="date"
+                    lang="en-GB"
                     value={formData.dateOfBirth}
                     onChange={(e) => handleFieldChange('dateOfBirth', e.target.value)}
                     className="mt-2 border border-gray-200 rounded-xl p-3 focus:outline-none focus:ring-2 focus:ring-[#0e1f42]/40"
@@ -174,17 +219,34 @@ const StartApplicationFlow = ({ application, onSaveDraft, onProceed, onClose }) 
             <section className="space-y-4">
               <div className="grid md:grid-cols-2 gap-4">
                 <label className="flex flex-col text-sm text-[#475467]">
+                  Marital Status
+                  <select
+                    value={formData.maritalStatus}
+                    onChange={(e) => handleFieldChange('maritalStatus', e.target.value)}
+                    className="mt-2 border border-gray-200 rounded-xl p-3 focus:outline-none focus:ring-2 focus:ring-[#0e1f42]/40"
+                  >
+                    <option value="">Select status</option>
+                    <option value="Married">Married</option>
+                    <option value="Engaged">Engaged</option>
+                    <option value="Single">Single</option>
+                  </select>
+                </label>
+                <label className="flex flex-col text-sm text-[#475467]">
                   Number of Occupants
                   <select
                     value={formData.occupants}
                     onChange={(e) => handleFieldChange('occupants', e.target.value)}
                     className="mt-2 border border-gray-200 rounded-xl p-3 focus:outline-none focus:ring-2 focus:ring-[#0e1f42]/40"
                   >
-                    {[1, 2, 3, 4, 5, 6].map((count) => (
-                      <option key={count} value={count}>
-                        {count} occupant{count > 1 ? 's' : ''}
-                      </option>
-                    ))}
+                    <option value="just_me">Just me</option>
+                    <option value="me_and_spouse">I and my spouse</option>
+                    <option value="family_1">I and family of 1</option>
+                    <option value="family_2">I and family of 2</option>
+                    <option value="family_3">I and family of 3</option>
+                    <option value="family_4">I and family of 4</option>
+                    <option value="family_5_plus">I and family of 5+</option>
+                    <option value="shared_with_friend">Shared with a friend</option>
+                    <option value="shared_with_relatives">Shared with relatives</option>
                   </select>
                 </label>
               </div>
@@ -242,61 +304,51 @@ const StartApplicationFlow = ({ application, onSaveDraft, onProceed, onClose }) 
 
         {step === 2 && (
           <section className="space-y-4">
-            <p className="text-sm font-semibold text-[#0e1f42] border-b border-[#f1f5f9] pb-3">
+            <p className="text-sm font-semibold text-[var(--text-color,#0e1f42)] border-b border-[var(--border-color,#e2e8f0)] pb-3">
               Upload Required Documents
             </p>
+            <div className="rounded-2xl border border-dashed border-[var(--border-color,#d0d5dd)] bg-[var(--card-bg,#f8fafc)] p-4 md:p-5">
+              <div className="space-y-1">
+                <h3 className="text-sm font-semibold text-[var(--text-color,#0e1f42)]">Government ID *</h3>
+                <p className="text-xs text-[var(--text-muted,#667085)]">
+                  Upload one valid ID: NIN slip/card, International Passport, Driver&apos;s License, or any government-issued ID.
+                </p>
+              </div>
 
-            <div className="space-y-3">
-              <label className="flex flex-col text-sm text-[#475467]">
-                Government Issued ID *
+              <label className="mt-4 flex cursor-pointer items-center justify-center rounded-xl border border-[var(--border-color,#d0d5dd)] bg-[var(--surface-bg,var(--card-bg,#ffffff))] px-4 py-3 text-sm font-medium text-[var(--text-color,#0e1f42)] hover:border-[var(--accent-color,#9f7539)]">
                 <input
                   type="file"
                   accept=".png,.jpg,.jpeg,.pdf"
-                  className="mt-2 border border-gray-200 rounded-xl p-3 focus:outline-none focus:ring-2 focus:ring-[#0e1f42]/40"
-                  onChange={(event) =>
-                    handleDocPick('governmentIdFileName', event.target.files?.[0] || null)
-                  }
+                  className="hidden"
+                  onChange={(event) => handleDocPick(event.target.files?.[0] || null)}
                 />
-                <span className="mt-1 text-xs text-[#667085]">
-                  {docs.governmentIdFileName || 'No file selected'}
-                </span>
+                <span>{docs.governmentIdFileName ? 'Replace ID Upload' : 'Choose Government ID File'}</span>
               </label>
 
-              <label className="flex flex-col text-sm text-[#475467]">
-                Proof of Income *
-                <input
-                  type="file"
-                  accept=".png,.jpg,.jpeg,.pdf"
-                  className="mt-2 border border-gray-200 rounded-xl p-3 focus:outline-none focus:ring-2 focus:ring-[#0e1f42]/40"
-                  onChange={(event) =>
-                    handleDocPick('proofOfIncomeFileName', event.target.files?.[0] || null)
-                  }
-                />
-                <span className="mt-1 text-xs text-[#667085]">
-                  {docs.proofOfIncomeFileName || 'No file selected'}
-                </span>
-              </label>
+              <p className="mt-2 text-xs text-[var(--text-muted,#667085)]">
+                {docs.governmentIdFileName || 'No file selected'}
+              </p>
 
-              <label className="flex flex-col text-sm text-[#475467]">
-                Additional Documents (Optional)
-                <input
-                  type="file"
-                  accept=".png,.jpg,.jpeg,.pdf"
-                  className="mt-2 border border-gray-200 rounded-xl p-3 focus:outline-none focus:ring-2 focus:ring-[#0e1f42]/40"
-                  onChange={(event) =>
-                    handleDocPick('additionalDocsFileName', event.target.files?.[0] || null)
-                  }
-                />
-                <span className="mt-1 text-xs text-[#667085]">
-                  {docs.additionalDocsFileName || 'No file selected'}
-                </span>
-              </label>
+              {docs.governmentIdFileName && (
+                <div className="mt-4 flex items-center justify-between rounded-xl border border-[var(--border-color,#e2e8f0)] bg-[var(--surface-bg,var(--card-bg,#ffffff))] px-4 py-3">
+                  <div className="min-w-0">
+                    <p className="text-xs text-[var(--text-muted,#667085)]">Uploaded file</p>
+                    <p className="truncate text-sm font-medium text-[var(--text-color,#0e1f42)]">
+                      {docs.governmentIdFileName}
+                    </p>
+                  </div>
+                  <span className="ml-3 inline-flex items-center gap-1 rounded-full bg-emerald-500/15 px-2.5 py-1 text-xs font-semibold text-emerald-400">
+                    <i className="fas fa-check-circle" aria-hidden="true"></i>
+                    Done
+                  </span>
+                </div>
+              )}
             </div>
           </section>
         )}
       </div>
 
-      <div className="space-y-4 pt-4 border-t border-[#e2e8f0]">
+      <div className="mt-6 space-y-4 pt-4 border-t border-[var(--border-color,#e2e8f0)]">
         {step === 1 && (
           <div className="flex justify-end">
             <button
@@ -320,7 +372,7 @@ const StartApplicationFlow = ({ application, onSaveDraft, onProceed, onClose }) 
                 persistDraft(1);
                 setStep(1);
               }}
-              className="px-6 py-3 rounded-2xl border border-[#d0d7df] text-[#344054] font-semibold"
+              className="px-6 py-3 rounded-2xl border border-[var(--border-color,#d0d7df)] text-[var(--text-color,#344054)] font-semibold"
             >
               Back to Form
             </button>
@@ -334,6 +386,7 @@ const StartApplicationFlow = ({ application, onSaveDraft, onProceed, onClose }) 
             </button>
           </div>
         )}
+      </div>
       </div>
     </div>
   );

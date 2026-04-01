@@ -32,13 +32,13 @@ const PropertyGrid = ({
     >
       {properties.map((property) => (
         <div
-          key={property.id}
+          key={property.id || property.propertyId}
           className={viewType === 'list' ? 'w-full' : 'w-[85%] flex-shrink-0 snap-start sm:w-full'}
         >
           <PropertyCard
             property={property}
             viewType={viewType}
-            onViewDetails={() => onPropertyClick?.(property.id)}
+            onViewDetails={() => onPropertyClick?.(property.id || property.propertyId)}
             onToggleFavorite={(prop, fav) => onFavoriteToggle?.(prop, fav)}
             onBookNowClick={onBookNowClick}
             isFavorite={property.isFavorite}

@@ -4,16 +4,15 @@ import { Users, Search, Download, UserPlus, Eye } from 'lucide-react';
 import { Link } from 'react-router-dom';
 
 const AdminTenants = () => {
-  const { tenants, setTenants } = useAdmin();
+  const { tenants } = useAdmin();
+  const getTenantRent = (tenant) => Number(tenant?.rent ?? tenant?.rentAmount ?? 0);
+  const getTenantPaymentStatus = (tenant) =>
+    tenant?.paymentStatus || (getTenantRent(tenant) > 0 ? 'Paid' : 'Pending');
 
   // Filters
   const [search, setSearch] = useState("");
   const [statusFilter, setStatusFilter] = useState("all");
   const [sortBy, setSortBy] = useState("newest");
-
-  const confirmMoveIn = (id) => {
-    setTenants((prev) => prev.map((t) => (t.id === id ? { ...t, status: 'Active' } : t)));
-  };
 
   // Summary Data
   const summaryStats = useMemo(() => {
@@ -70,9 +69,9 @@ const AdminTenants = () => {
     }
 
     if (sortBy === "rent-desc") {
-      list.sort((a, b) => b.rent - a.rent);
+      list.sort((a, b) => getTenantRent(b) - getTenantRent(a));
     } else if (sortBy === "rent-asc") {
-      list.sort((a, b) => a.rent - b.rent);
+      list.sort((a, b) => getTenantRent(a) - getTenantRent(b));
     } else {
       // newest by id for mock
       list.sort((a, b) => b.id.localeCompare(a.id));
@@ -190,10 +189,10 @@ const AdminTenants = () => {
                 </td>
                 <td className="py-4 px-4">
                   <div className="text-gray-700 dark:text-gray-300 font-medium line-clamp-1">{tenant.propertyTitle}</div>
-                  <div className="text-[11px] text-gray-500 dark:text-gray-400">Unit {tenant.unitNumber}</div>
+                  <div className="text-[11px] text-gray-500 dark:text-gray-400">Unit {tenant.unitNumber || tenant.unitCode || "—"}</div>
                 </td>
                 <td className="py-4 px-4 font-medium text-xs text-gray-700 dark:text-gray-300">
-                  ₦{tenant.rent?.toLocaleString()}
+                  ₦{getTenantRent(tenant).toLocaleString()}
                 </td>
                 <td className="py-4 px-4 text-xs text-gray-600 dark:text-gray-400 whitespace-nowrap">
                   <div>{tenant.leaseStart}</div>
@@ -205,20 +204,12 @@ const AdminTenants = () => {
                   </span>
                 </td>
                 <td className="py-4 px-4">
-                  <span className={`px-2.5 py-1 whitespace-nowrap rounded-full text-[10px] font-bold ${paymentBadge(tenant.paymentStatus)}`}>
-                    {tenant.paymentStatus || 'Pending'}
+                  <span className={`px-2.5 py-1 whitespace-nowrap rounded-full text-[10px] font-bold ${paymentBadge(getTenantPaymentStatus(tenant))}`}>
+                    {getTenantPaymentStatus(tenant)}
                   </span>
                 </td>
                 <td className="py-4 px-4 text-right">
                   <div className="flex justify-end items-center gap-2">
-                    {tenant.status === 'Move-in pending' && (
-                      <button
-                        onClick={() => confirmMoveIn(tenant.id)}
-                        className="text-xs font-semibold text-green-600 dark:text-green-400 hover:text-green-700 dark:hover:text-green-300 cursor-pointer"
-                      >
-                        Confirm
-                      </button>
-                    )}
                     <Link
                       to={`/admin/tenants/${tenant.id}`}
                       className="p-2 hover:bg-gray-100 dark:hover:bg-white/5 rounded-lg text-gray-400 dark:text-gray-500 hover:text-[#9F7539] transition-all cursor-pointer"
@@ -251,13 +242,13 @@ const AdminTenants = () => {
               <div className="p-2 bg-gray-50 dark:bg-gray-900/50 rounded-lg border border-gray-100 dark:border-white/5">
                 <p className="text-gray-400 dark:text-gray-500 mb-1">Property</p>
                 <p className="font-semibold text-gray-700 dark:text-gray-300 truncate">{tenant.propertyTitle}</p>
-                <p className="text-[10px] text-gray-500 dark:text-gray-400">Unit {tenant.unitNumber}</p>
+                <p className="text-[10px] text-gray-500 dark:text-gray-400">Unit {tenant.unitNumber || tenant.unitCode || "—"}</p>
               </div>
               <div className="p-2 bg-gray-50 dark:bg-gray-900/50 rounded-lg border border-gray-100 dark:border-white/5">
                 <p className="text-gray-400 dark:text-gray-500 mb-1">Rent</p>
-                <p className="font-semibold text-gray-700 dark:text-gray-300">₦{tenant.rent?.toLocaleString()}</p>
-                <span className={`text-[9px] font-bold ${tenant.paymentStatus === 'Paid' ? 'text-green-600 dark:text-green-400' : 'text-amber-600 dark:text-amber-400'}`}>
-                  {tenant.paymentStatus}
+                <p className="font-semibold text-gray-700 dark:text-gray-300">₦{getTenantRent(tenant).toLocaleString()}</p>
+                <span className={`text-[9px] font-bold ${getTenantPaymentStatus(tenant) === 'Paid' ? 'text-green-600 dark:text-green-400' : 'text-amber-600 dark:text-amber-400'}`}>
+                  {getTenantPaymentStatus(tenant)}
                 </span>
               </div>
             </div>
@@ -267,14 +258,6 @@ const AdminTenants = () => {
                 Lease: <span className="font-medium dark:text-gray-300">{tenant.leaseStart}</span> → <span className="font-medium dark:text-gray-300">{tenant.leaseEnd}</span>
               </div>
               <div className="flex gap-2">
-                {tenant.status === 'Move-in pending' && (
-                  <button
-                    onClick={() => confirmMoveIn(tenant.id)}
-                    className="px-3 py-1.5 bg-green-50 dark:bg-green-500/10 text-green-600 dark:text-green-400 font-bold rounded-lg text-[11px] cursor-pointer hover:bg-green-100 transition-colors"
-                  >
-                    Confirm
-                  </button>
-                )}
                 <Link
                   to={`/admin/tenants/${tenant.id}`}
                   className="p-2 border border-gray-100 dark:border-white/10 rounded-lg text-gray-400 dark:text-gray-500 hover:text-[#9F7539] transition-all cursor-pointer"

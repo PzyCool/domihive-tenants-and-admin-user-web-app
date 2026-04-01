@@ -40,6 +40,7 @@ const ApplicationTrackPage = () => {
   const navigate = useNavigate();
   const { applications } = useApplications();
   const [animatedIndex, setAnimatedIndex] = useState(0);
+  const [showVerdictOverlay, setShowVerdictOverlay] = useState(false);
 
   const application = useMemo(
     () => applications.find((app) => app.id === applicationId),
@@ -94,6 +95,21 @@ const ApplicationTrackPage = () => {
     return 'Awaiting verdict.';
   })();
 
+  const formatNaira = (value) => `₦${Number(value || 0).toLocaleString()}`;
+
+  useEffect(() => {
+    if (!applicationId || !application) return;
+    if (!['APPROVED', 'REJECTED'].includes(application.status)) return;
+    const key = `domihive_track_verdict_seen_${applicationId}_${application.status}`;
+    try {
+      if (localStorage.getItem(key) === '1') return;
+      setShowVerdictOverlay(true);
+      localStorage.setItem(key, '1');
+    } catch (_error) {
+      setShowVerdictOverlay(true);
+    }
+  }, [applicationId, application]);
+
   return (
     <div className="rent-overview-container bg-gradient-to-br from-gray-50 to-gray-100 min-h-screen p-4 md:p-6">
       <div className="bg-white rounded-lg border border-[#e2e8f0] p-6 space-y-6 max-w-5xl mx-auto">
@@ -131,11 +147,20 @@ const ApplicationTrackPage = () => {
             <div className="space-y-1">
               <h3 className="text-lg font-semibold text-[#0e1f42]">{application.property?.title}</h3>
               <p className="text-sm text-[#475467]">{application.property?.location}</p>
-              <p className="text-sm font-semibold text-[#0e1f42]">NGN {application.property?.price?.toLocaleString()} / year</p>
+              <p className="text-sm font-semibold text-[#0e1f42]">{formatNaira(application.property?.price)} / year</p>
             </div>
           </div>
           <p className="text-xs text-[#6c757d]">Last updated: {application.updatedAt}</p>
         </div>
+
+        {application.status === 'UNDER_REVIEW' && (
+          <div className="bg-amber-50 border border-amber-200 rounded-xl p-4">
+            <p className="text-sm font-semibold text-amber-800">Your application has been submitted and is under review.</p>
+            <p className="text-xs text-amber-700 mt-1">
+              Check back on this page for your final verdict.
+            </p>
+          </div>
+        )}
 
         <div className="bg-white border border-[#e2e8f0] rounded-2xl p-5 shadow-sm">
           <h2 className="text-sm font-semibold text-[#0e1f42] mb-4">Status Progress</h2>
@@ -171,6 +196,60 @@ const ApplicationTrackPage = () => {
           </div>
         </div>
       </div>
+
+      {showVerdictOverlay && (
+        <div className="fixed inset-0 z-[1400] bg-black/45 backdrop-blur-[2px] flex items-center justify-center p-4">
+          <div className="w-full max-w-xl rounded-2xl bg-white border border-[#e2e8f0] shadow-2xl overflow-hidden">
+            <div className={`px-6 py-4 border-b ${application.status === 'APPROVED' ? 'bg-green-50 border-green-200' : 'bg-red-50 border-red-200'}`}>
+              <h3 className="text-xl font-bold text-[#0e1f42]">
+                {application.status === 'APPROVED' ? 'Congratulations! Application Approved' : 'Application Result'}
+              </h3>
+            </div>
+            <div className="px-6 py-5 space-y-3 text-sm text-[#475467]">
+              {application.status === 'APPROVED' ? (
+                <>
+                  <p>Your application for <span className="font-semibold text-[#0e1f42]">{application.property?.title}</span> was approved.</p>
+                  <p>You now have access to DomiHive management tools (My Properties, Maintenance, Payments, and Messages).</p>
+                </>
+              ) : (
+                <>
+                  <p>Your application for <span className="font-semibold text-[#0e1f42]">{application.property?.title}</span> was not approved.</p>
+                  {application?.rejectionReason ? (
+                    <p>Reason: <span className="font-semibold text-[#0e1f42]">{application.rejectionReason}</span></p>
+                  ) : null}
+                  <p>
+                    Refund status: <span className="font-semibold text-[#0e1f42]">{application?.refundStatus || 'Pending Refund'}</span>
+                    {application?.refundETA ? <> • ETA: <span className="font-semibold text-[#0e1f42]">{application.refundETA}</span></> : null}
+                  </p>
+                </>
+              )}
+            </div>
+            <div className="px-6 py-4 border-t border-[#e2e8f0] flex items-center justify-end gap-2">
+              <button
+                onClick={() => setShowVerdictOverlay(false)}
+                className="px-4 py-2 rounded-lg border border-[#e2e8f0] text-sm font-semibold text-[#0e1f42]"
+              >
+                Close
+              </button>
+              {application.status === 'APPROVED' ? (
+                <button
+                  onClick={() => navigate('/dashboard/rent/my-properties')}
+                  className="px-4 py-2 rounded-lg text-sm font-semibold text-white bg-[var(--accent-color,#9F7539)]"
+                >
+                  Open My Properties
+                </button>
+              ) : (
+                <button
+                  onClick={() => navigate('/dashboard/rent/browse')}
+                  className="px-4 py-2 rounded-lg text-sm font-semibold text-white bg-[var(--accent-color,#9F7539)]"
+                >
+                  Continue Browsing
+                </button>
+              )}
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 };

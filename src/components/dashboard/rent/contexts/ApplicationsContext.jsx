@@ -1,6 +1,7 @@
 import React, { createContext, useCallback, useContext, useEffect, useMemo, useState } from 'react';
 import { useAuth } from '../../../../context/AuthContext';
 import { readAdminStorage } from '../../../../context/adminPersistence';
+import { getUserStorageKey } from '../../../shared/utils/userStorageKey';
 import {
   readInspectionBookings,
   getBookingIdentityKey,
@@ -8,19 +9,14 @@ import {
   INSPECTION_BOOKING_STATUSES
 } from '../../../shared/utils/inspectionBookings';
 import { applyApplicationLifecycleToUnit } from '../../../shared/utils/unitLifecycle';
+import { formatDateDDMMYY, formatDateTimeDDMMYY } from '../../../shared/utils/dateFormat';
 
 const MAX_NOTIFICATIONS = 120;
 
 const ApplicationsContext = createContext();
 
 const formatDateTimeLabel = (isoDate) =>
-  new Date(isoDate).toLocaleString('en-US', {
-    month: 'long',
-    day: 'numeric',
-    year: 'numeric',
-    hour: 'numeric',
-    minute: '2-digit'
-  });
+  formatDateTimeDDMMYY(isoDate);
 
 const formatRelativeTime = (iso) => {
   const seconds = Math.max(0, Math.floor((Date.now() - new Date(iso).getTime()) / 1000));
@@ -63,6 +59,41 @@ const safeReadJson = (storageKey, fallback = []) => {
   }
 };
 
+const sanitizeApplicationForStorage = (application) => {
+  if (!application || typeof application !== 'object') return application;
+  const docs = application.applicantDocs && typeof application.applicantDocs === 'object'
+    ? { ...application.applicantDocs }
+    : null;
+  if (docs) {
+    // Never persist heavy binary previews in localStorage.
+    delete docs.governmentIdPreview;
+    delete docs.governmentIdMimeType;
+  }
+  return docs ? { ...application, applicantDocs: docs } : application;
+};
+
+const sanitizeApplicationsForStorage = (applications) =>
+  Array.isArray(applications) ? applications.map(sanitizeApplicationForStorage) : [];
+
+const safeWriteJson = (storageKey, data) => {
+  const payload = JSON.stringify(data);
+  try {
+    localStorage.setItem(storageKey, payload);
+    return true;
+  } catch (_error) {
+    try {
+      // Retry once with sanitized/pruned payload.
+      const fallbackData = Array.isArray(data)
+        ? sanitizeApplicationsForStorage(data)
+        : data;
+      localStorage.setItem(storageKey, JSON.stringify(fallbackData));
+      return true;
+    } catch (_retryError) {
+      return false;
+    }
+  }
+};
+
 export const useApplications = () => {
   const context = useContext(ApplicationsContext);
   if (!context) {
@@ -73,14 +104,15 @@ export const useApplications = () => {
 
 export const ApplicationsProvider = ({ children }) => {
   const { user } = useAuth();
-  const userKey = user?.id || 'guest';
+  const userKey = getUserStorageKey(user);
   const applicationsStorageKey = `domihive_applications_state_${userKey}`;
   const notificationsStorageKey = `domihive_dashboard_notifications_${userKey}`;
   const [applications, setApplications] = useState([]);
   const [notifications, setNotifications] = useState([]);
 
   useEffect(() => {
-    setApplications(safeReadJson(applicationsStorageKey, []));
+    const loaded = safeReadJson(applicationsStorageKey, []);
+    setApplications(sanitizeApplicationsForStorage(loaded));
   }, [applicationsStorageKey]);
 
   useEffect(() => {
@@ -88,11 +120,11 @@ export const ApplicationsProvider = ({ children }) => {
   }, [notificationsStorageKey]);
 
   useEffect(() => {
-    localStorage.setItem(applicationsStorageKey, JSON.stringify(applications));
+    safeWriteJson(applicationsStorageKey, sanitizeApplicationsForStorage(applications));
   }, [applications, applicationsStorageKey]);
 
   useEffect(() => {
-    localStorage.setItem(notificationsStorageKey, JSON.stringify(notifications));
+    safeWriteJson(notificationsStorageKey, notifications);
   }, [notifications, notificationsStorageKey]);
 
   const addNotification = useCallback((notification) => {
@@ -155,11 +187,7 @@ export const ApplicationsProvider = ({ children }) => {
     const inspectionDateBase = new Date(`${booking?.inspectionDate || ''}T00:00:00`);
     const inspectionDateLabel = Number.isNaN(inspectionDateBase.getTime())
       ? formatDateTimeLabel(inspectionDateISO)
-      : `${inspectionDateBase.toLocaleDateString('en-US', {
-          month: 'long',
-          day: 'numeric',
-          year: 'numeric'
-        })} • ${booking?.inspectionTime || ''}`;
+      : `${formatDateDDMMYY(inspectionDateBase)} • ${booking?.inspectionTime || ''}`;
     const propertyId = property?.id || property?.propertyId || booking?.propertyId || 'PROP-UNKNOWN';
 
     let createdOrUpdated;
@@ -179,6 +207,8 @@ export const ApplicationsProvider = ({ children }) => {
         inspectionTime: booking?.inspectionTime || '',
         unitCode: booking?.unitCode || '',
         inspectionNotes: booking?.inspectionNotes || '',
+        cautionFee: Number(property?.cautionFee || property?.caution || 0),
+        serviceCharge: Number(property?.serviceCharge || 0),
         createdAtISO: nowISO,
         updatedAtISO: nowISO,
         updatedAt: 'Just now',
@@ -187,6 +217,8 @@ export const ApplicationsProvider = ({ children }) => {
           title: property?.title || 'Selected Property',
           location: property?.location || 'Lagos, Nigeria',
           price: Number(property?.price || 0),
+          cautionFee: Number(property?.cautionFee || property?.caution || 0),
+          serviceCharge: Number(property?.serviceCharge || 0),
           image: property?.image || 'https://images.unsplash.com/photo-1549187774-b4e9b0445b58?w=640',
           unitCode: booking?.unitCode || property?.unitCode || '',
           bedrooms: Number(property?.bedrooms || 0),
@@ -371,6 +403,10 @@ export const ApplicationsProvider = ({ children }) => {
           const nextApp = {
             ...app,
             status: mapped,
+            rejectionReason: adminApp?.rejectionReason || app?.rejectionReason || '',
+            refundStatus: adminApp?.refundStatus || app?.refundStatus || '',
+            refundETA: adminApp?.refundETA || app?.refundETA || '',
+            decisionAtISO: adminApp?.decisionAt || app?.decisionAtISO || '',
             updatedAtISO: new Date().toISOString(),
             updatedAt: 'Just now'
           };
@@ -406,12 +442,18 @@ export const ApplicationsProvider = ({ children }) => {
               APPROVED: {
                 title: 'Application Approved',
                 message: `${entry.title} has been approved.`,
-                cta: { label: 'View My Properties', path: '/dashboard/rent/my-properties' }
+                cta: {
+                  label: 'View Verdict',
+                  path: `/dashboard/rent/applications/${entry.application?.id}/track`
+                }
               },
               REJECTED: {
                 title: 'Application Rejected',
                 message: `${entry.title} was not approved this time.`,
-                cta: { label: 'Track Application', path: '/dashboard/rent/applications' }
+                cta: {
+                  label: 'View Verdict',
+                  path: `/dashboard/rent/applications/${entry.application?.id}/track`
+                }
               }
             }[entry.nextStatus];
             return {

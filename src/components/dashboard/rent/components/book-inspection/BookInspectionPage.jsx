@@ -5,7 +5,6 @@ import { useApplications } from '../../contexts/ApplicationsContext';
 import PropertySummary from './PropertySummary';
 import InspectionForm from './InspectionForm';
 import TermsAndConditions from './TermsAndConditions';
-import DocumentVerification from './DocumentVerification';
 import UserContextBanner from './UserContextBanner';
 import SuccessModal from './SuccessModal';
 import FloatingCallButton from '../property-details/components/FloatingCallButton';
@@ -187,9 +186,6 @@ const BookInspectionPage = ({ propertyId, propertyData, onBack }) => {
                   formValues={formValues}
                   onFormChange={handleFormChange}
                 />
-
-                {/* Document Verification Section */}
-                <DocumentVerification />
 
                 {/* Terms and Conditions Section */}
                 {/* We need to pass the checked state to TermsAndConditions */}

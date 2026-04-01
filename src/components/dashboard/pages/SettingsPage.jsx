@@ -1,5 +1,7 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { useAuth } from '../../../context/AuthContext';
+import { formatDateTimeDDMMYY } from '../../shared/utils/dateFormat';
+import { getUserStorageKey } from '../../shared/utils/userStorageKey';
 
 const tabs = [
   { id: 'profile', label: 'Profile', icon: 'user' },
@@ -39,13 +41,7 @@ const clearJourneyStorage = (userKey) => {
 const buildPresentationSeed = (user) => {
   const now = Date.now();
   const inspectionAt = new Date(now + 24 * 60 * 60 * 1000);
-  const inspectionLabel = inspectionAt.toLocaleString('en-US', {
-    month: 'long',
-    day: 'numeric',
-    year: 'numeric',
-    hour: 'numeric',
-    minute: '2-digit'
-  });
+  const inspectionLabel = formatDateTimeDDMMYY(inspectionAt);
   const submittedAtISO = new Date(now - 3 * 1000).toISOString();
 
   const sampleProperty = {
@@ -246,7 +242,7 @@ const SettingsPage = () => {
     if (isJourneyActionRunning) return;
     setIsJourneyActionRunning(true);
     try {
-      const userKey = user?.id || 'guest';
+      const userKey = getUserStorageKey(user);
       clearJourneyStorage(userKey);
       window.alert('Journey data reset complete. The dashboard will reload.');
       window.location.reload();
@@ -260,7 +256,7 @@ const SettingsPage = () => {
     if (isJourneyActionRunning) return;
     setIsJourneyActionRunning(true);
     try {
-      const userKey = user?.id || 'guest';
+      const userKey = getUserStorageKey(user);
       clearJourneyStorage(userKey);
 
       const { sampleProperty, seededApplication, seededNotifications } = buildPresentationSeed(user);

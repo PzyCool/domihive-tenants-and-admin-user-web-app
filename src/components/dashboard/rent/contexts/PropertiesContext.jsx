@@ -1,7 +1,9 @@
 import React, { createContext, useContext, useMemo, useState, useEffect } from 'react';
 import { useAuth } from '../../../../context/AuthContext';
+import { getUserStorageKey } from '../../../shared/utils/userStorageKey';
 import { useApplications } from './ApplicationsContext';
 import { applyMoveInLifecycleToUnit } from '../../../shared/utils/unitLifecycle';
+import { readAdminStorage, writeAdminStorage } from '../../../../context/adminPersistence';
 
 const EMPTY_PROPERTIES = [];
 
@@ -16,7 +18,7 @@ export const useProperties = () => {
 export const PropertiesProvider = ({ children }) => {
   const { user } = useAuth();
   const { applications } = useApplications();
-  const userKey = user?.id || 'guest';
+  const userKey = getUserStorageKey(user);
   const propertiesStorageKey = `domihive_properties_${userKey}`;
   const favoritesStorageKey = `domihive_favorites_${userKey}`;
 
@@ -75,6 +77,7 @@ export const PropertiesProvider = ({ children }) => {
 
           return {
             propertyId,
+            sourceApplicationId: app.id,
             name: app.property.title || 'Approved Property',
             location: app.property.location || 'Lagos, Nigeria',
             unitType: app.property.unitType || 'Unit',
@@ -138,6 +141,33 @@ export const PropertiesProvider = ({ children }) => {
 
     if (movedInProperty) {
       applyMoveInLifecycleToUnit({ property: movedInProperty });
+      try {
+        const adminData = readAdminStorage() || {};
+        const tenantList = Array.isArray(adminData.tenants) ? adminData.tenants : [];
+        const nextTenants = tenantList.map((tenant) => {
+          const sameApplication =
+            String(tenant?.applicationId || '') === String(movedInProperty?.sourceApplicationId || '');
+          const sameProperty = String(tenant?.propertyId || '') === String(movedInProperty?.propertyId || '');
+          const sameUnit =
+            String(tenant?.unitCode || tenant?.unitNumber || '') ===
+            String(movedInProperty?.unitCode || '');
+          if (!sameApplication && !sameProperty && !sameUnit) return tenant;
+          return {
+            ...tenant,
+            status: 'Active',
+            moveInConfirmedAt: new Date().toISOString(),
+            moveInDate: checklist?.moveInDate || tenant?.moveInDate || '',
+            keyNumber: checklist?.keyNumber || tenant?.keyNumber || ''
+          };
+        });
+        writeAdminStorage({
+          ...adminData,
+          tenants: nextTenants
+        });
+        window.dispatchEvent(new CustomEvent('domihive:admin-data-updated'));
+      } catch (_error) {
+        // keep tenant-side flow resilient
+      }
     }
   };
 

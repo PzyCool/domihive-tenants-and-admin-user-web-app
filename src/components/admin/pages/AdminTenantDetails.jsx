@@ -1,4 +1,4 @@
-import React, { useMemo } from 'react';
+﻿import React, { useMemo } from 'react';
 import { useParams, useNavigate, Link } from 'react-router-dom';
 import { useAdmin } from '../../../context/AdminContext';
 import {
@@ -42,6 +42,25 @@ const AdminTenantDetails = () => {
         );
     }
 
+    const tenantView = {
+        ...tenant,
+        name: tenant?.name || 'Tenant',
+        image: tenant?.image || tenant?.avatar || 'https://randomuser.me/api/portraits/lego/1.jpg',
+        email: tenant?.email || 'No email',
+        phone: tenant?.phone || 'No phone',
+        occupation: tenant?.occupation || 'Not provided',
+        status: tenant?.status || 'Move-in pending',
+        emergencyContact: tenant?.emergencyContact || { name: 'Not provided', relationship: 'N/A', phone: 'N/A' },
+        leaseStart: tenant?.leaseStart || '—',
+        leaseEnd: tenant?.leaseEnd || '—',
+        unitNumber: tenant?.unitNumber || tenant?.unitCode || '—',
+        unitId: tenant?.unitId || tenant?.unitCode || '',
+        propertyTitle: tenant?.propertyTitle || 'Property not linked',
+        rent: Number(tenant?.rent ?? tenant?.rentAmount ?? 0),
+        paymentStatus: tenant?.paymentStatus || 'Pending',
+        billingHistory: Array.isArray(tenant?.billingHistory) ? tenant.billingHistory : []
+    };
+
     const statusBadge = (status) => {
         if (status === 'Active') return 'bg-green-100 text-green-700 dark:bg-green-500/10 dark:text-green-400';
         if (status === 'Reserved') return 'bg-blue-100 text-blue-700 dark:bg-blue-500/10 dark:text-blue-400';
@@ -54,7 +73,7 @@ const AdminTenantDetails = () => {
             <div className="flex flex-col gap-4">
                 <div className="flex items-center gap-2 text-[11px] text-gray-400 dark:text-gray-500 font-medium">
                     <Link to="/admin/tenants" className="hover:text-[#9F7539] transition-colors">Tenants</Link>
-                    <span className="text-gray-300 dark:text-gray-700">›</span>
+                    <span className="text-gray-300 dark:text-gray-700">â€º</span>
                     <span className="text-gray-600 dark:text-gray-300 font-bold">Tenant Profile</span>
                 </div>
 
@@ -68,15 +87,15 @@ const AdminTenantDetails = () => {
                         </button>
                         <div className="flex items-center gap-4">
                             <div className="w-14 h-14 rounded-full bg-gray-100 dark:bg-gray-800 overflow-hidden border border-gray-100 dark:border-white/5 shadow-sm">
-                                <img src={tenant.image} alt={tenant.name} className="w-full h-full object-cover" />
+                                <img src={tenantView.image} alt={tenantView.name} className="w-full h-full object-cover" />
                             </div>
                             <div>
-                                <h1 className="text-2xl font-bold text-[#0e1f42] dark:text-white leading-tight">{tenant.name}</h1>
+                                <h1 className="text-2xl font-bold text-[#0e1f42] dark:text-white leading-tight">{tenantView.name}</h1>
                                 <div className="flex items-center gap-3 mt-1">
-                                    <span className={`px-2 py-0.5 rounded-full text-[10px] font-extrabold uppercase tracking-wider ${statusBadge(tenant.status)}`}>
-                                        {tenant.status}
+                                    <span className={`px-2 py-0.5 rounded-full text-[10px] font-extrabold uppercase tracking-wider ${statusBadge(tenantView.status)}`}>
+                                        {tenantView.status}
                                     </span>
-                                    <span className="text-xs text-gray-400 dark:text-gray-600 font-medium">ID: {tenant.id}</span>
+                                    <span className="text-xs text-gray-400 dark:text-gray-600 font-medium">ID: {tenantView.id}</span>
                                 </div>
                             </div>
                         </div>
@@ -108,7 +127,7 @@ const AdminTenantDetails = () => {
                                 </div>
                                 <div className="min-w-0">
                                     <p className="text-[10px] font-bold text-gray-400 dark:text-gray-500 uppercase tracking-wider">Email Address</p>
-                                    <p className="text-sm font-bold text-[#0e1f42] dark:text-white truncate">{tenant.email}</p>
+                                    <p className="text-sm font-bold text-[#0e1f42] dark:text-white truncate">{tenantView.email}</p>
                                 </div>
                             </div>
 
@@ -118,7 +137,7 @@ const AdminTenantDetails = () => {
                                 </div>
                                 <div>
                                     <p className="text-[10px] font-bold text-gray-400 dark:text-gray-500 uppercase tracking-wider">Phone Number</p>
-                                    <p className="text-sm font-bold text-[#0e1f42] dark:text-white">{tenant.phone}</p>
+                                    <p className="text-sm font-bold text-[#0e1f42] dark:text-white">{tenantView.phone}</p>
                                 </div>
                             </div>
 
@@ -128,7 +147,7 @@ const AdminTenantDetails = () => {
                                 </div>
                                 <div>
                                     <p className="text-[10px] font-bold text-gray-400 dark:text-gray-500 uppercase tracking-wider">Occupation</p>
-                                    <p className="text-sm font-bold text-[#0e1f42] dark:text-white">{tenant.occupation}</p>
+                                    <p className="text-sm font-bold text-[#0e1f42] dark:text-white">{tenantView.occupation}</p>
                                 </div>
                             </div>
                         </div>
@@ -140,8 +159,8 @@ const AdminTenantDetails = () => {
                                     <User size={14} />
                                 </div>
                                 <div>
-                                    <p className="text-sm font-bold text-[#0e1f42] dark:text-white">{tenant.emergencyContact.name}</p>
-                                    <p className="text-[11px] text-gray-500 dark:text-gray-400">{tenant.emergencyContact.relationship} • {tenant.emergencyContact.phone}</p>
+                                    <p className="text-sm font-bold text-[#0e1f42] dark:text-white">{tenantView.emergencyContact.name}</p>
+                                    <p className="text-[11px] text-gray-500 dark:text-gray-400">{tenantView.emergencyContact.relationship} â€¢ {tenantView.emergencyContact.phone}</p>
                                 </div>
                             </div>
                         </div>
@@ -157,8 +176,8 @@ const AdminTenantDetails = () => {
                                 <FileText size={24} />
                             </div>
                             <div className="min-w-0">
-                                <p className="text-white font-bold text-sm truncate">lease_agreement_{tenant.id}.pdf</p>
-                                <p className="text-[10px] text-gray-400 mt-0.5">Signed on {tenant.leaseStart}</p>
+                                <p className="text-white font-bold text-sm truncate">lease_agreement_{tenantView.id}.pdf</p>
+                                <p className="text-[10px] text-gray-400 mt-0.5">Signed on {tenantView.leaseStart}</p>
                             </div>
                         </div>
                         <button className="w-full flex items-center justify-center gap-2 py-3 bg-white hover:bg-gray-100 text-[#0e1f42] rounded-2xl text-xs font-bold transition-all shadow-xl">
@@ -175,7 +194,7 @@ const AdminTenantDetails = () => {
                             <h3 className="text-base font-bold text-[#0e1f42] dark:text-white">Active Lease Details</h3>
                             <div className="flex items-center gap-2 text-[#9F7539] font-bold text-xs">
                                 <Building2 size={14} />
-                                {tenant.unitNumber}
+                                {tenantView.unitNumber}
                             </div>
                         </div>
 
@@ -186,8 +205,8 @@ const AdminTenantDetails = () => {
                                 </div>
                                 <div className="space-y-1">
                                     <p className="text-[10px] font-bold text-gray-400 dark:text-gray-500 uppercase tracking-widest">Assigned Property</p>
-                                    <p className="text-sm font-bold text-[#0e1f42] dark:text-white leading-tight">{tenant.propertyTitle}</p>
-                                    <Link to={`/admin/units/${tenant.unitId}`} className="text-[11px] text-[#9F7539] font-bold flex items-center gap-1 mt-1 hover:underline">
+                                    <p className="text-sm font-bold text-[#0e1f42] dark:text-white leading-tight">{tenantView.propertyTitle}</p>
+                                    <Link to={`/admin/units/${tenantView.unitId}`} className="text-[11px] text-[#9F7539] font-bold flex items-center gap-1 mt-1 hover:underline">
                                         Property Details <ExternalLink size={10} />
                                     </Link>
                                 </div>
@@ -199,10 +218,10 @@ const AdminTenantDetails = () => {
                                 </div>
                                 <div className="space-y-1">
                                     <p className="text-[10px] font-bold text-gray-400 dark:text-gray-500 uppercase tracking-widest">Monthly Rent</p>
-                                    <p className="text-xl font-extrabold text-[#0e1f42] dark:text-white leading-tight">₦{tenant.rent?.toLocaleString()}</p>
+                                    <p className="text-xl font-extrabold text-[#0e1f42] dark:text-white leading-tight">₦{tenantView.rent?.toLocaleString()}</p>
                                     <div className="flex items-center gap-1.5">
-                                        <span className={`w-2 h-2 rounded-full ${tenant.paymentStatus === 'Paid' ? 'bg-green-500' : 'bg-amber-500'}`} />
-                                        <span className="text-[11px] text-gray-400 font-medium">Payment: {tenant.paymentStatus}</span>
+                                        <span className={`w-2 h-2 rounded-full ${tenantView.paymentStatus === 'Paid' ? 'bg-green-500' : 'bg-amber-500'}`} />
+                                        <span className="text-[11px] text-gray-400 font-medium">Payment: {tenantView.paymentStatus}</span>
                                     </div>
                                 </div>
                             </div>
@@ -214,7 +233,7 @@ const AdminTenantDetails = () => {
                                     <Calendar size={12} />
                                     <span className="text-[10px] font-bold uppercase tracking-widest">Lease Period</span>
                                 </div>
-                                <p className="text-xs font-bold text-[#0e1f42] dark:text-white">{tenant.leaseStart} — {tenant.leaseEnd}</p>
+                                <p className="text-xs font-bold text-[#0e1f42] dark:text-white">{tenantView.leaseStart} â€” {tenantView.leaseEnd}</p>
                                 <p className="text-[11px] text-gray-400">12 Months Contract</p>
                             </div>
                             <div className="bg-gray-50 dark:bg-white/5 p-4 rounded-2xl space-y-1">
@@ -246,7 +265,7 @@ const AdminTenantDetails = () => {
                                     </tr>
                                 </thead>
                                 <tbody className="divide-y divide-gray-50 dark:divide-white/5">
-                                    {tenant.billingHistory.map((bill) => (
+                                    {tenantView.billingHistory.map((bill) => (
                                         <tr key={bill.id} className="text-xs">
                                             <td className="py-4 pr-4">
                                                 <div className="font-bold text-[#0e1f42] dark:text-white">{bill.id}</div>
@@ -277,3 +296,4 @@ const AdminTenantDetails = () => {
 };
 
 export default AdminTenantDetails;
+

@@ -9,8 +9,8 @@ import ActionSection from './components/ActionSection/ActionSection';
 // import FloatingCallButton from './components/FloatingCallButton';
 import usePropertyDetails from './hooks/usePropertyDetails';
 
-const PropertyDetailsPage = ({ propertyId, listingType, onBookInspection, onClose }) => {
-  const { property, loading, error } = usePropertyDetails(propertyId);
+const PropertyDetailsPage = ({ propertyId, propertyData, listingType, onBookInspection, onClose }) => {
+  const { property, loading, error } = usePropertyDetails(propertyId, propertyData);
   const [activeSection, setActiveSection] = React.useState('overview');
   const [viewedSections, setViewedSections] = React.useState({ media: false, location: false });
   const [validationMessage, setValidationMessage] = React.useState('');

@@ -1,5 +1,6 @@
 // src/components/home/properties/components/PropertyGrid/PropertyCard.jsx
 import React, { useState } from 'react';
+import { formatDateDDMMYY } from '../../../../shared/utils/dateFormat';
 
 const PropertyCard = ({
   property,
@@ -201,11 +202,7 @@ const PropertyCard = ({
                 <div className="text-sm text-gray-600 font-medium">{estateTypeInfo.label}</div>
                 <div className="text-[11px] text-gray-500 mt-0.5 inline-flex items-center gap-1.5">
                   <i className="fas fa-clock text-[#9f7539]"></i>
-                  Listed {new Date(property.dateAdded).toLocaleDateString('en-NG', {
-                    month: 'short',
-                    day: 'numeric',
-                    year: 'numeric'
-                  })}
+                  Listed {formatDateDDMMYY(property.dateAdded)}
                 </div>
               </div>
               <div className="flex items-center gap-2">
@@ -344,11 +341,7 @@ const PropertyCard = ({
               <span className="text-xs md:text-sm text-gray-700 font-medium block line-clamp-2">{property.location}</span>
               <div className="hidden sm:block text-[11px] text-gray-500 mt-0.5">
                 <i className="fas fa-clock mr-1"></i>
-                Listed {new Date(property.dateAdded).toLocaleDateString('en-NG', { 
-                  month: 'short', 
-                  day: 'numeric',
-                  year: 'numeric'
-                })}
+                Listed {formatDateDDMMYY(property.dateAdded)}
               </div>
             </div>
           </div>

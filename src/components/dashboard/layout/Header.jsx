@@ -5,6 +5,7 @@ import { useAuth } from '../../../context/AuthContext';
 import { useDashboard } from '../../../context/DashboardContext';
 import { useJourney } from '../rent/contexts/JourneyContext';
 import { lockBodyScroll, unlockBodyScroll } from '../../../utils/scrollLock';
+import { formatDateTimeDDMMYY } from '../../shared/utils/dateFormat';
 
 const Header = ({ toggleSidebar, isMobile }) => {
   const { user } = useAuth();
@@ -423,7 +424,7 @@ const Header = ({ toggleSidebar, isMobile }) => {
                           </div>
                           <p className="text-sm text-gray-600 mt-1">{notification.message}</p>
                           <p className="text-xs text-gray-400 mt-1">
-                            {new Date(notification.createdAt).toLocaleString()}
+                            {formatDateTimeDDMMYY(notification.createdAt)}
                           </p>
 
                           <div className="mt-3 flex items-center gap-3">

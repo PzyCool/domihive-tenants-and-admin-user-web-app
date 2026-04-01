@@ -1,6 +1,10 @@
 // src/components/dashboard/rent/components/overview/TopOverview.jsx
 import React, { useState, useEffect, useRef } from 'react';
 import { useNavigate } from 'react-router-dom';
+import { formatDateDDMMYY, formatDateTimeDDMMYY } from '../../../../shared/utils/dateFormat';
+
+const MONTH_SHORT = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
+const MONTH_LONG = ['January', 'February', 'March', 'April', 'May', 'June', 'July', 'August', 'September', 'October', 'November', 'December'];
 
 const TopOverview = ({
   statsOverride,
@@ -163,7 +167,7 @@ const TopOverview = ({
     return days;
   };
 
-  const monthLabel = calendarDate.toLocaleDateString('en-US', { month: 'long', year: 'numeric' });
+  const monthLabel = `${MONTH_LONG[calendarDate.getMonth()]} ${calendarDate.getFullYear()}`;
 
   const goPrev = () => {
     if (view === 'month') {
@@ -210,7 +214,7 @@ const TopOverview = ({
 
       <div className="flex items-center justify-between mb-4 text-xs text-[#64748b]">
         <span>
-          {syncedAt ? `Last synced ${new Date(syncedAt).toLocaleTimeString()}` : 'Waiting for sync...'}
+          {syncedAt ? `Last synced ${formatDateTimeDDMMYY(syncedAt)}` : 'Waiting for sync...'}
         </span>
         {isStale && (
           <span className="px-2 py-1 rounded-full bg-amber-100 text-amber-700 font-semibold">
@@ -435,7 +439,7 @@ const TopOverview = ({
                       >
                         <div className="font-semibold">{day.getDate()}</div>
                         <div className="text-[10px] text-[#64748b]">
-                          {day.toLocaleDateString('en-US', { month: 'short' })}
+                          {MONTH_SHORT[day.getMonth()]}
                         </div>
                         {dayEvents.length > 0 && (
                           <div className="mt-1 flex justify-center gap-1">
@@ -495,10 +499,7 @@ const TopOverview = ({
                         <div className="flex-1">
                           <div className="font-medium text-[var(--text-color,#0e1f42)] text-sm">{event.title}</div>
                           <div className="text-xs text-[#64748b]">
-                            {new Date(event.date).toLocaleDateString('en-US', {
-                              month: 'short',
-                              day: 'numeric'
-                            })}
+                            {formatDateDDMMYY(event.date)}
                           </div>
                         </div>
                         <div className="text-xs px-2 py-1 bg-white rounded-full border border-[#e2e8f0] capitalize">

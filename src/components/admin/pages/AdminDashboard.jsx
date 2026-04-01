@@ -10,6 +10,7 @@ import {
   UserPlus,
 } from "lucide-react";
 import { useAdmin } from "../../../context/AdminContext";
+import { formatDateTimeDDMMYY } from "../../shared/utils/dateFormat";
 
 const statusStyles = {
   approved: "bg-green-100 text-green-700 dark:bg-green-500/10 dark:text-green-400",
@@ -24,7 +25,7 @@ const toTimeLabel = (raw) => {
   if (!raw) return "just now";
   const date = new Date(raw);
   if (Number.isNaN(date.getTime())) return "just now";
-  return date.toLocaleString();
+  return formatDateTimeDDMMYY(date);
 };
 
 const AdminDashboard = () => {
@@ -223,4 +224,3 @@ const AdminDashboard = () => {
 };
 
 export default AdminDashboard;
-

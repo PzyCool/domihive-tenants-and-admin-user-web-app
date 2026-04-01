@@ -81,7 +81,7 @@ const formatSize = (size) => {
   return `${raw} sqm`;
 };
 
-const ApplicationCard = ({ application, onAction }) => {
+const ApplicationCard = ({ application, onAction, compact = false }) => {
   const navigate = useNavigate();
   const [nowTick, setNowTick] = useState(Date.now());
 
@@ -93,7 +93,8 @@ const ApplicationCard = ({ application, onAction }) => {
   const isScheduled = inspectionStatus === INSPECTION_BOOKING_STATUSES.SCHEDULED;
   const isNoShow = inspectionStatus === INSPECTION_BOOKING_STATUSES.NO_SHOW;
   const isInspectionCompleted =
-    inspectionStatus === INSPECTION_BOOKING_STATUSES.INSPECTION_COMPLETED;
+    inspectionStatus === INSPECTION_BOOKING_STATUSES.INSPECTION_COMPLETED &&
+    application.status === 'INSPECTION_SCHEDULED';
   const countdown = useMemo(
     () => (isScheduled ? getInspectionCountdown(application.inspectionDateISO) : null),
     [isScheduled, application.inspectionDateISO, nowTick]
@@ -109,13 +110,23 @@ const ApplicationCard = ({ application, onAction }) => {
   }, [isScheduled]);
 
   return (
-    <div className="property-card relative w-full bg-white rounded-xl shadow-md border border-gray-200 overflow-hidden transition-all duration-300">
+    <div
+      className={`property-card relative ${compact ? 'w-full max-w-[860px] mx-auto' : 'w-full'} bg-white rounded-xl shadow-md border border-gray-200 overflow-hidden transition-all duration-300`}
+    >
       <div
         className={`flex flex-col lg:flex-row ${
           isNoShow ? 'opacity-75 blur-[0.8px] pointer-events-none select-none' : ''
         } ${isInspectionCompleted ? 'pointer-events-none select-none' : ''}`}
       >
-        <div className={`relative lg:w-[42%] ${isNoShow ? 'h-44 lg:h-[220px] min-h-[180px]' : 'h-56 lg:h-[320px] min-h-[220px]'}`}>
+        <div
+          className={`relative ${
+            compact ? 'lg:w-[26%]' : 'lg:w-[42%]'
+          } ${
+            compact
+              ? (isNoShow ? 'h-28 lg:h-[130px] min-h-[110px]' : 'h-32 lg:h-[155px] min-h-[125px]')
+              : (isNoShow ? 'h-44 lg:h-[220px] min-h-[180px]' : 'h-56 lg:h-[320px] min-h-[220px]')
+          }`}
+        >
           <img
             src={application.property?.image}
             alt={application.property?.title}
@@ -123,25 +134,25 @@ const ApplicationCard = ({ application, onAction }) => {
           />
         </div>
 
-        <div className="lg:w-[58%] p-4 md:p-5 flex flex-col">
+        <div className={`${compact ? 'lg:w-[74%] p-2.5 md:p-3' : 'lg:w-[58%] p-4 md:p-5'} flex flex-col`}>
           <div className="flex items-start justify-between gap-3">
             <div>
-              <div className="property-price-main text-2xl font-bold text-[#0e1f42] leading-tight">
+              <div className={`property-price-main ${compact ? 'text-lg' : 'text-2xl'} font-bold text-[#0e1f42] leading-tight`}>
                 {formatPrice(application.property?.price)}
               </div>
-              <div className="text-xs mt-1 text-[var(--text-muted,#6c757d)]">
+              <div className={`${compact ? 'text-[11px]' : 'text-xs'} mt-1 text-[var(--text-muted,#6c757d)]`}>
                 {formatPriceWords(application.property?.price)}
               </div>
-              <div className="text-gray-700 font-medium mt-1">
+              <div className={`${compact ? 'text-xs' : ''} text-gray-700 font-medium mt-1`}>
                 Inspection: {application.inspectionDate || 'Not set'}
               </div>
-              <h3 className="text-2xl font-semibold text-[#0e1f42] mt-2">{application.property?.title}</h3>
-              <div className="text-gray-600 text-sm mt-1 inline-flex items-center gap-1.5">
+              <h3 className={`${compact ? 'text-lg' : 'text-2xl'} font-semibold text-[#0e1f42] mt-1.5`}>{application.property?.title}</h3>
+              <div className={`${compact ? 'text-xs' : 'text-sm'} text-gray-600 mt-1 inline-flex items-center gap-1.5`}>
                 <i className="fas fa-map-marker-alt text-[#9f7539] text-[11px]"></i>
                 {application.property?.location}
               </div>
 
-              <div className="flex items-center gap-4 text-gray-600 text-sm mt-2">
+              <div className={`flex items-center ${compact ? 'gap-2.5 text-[11px]' : 'gap-4 text-sm'} text-gray-600 mt-1.5`}>
                 <span className="inline-flex items-center gap-1.5">
                   <i className="fas fa-bed text-[#9f7539] text-[11px]"></i>
                   {Number(application.property?.bedrooms || 0)} bed
@@ -156,22 +167,22 @@ const ApplicationCard = ({ application, onAction }) => {
                 </span>
               </div>
 
-              <div className="mt-2">
-                <div className="flex items-center gap-2 mb-1">
+              <div className={`${compact ? 'mt-1.5' : 'mt-2'}`}>
+                <div className="flex items-center gap-2 mb-0.5">
                   <i className="fas fa-align-left text-[#9f7539] text-[11px]"></i>
                   <span className="text-[11px] font-semibold text-gray-800">About this property:</span>
                 </div>
                 {application.property?.description ? (
-                  <p className="text-sm text-[var(--text-color,#334155)] leading-relaxed line-clamp-2">
+                  <p className={`${compact ? 'text-[10px]' : 'text-sm'} text-[var(--text-color,#334155)] leading-relaxed ${compact ? 'line-clamp-1' : 'line-clamp-2'}`}>
                     {application.property.description}
                   </p>
                 ) : null}
               </div>
 
-              <div className="text-sm mt-1 text-[var(--text-color,#0e1f42)]">
+              <div className={`${compact ? 'text-[11px]' : 'text-sm'} mt-1 text-[var(--text-color,#0e1f42)]`}>
                 Applicant: <span className="font-semibold">{application.applicantName || 'Applicant'}</span>
               </div>
-              <div className="text-sm mt-1 text-[var(--text-color,#0e1f42)]">
+              <div className={`${compact ? 'text-[11px]' : 'text-sm'} mt-0.5 text-[var(--text-color,#0e1f42)]`}>
                 Attendees: {application.attendees} attendee{application.attendees > 1 ? 's' : ''}
               </div>
             </div>
@@ -179,17 +190,17 @@ const ApplicationCard = ({ application, onAction }) => {
             <div className="flex flex-col items-end gap-2">
               <button
                 disabled={isNoShow}
-                className="w-10 h-10 rounded-full border border-gray-300 flex items-center justify-center text-gray-500 disabled:opacity-50 disabled:cursor-not-allowed"
+                className={`${compact ? 'w-7 h-7' : 'w-10 h-10'} rounded-full border border-gray-300 flex items-center justify-center text-gray-500 disabled:opacity-50 disabled:cursor-not-allowed`}
               >
-                <i className="fas fa-heart text-base"></i>
+                <i className={`fas fa-heart ${compact ? 'text-sm' : 'text-base'}`}></i>
               </button>
-              <span className={`px-3 py-1 rounded-full text-xs font-semibold ${badgeClass}`}>
+              <span className={`${compact ? 'px-2.5 py-0.5 text-[10px]' : 'px-3 py-1 text-xs'} rounded-full font-semibold ${badgeClass}`}>
                 {isInspectionStage ? inspectionStatus : (STATUS_LABELS[application.status] || 'In Progress')}
               </span>
             </div>
           </div>
 
-          <div className="mt-auto pt-4 flex items-center justify-end gap-2">
+          <div className={`mt-auto ${compact ? 'pt-1.5' : 'pt-4'} flex items-center justify-end gap-2`}>
             {isScheduled && countdown ? (
               <div className="inline-flex items-center gap-2 rounded-full px-3 py-1 text-xs font-semibold bg-[var(--accent-color,#9f7539)] text-white">
                 <i className="fas fa-hourglass-half"></i>
@@ -205,7 +216,9 @@ const ApplicationCard = ({ application, onAction }) => {
                     inspectionStatus === INSPECTION_BOOKING_STATUSES.PENDING_CONFIRMATION ||
                     isScheduled
                   }
-                  className="px-4 py-2 rounded-lg font-semibold text-sm text-white border border-transparent bg-[var(--accent-color,#9f7539)] hover:brightness-110 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+                  className={`${
+                    compact ? 'px-2.5 py-1 text-[11px]' : 'px-4 py-2 text-sm'
+                  } rounded-lg font-semibold text-white border border-transparent bg-[var(--accent-color,#9f7539)] hover:brightness-110 transition-colors disabled:opacity-50 disabled:cursor-not-allowed`}
                 >
                   {inspectionStatus === INSPECTION_BOOKING_STATUSES.PENDING_CONFIRMATION
                     ? 'Awaiting Confirmation'

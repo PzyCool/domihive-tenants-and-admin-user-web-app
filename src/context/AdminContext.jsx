@@ -974,18 +974,6 @@ const sanitizeClients = (list = []) =>
 
 export const AdminProvider = ({ children }) => {
   const persisted = useMemo(() => readAdminStorage(), []);
-  const [properties, setProperties] = useState(() => sanitizeProperties(persisted?.properties || []));
-  const [clients, setClients] = useState(() => sanitizeClients(persisted?.clients || []));
-  const [locations, setLocations] = useState(() => persisted?.locations || defaultLocations);
-  const [slots, setSlots] = useState(() => persisted?.slots || defaultSlots);
-  const [inspections, setInspections] = useState(() => persisted?.inspections || []);
-  const [applications, setApplications] = useState(() => persisted?.applications || []);
-  const [tenants, setTenants] = useState(() => persisted?.tenants || []);
-  const [policies, setPolicies] = useState(() => persisted?.policies || defaultPolicies);
-  const [recentActivities, setRecentActivities] = useState(() => persisted?.recentActivities || []);
-  const [maintenanceRequests, setMaintenanceRequests] = useState(() => persisted?.maintenanceRequests || []);
-  const [payments, setPayments] = useState(() => persisted?.payments || []);
-
   const readInboxApplications = () => {
     try {
       const raw = localStorage.getItem(ADMIN_APPLICATION_INBOX_KEY);
@@ -1005,6 +993,18 @@ export const AdminProvider = ({ children }) => {
     );
     return merged;
   };
+
+  const [properties, setProperties] = useState(() => sanitizeProperties(persisted?.properties || []));
+  const [clients, setClients] = useState(() => sanitizeClients(persisted?.clients || []));
+  const [locations, setLocations] = useState(() => persisted?.locations || defaultLocations);
+  const [slots, setSlots] = useState(() => persisted?.slots || defaultSlots);
+  const [inspections, setInspections] = useState(() => persisted?.inspections || []);
+  const [applications, setApplications] = useState(() => mergeApplications(persisted?.applications || []));
+  const [tenants, setTenants] = useState(() => persisted?.tenants || []);
+  const [policies, setPolicies] = useState(() => persisted?.policies || defaultPolicies);
+  const [recentActivities, setRecentActivities] = useState(() => persisted?.recentActivities || []);
+  const [maintenanceRequests, setMaintenanceRequests] = useState(() => persisted?.maintenanceRequests || []);
+  const [payments, setPayments] = useState(() => persisted?.payments || []);
 
   useEffect(() => {
     writeAdminStorage({
@@ -1037,6 +1037,13 @@ export const AdminProvider = ({ children }) => {
   // Keep admin pages in sync when tenant-side flow writes to shared admin storage.
   useEffect(() => {
     const syncFromStorage = (event) => {
+      if (event?.type === 'domihive:admin-application-submitted' && event?.detail?.id) {
+        setApplications((prev) => {
+          const upserted = [event.detail, ...prev.filter((item) => item?.id !== event.detail.id)];
+          return upserted;
+        });
+      }
+
       if (
         event?.key &&
         event.key !== ADMIN_STORAGE_KEY &&
@@ -1045,7 +1052,13 @@ export const AdminProvider = ({ children }) => {
         return;
       }
       const latest = readAdminStorage();
-      if (!latest) return;
+      if (!latest) {
+        const inboxOnly = readInboxApplications();
+        if (inboxOnly.length) {
+          setApplications((prev) => mergeApplications(prev));
+        }
+        return;
+      }
       if (Array.isArray(latest.properties)) setProperties(sanitizeProperties(latest.properties));
       if (Array.isArray(latest.clients)) setClients(sanitizeClients(latest.clients));
       if (latest.locations) setLocations(latest.locations);
@@ -1064,6 +1077,7 @@ export const AdminProvider = ({ children }) => {
 
     window.addEventListener('storage', syncFromStorage);
     window.addEventListener('domihive:admin-application-submitted', syncFromStorage);
+    window.addEventListener('domihive:admin-data-updated', syncFromStorage);
 
     // Initial same-tab hydration for any queued inbox writes.
     syncFromStorage();
@@ -1071,6 +1085,7 @@ export const AdminProvider = ({ children }) => {
     return () => {
       window.removeEventListener('storage', syncFromStorage);
       window.removeEventListener('domihive:admin-application-submitted', syncFromStorage);
+      window.removeEventListener('domihive:admin-data-updated', syncFromStorage);
     };
   }, []);
 

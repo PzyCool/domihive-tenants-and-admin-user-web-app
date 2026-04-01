@@ -1,5 +1,6 @@
 import React, { createContext, useContext, useMemo, useState, useEffect } from 'react';
 import { useAuth } from '../../../../context/AuthContext';
+import { getUserStorageKey } from '../../../shared/utils/userStorageKey';
 import { useProperties } from './PropertiesContext';
 
 const EMPTY_STATE = {
@@ -20,7 +21,7 @@ export const usePayments = () => {
 export const PaymentsProvider = ({ children }) => {
   const { user } = useAuth();
   const { properties } = useProperties();
-  const userKey = user?.id || 'guest';
+  const userKey = getUserStorageKey(user);
   const paymentsStorageKey = `domihive_payments_${userKey}`;
 
   const [state, setState] = useState(EMPTY_STATE);

@@ -1,5 +1,6 @@
 import React, { createContext, useContext, useMemo, useState, useEffect } from 'react';
 import { useAuth } from '../../../../context/AuthContext';
+import { getUserStorageKey } from '../../../shared/utils/userStorageKey';
 
 const MaintenanceContext = createContext();
 
@@ -11,7 +12,7 @@ export const useMaintenance = () => {
 
 export const MaintenanceProvider = ({ children }) => {
   const { user } = useAuth();
-  const userKey = user?.id || 'guest';
+  const userKey = getUserStorageKey(user);
   const ticketsStorageKey = `domihive_maintenance_tickets_${userKey}`;
   const [tickets, setTickets] = useState([]);
 

@@ -8,6 +8,7 @@ import { fetchBrowseSnapshot } from '../services/mockBrowseService';
 import SearchHeader from '../components/browse-properties/components/SearchHeader/SearchHeader';
 import PropertyGrid from '../components/browse-properties/components/PropertyGrid/PropertyGrid';
 import { buildListingFilterMeta } from '../../../shared/services/adminListings';
+import { formatDateTimeDDMMYY } from '../../../shared/utils/dateFormat';
 
 const DEFAULT_FILTERS = {
   searchQuery: '',
@@ -230,6 +231,7 @@ const RentBrowse = () => {
   });
 
   const [selectedPropertyId, setSelectedPropertyId] = useState(null);
+  const [selectedPropertyData, setSelectedPropertyData] = useState(null);
   const [showPropertyDetails, setShowPropertyDetails] = useState(false);
   const [showBookInspection, setShowBookInspection] = useState(false);
   const [selectedPropertyForBooking, setSelectedPropertyForBooking] = useState(null);
@@ -352,7 +354,13 @@ const RentBrowse = () => {
   };
 
   const handlePropertyClick = (propertyId) => {
-    setSelectedPropertyId(propertyId);
+    const matchedProperty =
+      allProperties.find(
+        (property) =>
+          String(property.id || property.propertyId) === String(propertyId)
+      ) || null;
+    setSelectedPropertyData(matchedProperty);
+    setSelectedPropertyId(propertyId || matchedProperty?.id || matchedProperty?.propertyId || null);
     setShowPropertyDetails(true);
     setShowBookInspection(false);
   };
@@ -377,8 +385,13 @@ const RentBrowse = () => {
       <div className="rent-browse-container min-h-screen bg-gradient-to-br from-gray-50 to-gray-100">
         <PropertyDetailsModal
           propertyId={selectedPropertyId}
+          propertyData={selectedPropertyData}
           isOpen={showPropertyDetails}
-          onClose={() => setShowPropertyDetails(false)}
+          onClose={() => {
+            setShowPropertyDetails(false);
+            setSelectedPropertyData(null);
+            setSelectedPropertyId(null);
+          }}
           onBookInspection={handleBookFromDetails}
         />
       </div>
@@ -415,7 +428,7 @@ const RentBrowse = () => {
             </div>
             <div className="flex items-center gap-2">
               <span className="text-xs text-[#64748b]">
-                {syncedAt ? `Last synced ${new Date(syncedAt).toLocaleTimeString()}` : 'Waiting for sync...'}
+                {syncedAt ? `Last synced ${formatDateTimeDDMMYY(syncedAt)}` : 'Waiting for sync...'}
               </span>
               {isStale && (
                 <span className="px-2 py-1 rounded-full bg-amber-100 text-amber-700 text-xs font-semibold">

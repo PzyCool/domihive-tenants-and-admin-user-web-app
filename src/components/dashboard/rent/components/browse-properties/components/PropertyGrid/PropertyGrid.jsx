@@ -24,11 +24,11 @@ const PropertyGrid = ({
   return (
     <div className={viewType === 'list' ? 'space-y-4' : 'grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 md:gap-6'}>
       {properties.map((property) => (
-        <div key={property.id} className={viewType === 'list' ? '' : 'flex justify-center'}>
+        <div key={property.id || property.propertyId} className={viewType === 'list' ? '' : 'flex justify-center'}>
           <PropertyCard
             property={property}
             viewType={viewType}
-            onViewDetails={() => onPropertyClick?.(property.id)}
+            onViewDetails={() => onPropertyClick?.(property.id || property.propertyId)}
             onToggleFavorite={(prop, fav) => onFavoriteToggle?.(prop, fav)}
             onBookNowClick={onBookNowClick} // ADD THIS PROP
             isFavorite={property.isFavorite}

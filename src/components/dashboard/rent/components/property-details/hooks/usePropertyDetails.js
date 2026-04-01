@@ -2,7 +2,7 @@
 import { useState, useEffect } from 'react';
 import { resolvePropertyById } from '../../../../../shared/utils/propertyResolver';
 
-export const usePropertyDetails = (propertyId) => {
+export const usePropertyDetails = (propertyId, propertyData = null) => {
   const [property, setProperty] = useState(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
@@ -12,7 +12,16 @@ export const usePropertyDetails = (propertyId) => {
       try {
         setLoading(true);
         await new Promise((resolve) => setTimeout(resolve, 200));
-        const resolved = resolvePropertyById(propertyId);
+        let resolved = null;
+        try {
+          resolved = resolvePropertyById(propertyId);
+        } catch (resolverError) {
+          console.error('Property resolver failed:', resolverError);
+          resolved = null;
+        }
+        if (!resolved && propertyData) {
+          resolved = propertyData;
+        }
         if (!resolved) {
           setProperty(null);
           setError('Property not found.');
@@ -21,17 +30,21 @@ export const usePropertyDetails = (propertyId) => {
         setProperty(resolved);
         setError(null);
       } catch (err) {
-        setError('Failed to load property details');
+        setError('Property not found.');
         console.error('Error fetching property:', err);
       } finally {
         setLoading(false);
       }
     };
 
-    if (propertyId) {
+    if (propertyId || propertyData) {
       fetchProperty();
+    } else {
+      setLoading(false);
+      setProperty(null);
+      setError('Property not found.');
     }
-  }, [propertyId]);
+  }, [propertyId, propertyData]);
 
   return { property, loading, error };
 };

@@ -15,8 +15,8 @@ import FloatingCallButton from './components/FloatingCallButton';
 // Import hooks
 import { usePropertyDetails } from './hooks/usePropertyDetails';
 
-const PropertyDetailsModal = ({ propertyId, isOpen, onClose, onBookInspection }) => {
-  const { property, loading, error } = usePropertyDetails(propertyId);
+const PropertyDetailsModal = ({ propertyId, propertyData, isOpen, onClose, onBookInspection }) => {
+  const { property, loading, error } = usePropertyDetails(propertyId, propertyData);
   const containerRef = React.useRef(null);
   const [activeSection, setActiveSection] = React.useState(null);
   const [viewedSections, setViewedSections] = React.useState({ media: false, location: false });
@@ -205,7 +205,7 @@ const PropertyDetailsModal = ({ propertyId, isOpen, onClose, onBookInspection })
             <div className="flex items-center justify-center min-h-[400px]">
               <div className="text-center">
                 <i className="fas fa-exclamation-triangle text-4xl text-red-500 mb-4"></i>
-                <p className="text-gray-600">Failed to load property details</p>
+                <p className="text-gray-600">{error || 'Failed to load property details'}</p>
                 <button
                   onClick={onClose}
                   className="mt-4 px-4 py-2 bg-[#9f7539] text-white rounded-lg hover:bg-[#b58a4a]"

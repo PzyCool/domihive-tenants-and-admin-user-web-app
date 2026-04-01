@@ -1,11 +1,11 @@
 // src/dashboards/rent/components/book-inspection/UserContextBanner.jsx
 import React from 'react';
+import { useLocation } from 'react-router-dom';
+import { useAuth } from '../../../../../context/AuthContext';
 
 const UserContextBanner = () => {
-  const currentUser = {
-    name: "John Doe",
-    dashboardType: "Rent"
-  };
+  const { user } = useAuth();
+  const location = useLocation();
 
   const dashboardColors = {
     'Rent': '#3498db',
@@ -14,7 +14,15 @@ const UserContextBanner = () => {
     'Buy': '#27ae60'
   };
 
-  const dashboardType = currentUser.dashboardType;
+  const dashboardType = location.pathname.includes('/dashboard/rent') ? 'Rent' : 'Dashboard';
+  const displayName =
+    user?.name ||
+    user?.fullName ||
+    user?.firstName ||
+    user?.username ||
+    user?.email ||
+    'Account User';
+
   const badgeColor = dashboardColors[dashboardType] || '#3498db';
 
   return (
@@ -25,7 +33,7 @@ const UserContextBanner = () => {
         <div className="flex-1">
           <div className="text-sm opacity-80 mb-1">Booking as:</div>
           <div className="flex items-center gap-2">
-            <span className="text-lg font-semibold">{currentUser.name}</span>
+            <span className="text-lg font-semibold">{displayName}</span>
             <span 
               className="px-3 py-1 rounded-full text-xs font-bold"
               style={{ backgroundColor: 'rgba(255, 255, 255, 0.2)', border: '1px solid rgba(255, 255, 255, 0.3)' }}

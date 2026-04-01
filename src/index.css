@@ -2060,15 +2060,7 @@ body.dashboard-themed[data-theme="true-black"] .property-payment-next {
   color: var(--text-color, #f8fafc) !important;
 }
 
-body.dashboard-themed[data-theme="dark-gray"] .property-payment-next p,
-body.dashboard-themed[data-theme="true-black"] .property-payment-next p {
-  color: var(--text-color, #f8fafc) !important;
-}
-
-body.dashboard-themed[data-theme="dark-gray"] .property-payments-page *,
-body.dashboard-themed[data-theme="true-black"] .property-payments-page * {
-  color: var(--text-color, #f8fafc) !important;
-}
+/* Avoid forcing one text color for all children so semantic status colors can show */
 
 /* Property payments tabs (light + dark) */
 .property-payment-tab {
@@ -2212,19 +2204,7 @@ body.dashboard-themed[data-theme="gold-dark"] .applications-card p.archived-note
   color: #ef4444 !important;
 }
 
-body.dashboard-themed[data-theme="dark-gray"] .property-payment-status,
-body.dashboard-themed[data-theme="true-black"] .property-payment-status {
-  background: var(--primary-color, #0e1f42) !important;
-  border: none !important;
-  color: #ffffff !important;
-}
-
-/* Property payments status badges (light) */
-.property-payment-status {
-  background: var(--primary-color, #0e1f42);
-  border: none;
-  color: #ffffff;
-}
+/* Keep payment status badge colors semantic (don't force to single color) */
 
 body.dashboard-themed[data-theme="dark-gray"] .property-overview-updates,
 body.dashboard-themed[data-theme="true-black"] .property-overview-updates {
@@ -2327,6 +2307,55 @@ body.dashboard-themed[data-theme="true-black"] .maintenance-policy-box p {
 body.dashboard-themed[data-theme="dark-gray"] .maintenance-policy-link,
 body.dashboard-themed[data-theme="true-black"] .maintenance-policy-link {
   color: var(--accent-color, #9f7539) !important;
+}
+
+/* Keep semantic status colors visible in dark themes */
+body.dashboard-themed[data-theme="dark-gray"] .status-success,
+body.dashboard-themed[data-theme="true-black"] .status-success,
+body.dashboard-themed[data-theme="gold-dark"] .status-success {
+  color: #10b981 !important;
+}
+
+body.dashboard-themed[data-theme="dark-gray"] .status-danger,
+body.dashboard-themed[data-theme="true-black"] .status-danger,
+body.dashboard-themed[data-theme="gold-dark"] .status-danger {
+  color: #ef4444 !important;
+}
+
+body.dashboard-themed[data-theme="dark-gray"] .status-accent,
+body.dashboard-themed[data-theme="true-black"] .status-accent,
+body.dashboard-themed[data-theme="gold-dark"] .status-accent {
+  color: var(--accent-color, #9f7539) !important;
+}
+
+.status-accent {
+  color: var(--accent-color, #9f7539) !important;
+}
+
+body.dashboard-themed[data-theme="dark-gray"] .status-warning,
+body.dashboard-themed[data-theme="true-black"] .status-warning,
+body.dashboard-themed[data-theme="gold-dark"] .status-warning {
+  color: #f59e0b !important;
+}
+
+.status-warning {
+  color: #f59e0b !important;
+}
+
+.status-accent-bg {
+  background: var(--accent-color, #9f7539) !important;
+}
+
+.status-accent-bg:hover {
+  filter: brightness(0.95);
+}
+
+.status-danger-bg {
+  background: #dc2626 !important;
+}
+
+.status-danger-bg:hover {
+  background: #b91c1c !important;
 }
 
 /* Book inspection success modal - dark theme support */

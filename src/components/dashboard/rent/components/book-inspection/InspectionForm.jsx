@@ -1,6 +1,10 @@
 // src/dashboards/rent/components/book-inspection/InspectionForm.jsx
 import React, { useState, useEffect } from 'react';
 import { getPropertySlotAvailability } from './utils/inspectionSlots';
+import { formatDateDDMMYY } from '../../../../shared/utils/dateFormat';
+
+const MONTH_SHORT = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
+const WEEKDAY_SHORT = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'];
 
 const InspectionForm = ({ propertyId, formValues, onFormChange }) => {
   const [availableDates, setAvailableDates] = useState([]);
@@ -63,13 +67,7 @@ const InspectionForm = ({ propertyId, formValues, onFormChange }) => {
   }, [inspectionDate, timesByDate]);
   
   const formatDateDisplay = (dateString) => {
-    const date = new Date(dateString);
-    return date.toLocaleDateString('en-US', {
-      weekday: 'long',
-      year: 'numeric',
-      month: 'long',
-      day: 'numeric'
-    });
+    return formatDateDDMMYY(dateString);
   };
   
   const formatTimeDisplay = (timeString) => {
@@ -166,8 +164,8 @@ const InspectionForm = ({ propertyId, formValues, onFormChange }) => {
               {availableDates.map((dateInfo) => {
                 const date = dateInfo.dateObj;
                 const day = date.getDate();
-                const month = date.toLocaleDateString('en-US', { month: 'short' });
-                const weekday = date.toLocaleDateString('en-US', { weekday: 'short' });
+                const month = MONTH_SHORT[date.getMonth()];
+                const weekday = WEEKDAY_SHORT[date.getDay()];
                 const isSelected = inspectionDate === dateInfo.date;
                 
                 let statusClass = '';

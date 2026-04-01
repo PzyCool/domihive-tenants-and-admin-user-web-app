@@ -20,6 +20,7 @@ const Properties = () => {
   const [filteredProperties, setFilteredProperties] = useState([]);
   const [displayedProperties, setDisplayedProperties] = useState([]);
   const [selectedPropertyId, setSelectedPropertyId] = useState(null);
+  const [selectedPropertyData, setSelectedPropertyData] = useState(null);
   const [showPropertyDetails, setShowPropertyDetails] = useState(false);
   const [showBookInspection, setShowBookInspection] = useState(false);
   const [selectedPropertyForBooking, setSelectedPropertyForBooking] = useState(null);
@@ -214,7 +215,12 @@ const Properties = () => {
   };
   
   const handlePropertyClick = (propertyId) => {
-    setSelectedPropertyId(propertyId);
+    const matchedProperty =
+      allProperties.find(
+        (property) => String(property.id || property.propertyId) === String(propertyId)
+      ) || null;
+    setSelectedPropertyData(matchedProperty);
+    setSelectedPropertyId(propertyId || matchedProperty?.id || matchedProperty?.propertyId || null);
     setShowPropertyDetails(true);
     setShowBookInspection(false);
   };
@@ -272,9 +278,14 @@ const Properties = () => {
             <div className="property-details-container fixed inset-0 z-50 overflow-y-auto bg-white">
               <PropertyDetailsPage
                 propertyId={selectedPropertyId}
+                propertyData={selectedPropertyData}
                 isOpen={showPropertyDetails}
                 onBookInspection={handleBookNowClick}
-                onClose={() => setShowPropertyDetails(false)}
+                onClose={() => {
+                  setShowPropertyDetails(false);
+                  setSelectedPropertyData(null);
+                  setSelectedPropertyId(null);
+                }}
               />
             </div>
           ) : (

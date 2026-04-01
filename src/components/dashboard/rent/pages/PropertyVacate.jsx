@@ -1,6 +1,17 @@
-import React, { useMemo, useState } from 'react';
+﻿import React, { useMemo, useState } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
+import { ArrowLeft, CalendarClock } from 'lucide-react';
 import { useProperties } from '../contexts/PropertiesContext';
+
+const asDDMMYY = (value) => {
+  if (!value) return '—';
+  const d = new Date(value);
+  if (Number.isNaN(d.getTime())) return String(value);
+  const day = String(d.getDate()).padStart(2, '0');
+  const month = String(d.getMonth() + 1).padStart(2, '0');
+  const year = String(d.getFullYear()).slice(-2);
+  return `${day}/${month}/${year}`;
+};
 
 const PropertyVacate = () => {
   const { propertyId } = useParams();
@@ -39,92 +50,110 @@ const PropertyVacate = () => {
   };
 
   return (
-    <div className="rent-overview-container bg-gradient-to-br from-gray-50 to-gray-100 min-h-screen p-4 md:p-6">
-      <div className="bg-white rounded-lg border border-[#e2e8f0] p-6 space-y-6 max-w-4xl mx-auto">
-        <div className="space-y-4">
-          <button
-            onClick={() => navigate('/dashboard/rent/my-properties')}
-            className="text-2xl font-medium leading-none"
-            style={{ color: 'var(--accent-color, #9F7539)' }}
-          >
-            ←
-          </button>
-          <div className="space-y-1">
-            <h1 className="text-2xl font-semibold text-[#0e1f42]">Notice to Vacate</h1>
-            <p className="text-sm text-[#475467]">
-              {property.name} • {property.location}
-            </p>
+    <div className="rent-overview-container min-h-screen p-4 md:p-6 property-payments-page">
+      <div className="max-w-6xl mx-auto space-y-6">
+        <div className="bg-white rounded-3xl border border-[#e2e8f0] p-6 shadow-sm space-y-5">
+          <div className="flex items-start justify-between gap-4 flex-wrap">
+            <div className="flex items-start gap-3">
+              <button
+                onClick={() => navigate(`/dashboard/rent/my-properties/${property.propertyId}/lease-management`)}
+                className="p-2 rounded-xl status-accent hover:bg-gray-100 transition-colors"
+                aria-label="Back to Lease Management"
+              >
+                <ArrowLeft size={20} />
+              </button>
+              <div>
+                <h1 className="text-2xl font-semibold text-[#0e1f42]">End Lease</h1>
+                <p className="text-sm text-gray-500">{property.name} • {property.location}</p>
+              </div>
+            </div>
+
+            <div className="bg-gray-50 border border-[#e2e8f0] rounded-xl px-4 py-3 min-w-[260px]">
+              <p className="text-[11px] uppercase tracking-wider text-gray-500 font-semibold">Lease End Date</p>
+              <p className="text-base font-bold status-accent">{asDDMMYY(property.leaseEnd)}</p>
+              <p className="text-xs text-gray-500">Unit: {property.unitCode || property.unitNumber || '—'}</p>
+            </div>
           </div>
         </div>
 
-        <div className="bg-white border border-[#e2e8f0] rounded-2xl p-4 shadow-sm space-y-6">
-          <div className="space-y-3 text-sm text-[#475467]">
-            <label className="flex flex-col gap-1">
+        <div className="grid lg:grid-cols-2 gap-6">
+          <div className="bg-white rounded-3xl border border-[#e2e8f0] p-6 shadow-sm space-y-4">
+            <h3 className="text-base font-bold text-[#0e1f42]">Notice to Vacate</h3>
+
+            <label className="flex flex-col gap-1 text-sm text-[#475467]">
               Preferred move-out date
               <input
-                type="date"
+                type="text"
                 value={vacateForm.preferredDate}
                 onChange={(e) => setVacateForm((p) => ({ ...p, preferredDate: e.target.value }))}
-                className="border border-[#e2e8f0] rounded-lg px-3 py-2"
+                className="border border-[#e2e8f0] rounded-lg px-3 py-2 bg-white"
+                placeholder="dd/mm/yy"
               />
             </label>
-            <label className="flex flex-col gap-1">
+
+            <label className="flex flex-col gap-1 text-sm text-[#475467]">
               Reason (optional)
               <input
                 value={vacateForm.reason}
                 onChange={(e) => setVacateForm((p) => ({ ...p, reason: e.target.value }))}
-                className="border border-[#e2e8f0] rounded-lg px-3 py-2"
+                className="border border-[#e2e8f0] rounded-lg px-3 py-2 bg-white"
                 placeholder="Relocation, rent, etc."
               />
             </label>
-            <label className="flex flex-col gap-1">
+
+            <label className="flex flex-col gap-1 text-sm text-[#475467]">
               Notes (optional)
               <textarea
                 value={vacateForm.notes}
                 onChange={(e) => setVacateForm((p) => ({ ...p, notes: e.target.value }))}
-                className="border border-[#e2e8f0] rounded-lg px-3 py-2"
+                className="border border-[#e2e8f0] rounded-lg px-3 py-2 bg-white"
                 rows={3}
                 placeholder="Additional details"
               />
             </label>
+
             <button
               onClick={handleSubmitVacate}
-              className="px-4 py-2 rounded-lg text-white font-semibold"
-              style={{ backgroundColor: 'var(--accent-color, #9F7539)' }}
+              className="px-4 py-3 rounded-xl text-white font-semibold status-danger-bg"
             >
-              Submit Notice
+              Submit End-Lease Notice
             </button>
           </div>
 
-          <div className="space-y-3 text-sm text-[#475467] border-t border-[#e2e8f0] pt-4">
+          <div className="bg-white rounded-3xl border border-[#e2e8f0] p-6 shadow-sm space-y-4">
             <div className="flex items-center justify-between">
-              <h3 className="text-sm font-semibold text-[#0e1f42]">Schedule Move-out Inspection</h3>
-              {property.moveOutInspection?.scheduled && (
-                <span className="text-xs text-[#6c757d]">Scheduled: {property.moveOutInspection.scheduled}</span>
-              )}
+              <h3 className="text-base font-bold text-[#0e1f42]">Schedule Move-out Inspection</h3>
+              <CalendarClock className="status-accent" size={16} />
             </div>
-            <label className="flex flex-col gap-1">
+
+            {property.moveOutInspection?.scheduled && (
+              <p className="text-xs text-gray-500">Scheduled: {property.moveOutInspection.scheduled}</p>
+            )}
+
+            <label className="flex flex-col gap-1 text-sm text-[#475467]">
               Date
               <input
-                type="date"
+                type="text"
                 value={inspectionForm.date}
                 onChange={(e) => setInspectionForm((p) => ({ ...p, date: e.target.value }))}
-                className="border border-[#e2e8f0] rounded-lg px-3 py-2"
+                className="border border-[#e2e8f0] rounded-lg px-3 py-2 bg-white"
+                placeholder="dd/mm/yy"
               />
             </label>
-            <label className="flex flex-col gap-1">
+
+            <label className="flex flex-col gap-1 text-sm text-[#475467]">
               Time
               <input
                 type="time"
                 value={inspectionForm.time}
                 onChange={(e) => setInspectionForm((p) => ({ ...p, time: e.target.value }))}
-                className="border border-[#e2e8f0] rounded-lg px-3 py-2"
+                className="border border-[#e2e8f0] rounded-lg px-3 py-2 bg-white"
               />
             </label>
+
             <button
               onClick={handleScheduleInspection}
-              className="px-4 py-2 rounded-lg text-white font-semibold"
-              style={{ backgroundColor: 'var(--accent-color, #9F7539)' }}
+              className="px-4 py-3 rounded-xl text-white font-semibold status-accent-bg"
             >
               Schedule Inspection
             </button>

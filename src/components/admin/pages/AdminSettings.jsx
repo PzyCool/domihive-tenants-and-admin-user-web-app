@@ -58,7 +58,7 @@ const AdminSettings = () => {
             currency: 'Nigerian Naira (₦)',
             showGridLines: false,
             autoBackup: true,
-            dateFormat: 'DD/MM/YYYY',
+            dateFormat: 'DD/MM/YY',
         }
     });
 
@@ -303,9 +303,7 @@ const AdminSettings = () => {
                                             onChange={(e) => handleChange('system', 'dateFormat', e.target.value)}
                                             className="w-full px-3 py-2 bg-gray-50 dark:bg-white/5 border border-gray-100 dark:border-white/10 rounded-lg text-sm text-[#0e1f42] dark:text-white focus:outline-none focus:border-[#9F7539]"
                                         >
-                                            <option>DD/MM/YYYY</option>
-                                            <option>MM/DD/YYYY</option>
-                                            <option>YYYY-MM-DD</option>
+                                            <option>DD/MM/YY</option>
                                         </select>
                                     </div>
                                 </div>

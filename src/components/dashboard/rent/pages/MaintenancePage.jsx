@@ -223,6 +223,7 @@ const MaintenancePage = () => {
             Preferred Repair Date (optional)
             <input
               type="date"
+              lang="en-GB"
               value={form.preferredDate}
               onChange={(e) => setForm((p) => ({ ...p, preferredDate: e.target.value }))}
               className="border border-[#e2e8f0] rounded-lg px-3 py-2"
