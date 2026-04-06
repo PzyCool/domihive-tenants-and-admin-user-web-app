@@ -5,13 +5,23 @@ import { useApplications } from '../contexts/ApplicationsContext';
 import UnifiedPanelPage, { UnifiedPanelSection } from '../../../shared/layout/UnifiedPanelPage';
 import { FilePlus2, FileClock, CheckCircle2 } from 'lucide-react';
 
+const ACTIVE_APPLICATION_STATUSES = [
+  'INSPECTION_SCHEDULED',
+  'INSPECTION_VERIFIED',
+  'APPLICATION_STARTED',
+  'APPLICATION_SUBMITTED',
+  'UNDER_REVIEW'
+];
+
+const ARCHIVED_APPLICATION_STATUSES = ['APPROVED', 'REJECTED', 'CANCELLED'];
+
 const RentApplications = () => {
   const navigate = useNavigate();
   const { applications, updateApplication, addNotification } = useApplications();
   const [decisionOverlay, setDecisionOverlay] = useState(null);
   const [isDecisionLoading, setIsDecisionLoading] = useState(false);
   const [search, setSearch] = useState('');
-  const [statusFilter, setStatusFilter] = useState('all');
+  const [statusFilter, setStatusFilter] = useState('active');
   const [sortBy, setSortBy] = useState('newest');
   const previousStatusesRef = useRef(new Map());
 
@@ -71,13 +81,13 @@ const RentApplications = () => {
       actionMeta?.type === 'inspection_completed_missed_cancel'
     ) {
       updateApplication(application.id, { status: 'CANCELLED', updatedAt: 'Just now' });
+      setStatusFilter('active');
       addNotification({
         type: 'application',
         title: 'Request Closed',
         message: `${application.property.title} inspection request has been closed.`,
-        cta: { label: 'Browse Properties', path: '/dashboard/rent/browse' }
+        cta: { label: 'View Cancelled Requests', path: '/dashboard/rent/applications' }
       });
-      navigate('/dashboard/rent/browse');
       return;
     }
 
@@ -108,7 +118,15 @@ const RentApplications = () => {
       );
     }
 
-    if (statusFilter !== 'all') {
+    if (statusFilter === 'active') {
+      list = list.filter((app) => ACTIVE_APPLICATION_STATUSES.includes(app.status));
+    } else if (statusFilter === 'approved') {
+      list = list.filter((app) => app.status === 'APPROVED');
+    } else if (statusFilter === 'rejected') {
+      list = list.filter((app) => app.status === 'REJECTED');
+    } else if (statusFilter === 'archived') {
+      list = list.filter((app) => ARCHIVED_APPLICATION_STATUSES.includes(app.status));
+    } else {
       list = list.filter((app) => app.status === statusFilter);
     }
 
@@ -121,28 +139,15 @@ const RentApplications = () => {
     return list;
   }, [applications, search, statusFilter, sortBy]);
 
-  const activeApplications = useMemo(
-    () =>
-      filteredApplications.filter((app) =>
-        ['INSPECTION_SCHEDULED', 'INSPECTION_VERIFIED', 'APPLICATION_STARTED', 'APPLICATION_SUBMITTED', 'UNDER_REVIEW'].includes(app.status)
-      ),
-    [filteredApplications]
-  );
-
-  const archivedApplications = useMemo(
-    () => filteredApplications.filter((app) => ['CANCELLED', 'REJECTED', 'APPROVED'].includes(app.status)),
-    [filteredApplications]
-  );
-
   const summaryStats = useMemo(
     () => ({
-      total: activeApplications.length,
-      pending: activeApplications.filter((app) =>
+      total: applications.length,
+      pending: applications.filter((app) =>
         ['INSPECTION_SCHEDULED', 'INSPECTION_VERIFIED', 'APPLICATION_STARTED'].includes(app.status)
       ).length,
-      submitted: activeApplications.filter((app) => app.status === 'APPLICATION_SUBMITTED' || app.status === 'UNDER_REVIEW').length
+      submitted: applications.filter((app) => app.status === 'APPLICATION_SUBMITTED' || app.status === 'UNDER_REVIEW').length
     }),
-    [activeApplications]
+    [applications]
   );
 
   useEffect(() => {
@@ -173,11 +178,6 @@ const RentApplications = () => {
       <UnifiedPanelPage
         title="My Applications"
         subtitle="Track inspection → application → payment → decision."
-        actions={
-          <button className="h-11 px-6 rounded-lg border border-[var(--accent-color,#9F7539)] bg-[var(--accent-color,#9F7539)] text-white text-sm font-semibold hover:opacity-90">
-            Refresh Status
-          </button>
-        }
         stats={[
           {
             label: 'Total Applications',
@@ -213,31 +213,26 @@ const RentApplications = () => {
                 className="w-full pl-9 pr-3 py-2.5 rounded-md border border-[var(--border-color,#e2e8f0)] bg-transparent text-sm text-[var(--text-color,#0e1f42)]"
               />
             </div>
-            <div className="flex flex-wrap items-center gap-3">
+            <div className="flex flex-wrap md:flex-nowrap items-center gap-3">
               <select
                 value={statusFilter}
                 onChange={(e) => setStatusFilter(e.target.value)}
-                className="px-3 py-2.5 rounded-md border border-[var(--border-color,#e2e8f0)] bg-transparent text-sm text-[var(--text-color,#0e1f42)] min-w-[155px]"
+                className="h-11 px-3 rounded-md border border-[var(--border-color,#e2e8f0)] bg-transparent text-sm text-[var(--text-color,#0e1f42)] min-w-[155px]"
               >
-                <option value="all">All Status</option>
-                <option value="INSPECTION_SCHEDULED">Inspection Scheduled</option>
-                <option value="INSPECTION_VERIFIED">Inspection Verified</option>
-                <option value="APPLICATION_STARTED">Application Started</option>
-                <option value="APPLICATION_SUBMITTED">Application Submitted</option>
-                <option value="UNDER_REVIEW">Under Review</option>
-                <option value="APPROVED">Approved</option>
-                <option value="REJECTED">Rejected</option>
-                <option value="CANCELLED">Cancelled</option>
+                <option value="active">Active</option>
+                <option value="approved">Approved</option>
+                <option value="rejected">Rejected</option>
+                <option value="archived">Cancelled (Archived)</option>
               </select>
               <select
                 value={sortBy}
                 onChange={(e) => setSortBy(e.target.value)}
-                className="px-3 py-2.5 rounded-md border border-[var(--border-color,#e2e8f0)] bg-transparent text-sm text-[var(--text-color,#0e1f42)] min-w-[155px]"
+                className="h-11 px-3 rounded-md border border-[var(--border-color,#e2e8f0)] bg-transparent text-sm text-[var(--text-color,#0e1f42)] min-w-[155px]"
               >
                 <option value="newest">Sort: Newest</option>
                 <option value="oldest">Sort: Oldest</option>
               </select>
-              <div className="text-sm text-[var(--text-muted,#64748b)]">
+              <div className="h-11 inline-flex items-center text-sm text-[var(--text-muted,#64748b)] whitespace-nowrap">
                 Showing <span className="font-semibold text-[var(--text-color,#0e1f42)]">{filteredApplications.length}</span> applications
               </div>
             </div>
@@ -246,14 +241,14 @@ const RentApplications = () => {
       >
         <UnifiedPanelSection unstyled className="pt-1">
           <div className="grid gap-4">
-            {activeApplications.length === 0 ? (
+            {filteredApplications.length === 0 ? (
               <div className="bg-white border border-[#e2e8f0] rounded-2xl p-6 text-center">
-                <p className="text-base font-semibold text-[#0e1f42]">No applications yet</p>
-                <p className="text-sm text-[#64748b] mt-1">Book an inspection from Browse Properties to start your first application.</p>
+                <p className="text-base font-semibold text-[#0e1f42]">No applications found</p>
+                <p className="text-sm text-[#64748b] mt-1">Try another status filter or book an inspection from Browse Properties.</p>
               </div>
             ) : (
-              activeApplications.map((application) => (
-                <div key={application.id} className="w-full max-w-[900px] mx-auto">
+              filteredApplications.map((application) => (
+                <div key={application.id} className="w-full">
                   <ApplicationCard
                     application={application}
                     onAction={handleCardAction}
@@ -264,114 +259,6 @@ const RentApplications = () => {
             )}
           </div>
         </UnifiedPanelSection>
-
-        {archivedApplications.length > 0 && (
-          <UnifiedPanelSection>
-            <div className="pt-2">
-              <div className="flex items-center justify-between mb-3">
-                <h2 className="text-lg font-semibold text-[var(--text-color,#0e1f42)]">Archived Requests</h2>
-                <span className="text-xs text-[var(--text-muted,#64748b)]">{archivedApplications.length} archived</span>
-              </div>
-              <div className="grid gap-3">
-                {archivedApplications.map((application) => (
-                  <div
-                    key={`archived-${application.id}`}
-                    className="relative rounded-xl border px-4 py-3 bg-[var(--card-bg,#f8fafc)] border-[var(--border-color,#e2e8f0)]"
-                  >
-                    <span
-                      className="absolute top-3 right-3 inline-flex px-2.5 py-1 rounded-full text-[11px] font-semibold border"
-                      style={
-                        application.status === 'APPROVED'
-                          ? {
-                              backgroundColor: 'rgba(16, 185, 129, 0.18)',
-                              color: '#10b981',
-                              borderColor: 'rgba(16, 185, 129, 0.45)'
-                            }
-                          : application.status === 'REJECTED'
-                            ? {
-                                backgroundColor: 'rgba(239, 68, 68, 0.18)',
-                                color: '#ef4444',
-                                borderColor: 'rgba(239, 68, 68, 0.45)'
-                              }
-                            : {
-                                backgroundColor: 'rgba(107, 114, 128, 0.18)',
-                                color: '#6b7280',
-                                borderColor: 'rgba(107, 114, 128, 0.45)'
-                              }
-                      }
-                    >
-                      {application.status === 'APPROVED'
-                        ? 'Approved'
-                        : application.status === 'REJECTED'
-                          ? 'Rejected'
-                          : 'Cancelled'}
-                    </span>
-                    <div className="flex flex-wrap items-start justify-between gap-2">
-                      <div className="flex items-start gap-3 min-w-0">
-                        <div className="w-16 h-16 rounded-lg overflow-hidden border border-[var(--border-color,#e2e8f0)] bg-[var(--surface-2,#f1f5f9)] shrink-0">
-                          {application.property?.image ? (
-                            <img
-                              src={application.property.image}
-                              alt={application.property?.title || 'Archived property'}
-                              className="w-full h-full object-cover"
-                            />
-                          ) : null}
-                        </div>
-                        <div className="min-w-0">
-                          <p className="archived-price text-sm font-semibold">
-                            ₦{Number(application.property?.price || 0).toLocaleString()}/year
-                          </p>
-                          <p className="text-xs text-[var(--text-muted,#64748b)] mt-0.5">
-                            {(() => {
-                              const amount = Number(application.property?.price || 0);
-                              if (amount >= 1000000000) return `${(amount / 1000000000).toFixed(1)} billion naira yearly`;
-                              if (amount >= 1000000) return `${(amount / 1000000).toFixed(1)} million naira yearly`;
-                              if (amount >= 1000) return `${(amount / 1000).toFixed(1)} thousand naira yearly`;
-                              return `${amount.toLocaleString('en-NG')} naira yearly`;
-                            })()}
-                          </p>
-                          <p className="font-semibold text-[var(--text-color,#0e1f42)]">
-                            {application.property?.title || 'Archived Property Request'}
-                          </p>
-                          <p className="text-sm text-[var(--text-muted,#64748b)] inline-flex items-center gap-1.5">
-                            <i className="fas fa-map-marker-alt text-[var(--accent-color,#9f7539)] text-[11px]"></i>
-                            {application.property?.location || 'Location not available'}
-                          </p>
-                          <div className="mt-1 flex flex-wrap items-center gap-3 text-xs text-[var(--text-muted,#64748b)]">
-                            <span className="inline-flex items-center gap-1">
-                              <i className="fas fa-bed text-[var(--accent-color,#9f7539)] text-[10px]"></i>
-                              {Number(application.property?.bedrooms || 0)} bed
-                            </span>
-                            <span className="inline-flex items-center gap-1">
-                              <i className="fas fa-bath text-[var(--accent-color,#9f7539)] text-[10px]"></i>
-                              {Number(application.property?.bathrooms || 0)} bath
-                            </span>
-                            <span className="inline-flex items-center gap-1">
-                              <i className="fas fa-ruler-combined text-[var(--accent-color,#9f7539)] text-[10px]"></i>
-                              {application.property?.size || '—'}
-                            </span>
-                          </div>
-                          {application.property?.description ? (
-                            <p className="text-xs text-[var(--text-muted,#64748b)] mt-1 line-clamp-2">
-                              {application.property.description}
-                            </p>
-                          ) : null}
-                        </div>
-                      </div>
-                    </div>
-                    <p className="archived-note text-xs mt-2">
-                      {application.status === 'APPROVED'
-                        ? 'This application was approved and your tenancy is now active under My Properties.'
-                        : application.status === 'REJECTED'
-                          ? `This application was rejected.${application.rejectionReason ? ` Reason: ${application.rejectionReason}` : ''}`
-                          : 'This request was closed and moved to archive.'}
-                    </p>
-                  </div>
-                ))}
-              </div>
-            </div>
-          </UnifiedPanelSection>
-        )}
       </UnifiedPanelPage>
 
       {isDecisionLoading && (

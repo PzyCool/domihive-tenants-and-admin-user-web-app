@@ -2191,6 +2191,17 @@ body.dashboard-themed[data-theme="true-black"] .applications-card p {
   color: var(--text-color, #f8fafc) !important;
 }
 
+/* Track application: keep main unit price in accent color */
+.track-price-main {
+  color: var(--accent-color, #9f7539) !important;
+}
+
+body.dashboard-themed[data-theme="dark-gray"] .track-price-main,
+body.dashboard-themed[data-theme="gold-dark"] .track-price-main,
+body.dashboard-themed[data-theme="true-black"] .track-price-main {
+  color: var(--accent-color, #9f7539) !important;
+}
+
 /* Archived requests: allow critical color accents to override global paragraph rule */
 body.dashboard-themed[data-theme="dark-gray"] .applications-card p.archived-price,
 body.dashboard-themed[data-theme="true-black"] .applications-card p.archived-price,
