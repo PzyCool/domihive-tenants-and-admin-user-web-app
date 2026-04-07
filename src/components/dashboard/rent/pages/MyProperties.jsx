@@ -134,7 +134,7 @@ const MyProperties = () => {
         </div>
       }
     >
-      <UnifiedPanelSection>
+      <UnifiedPanelSection unstyled className="pt-1">
         <div className="grid gap-4">
           {visibleProperties.length === 0 ? (
             <div className="bg-white border border-[#e2e8f0] rounded-2xl p-6 text-center">
