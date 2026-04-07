@@ -38,9 +38,9 @@ const PropertyLeaseManagement = () => {
           <div className="flex items-start justify-between gap-4 flex-wrap">
             <div className="flex items-start gap-3">
               <button
-                onClick={() => navigate(`/dashboard/rent/my-properties/${propertyId}`)}
+                onClick={() => navigate('/dashboard/rent/my-properties')}
                 className="p-2 rounded-xl status-accent hover:bg-gray-100 transition-colors"
-                aria-label="Back to Property Overview"
+                aria-label="Back to My Properties"
               >
                 <ArrowLeft size={20} />
               </button>

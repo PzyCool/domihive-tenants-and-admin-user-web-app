@@ -33,7 +33,7 @@ const UnifiedPanelPage = ({
       <div className="space-y-5">
         <div className="flex flex-col gap-3 md:flex-row md:items-center md:justify-between">
           <div>
-            <h1 className="text-3xl md:text-4xl font-bold mt-1 leading-tight text-[var(--text-color,#0e1f42)]">{title}</h1>
+            <h1 className="text-2xl md:text-3xl font-bold mt-1 leading-tight text-[var(--text-color,#0e1f42)]">{title}</h1>
             {subtitle ? <p className="text-sm text-[var(--text-muted,#64748b)]">{subtitle}</p> : null}
           </div>
           {actions ? <div className="flex flex-wrap items-center gap-3 text-sm">{actions}</div> : null}

@@ -1,17 +1,18 @@
-import React, { useMemo, useState } from 'react';
+﻿import React, { useMemo, useState } from 'react';
 import { useLocation, useNavigate, useParams } from 'react-router-dom';
 import { ArrowLeft, Bath, BedDouble, Building2, Calendar, Clock, FileText, Ruler } from 'lucide-react';
 import { useProperties } from '../contexts/PropertiesContext';
+import PropertyCard from '../components/properties/PropertyCard';
 
 const formatNaira = (amt) => (amt || amt === 0 ? `₦${Number(amt).toLocaleString()}` : '—');
 
-const formatDateDDMMYY = (value) => {
+const formatDateDDMMYYYY = (value) => {
   if (!value) return '—';
   const d = new Date(value);
   if (Number.isNaN(d.getTime())) return String(value);
   const day = String(d.getDate()).padStart(2, '0');
   const month = String(d.getMonth() + 1).padStart(2, '0');
-  const year = String(d.getFullYear()).slice(-2);
+  const year = String(d.getFullYear());
   return `${day}/${month}/${year}`;
 };
 
@@ -29,6 +30,15 @@ const getDaysRemaining = (endDate) => {
   const now = new Date();
   return Math.ceil((end.getTime() - now.getTime()) / (1000 * 60 * 60 * 24));
 };
+
+const formatDateInputDDMMYYYY = (value) => {
+  const digits = String(value || '').replace(/\D/g, '').slice(0, 8);
+  if (digits.length <= 2) return digits;
+  if (digits.length <= 4) return `${digits.slice(0, 2)}/${digits.slice(2)}`;
+  return `${digits.slice(0, 2)}/${digits.slice(2, 4)}/${digits.slice(4, 8)}`;
+};
+
+const isValidDateInputDDMMYYYY = (value) => /^\d{2}\/\d{2}\/\d{4}$/.test(String(value || ''));
 
 const PropertyDashboard = () => {
   const { propertyId } = useParams();
@@ -73,6 +83,7 @@ const PropertyDashboard = () => {
   const size = property.size ?? property.sizeSqm ?? property.sqm ?? '—';
 
   const handleCompleteMoveIn = () => {
+    if (!isValidDateInputDDMMYYYY(moveInForm.moveInDate)) return;
     completeMoveInChecklist(property.propertyId, {
       keysReceived: true,
       meterReading: moveInForm.keyNumber || '000000',
@@ -81,7 +92,22 @@ const PropertyDashboard = () => {
       inventoryConfirmed: !!moveInForm.keyNumber,
       moveInDateConfirmed: !!moveInForm.moveInDate
     });
+    navigate('/dashboard/rent/my-properties');
   };
+
+  const handleMoveInCardAction = (_property, action) => {
+    if (action === 'movein') {
+      const target = document.getElementById('movein');
+      if (target) target.scrollIntoView({ behavior: 'smooth', block: 'start' });
+    }
+  };
+
+  const headerStatusClass =
+    property.tenancyStatus === 'PENDING_MOVE_IN'
+      ? 'bg-red-100 text-red-700 border border-red-200 property-status property-status--pending-move-in'
+      : property.tenancyStatus === 'ACTIVE'
+        ? 'bg-emerald-100 text-emerald-700 border border-emerald-200 property-status property-status--active'
+        : 'bg-gray-100 text-gray-700 border border-gray-200 property-status';
 
   if (showMoveInOnly) {
     return (
@@ -96,16 +122,8 @@ const PropertyDashboard = () => {
             >
               <i className="fas fa-arrow-left-long text-xl"></i>
             </button>
-            <div className="flex flex-wrap justify-between gap-3 items-start">
-              <div>
-                <h1 className="text-2xl font-semibold text-[#0e1f42]">{property.name}</h1>
-                <p className="text-sm text-[#64748b]">{property.location}</p>
-                <p className="text-xs text-[#94a3b8]">{property.unitType}</p>
-              </div>
-              <span className="px-3 py-1 rounded-full text-xs font-semibold property-status bg-amber-100 text-amber-700 border border-amber-200">
-                {statusLabel}
-              </span>
-            </div>
+
+            <PropertyCard property={property} onAction={handleMoveInCardAction} />
           </div>
 
           <div className="bg-white border border-[#e2e8f0] rounded-2xl p-4 shadow-sm" id="movein">
@@ -135,9 +153,16 @@ const PropertyDashboard = () => {
                 <input
                   type="text"
                   value={moveInForm.moveInDate || ''}
-                  onChange={(e) => setMoveInForm((p) => ({ ...p, moveInDate: e.target.value }))}
+                  onChange={(e) =>
+                    setMoveInForm((p) => ({
+                      ...p,
+                      moveInDate: formatDateInputDDMMYYYY(e.target.value)
+                    }))
+                  }
+                  inputMode="numeric"
+                  maxLength={10}
                   className="border border-[#e2e8f0] rounded-lg px-3 py-2 w-full bg-transparent"
-                  placeholder="dd/mm/yy"
+                  placeholder="dd/mm/yyyy"
                 />
               </div>
             </div>
@@ -164,7 +189,7 @@ const PropertyDashboard = () => {
               <p className="text-sm text-gray-500 mt-0.5">{property.location}</p>
             </div>
           </div>
-          <span className="px-2.5 py-1 rounded-full text-[10px] font-extrabold uppercase tracking-wider bg-amber-100 text-amber-700">
+          <span className={`px-2.5 py-1 rounded-full text-[10px] font-extrabold uppercase tracking-wider ${headerStatusClass}`}>
             {statusLabel}
           </span>
         </div>
@@ -182,7 +207,7 @@ const PropertyDashboard = () => {
               <div className="space-y-4">
                 <div>
                   <p className="text-[10px] font-bold text-gray-500 uppercase tracking-wider">Move in Date</p>
-                  <p className="text-sm font-bold status-success">{formatDateDDMMYY(moveInDate)}</p>
+                  <p className="text-sm font-bold status-success">{formatDateDDMMYYYY(moveInDate)}</p>
                 </div>
                 <div>
                   <p className="text-[10px] font-bold text-gray-500 uppercase tracking-wider">Unit Type</p>
@@ -236,16 +261,24 @@ const PropertyDashboard = () => {
                   </div>
                   <div className="space-y-1">
                     <p className="text-[10px] font-bold text-gray-500 uppercase tracking-widest">Lease Start</p>
-                    <p className="text-sm font-bold text-[#0e1f42]">{formatDateDDMMYY(property.leaseStart)}</p>
+                    <p className="text-sm font-bold text-[#0e1f42]">{formatDateDDMMYYYY(property.leaseStart)}</p>
                   </div>
                 </div>
                 <div className="flex gap-4">
                   <div className="p-3 rounded-2xl bg-gray-100 status-accent flex items-center justify-center h-fit">
                     <Clock size={20} />
                   </div>
-                  <div className="space-y-1">
+                  <div className="space-y-1 flex-1">
                     <p className="text-[10px] font-bold text-gray-500 uppercase tracking-widest">Lease End</p>
-                    <p className="text-sm font-bold text-[#0e1f42]">{formatDateDDMMYY(property.leaseEnd)}</p>
+                    <div className="flex items-center justify-between gap-3">
+                      <p className="text-sm font-bold text-[#0e1f42]">{formatDateDDMMYYYY(property.leaseEnd)}</p>
+                      <button
+                        onClick={() => navigate(`/dashboard/rent/my-properties/${property.propertyId}/timeline`)}
+                        className="text-xs font-semibold status-accent hover:underline whitespace-nowrap"
+                      >
+                        View timeline
+                      </button>
+                    </div>
                   </div>
                 </div>
               </div>
@@ -258,7 +291,7 @@ const PropertyDashboard = () => {
                   {property.nextPayment ? (
                     <>
                       <p className="text-xs font-bold status-success">{formatNaira(property.nextPayment.amount)}</p>
-                      <p className="text-[11px] text-gray-500">Due: {formatDateDDMMYY(property.nextPayment.dueDate)}</p>
+                      <p className="text-[11px] text-gray-500">Due: {formatDateDDMMYYYY(property.nextPayment.dueDate)}</p>
                     </>
                   ) : (
                     <p className="text-xs text-gray-500">No upcoming payment</p>
@@ -316,9 +349,16 @@ const PropertyDashboard = () => {
                 <input
                   type="text"
                   value={moveInForm.moveInDate || ''}
-                  onChange={(e) => setMoveInForm((p) => ({ ...p, moveInDate: e.target.value }))}
+                  onChange={(e) =>
+                    setMoveInForm((p) => ({
+                      ...p,
+                      moveInDate: formatDateInputDDMMYYYY(e.target.value)
+                    }))
+                  }
+                  inputMode="numeric"
+                  maxLength={10}
                   className="border border-[#e2e8f0] rounded-lg px-3 py-2 flex-1 bg-transparent"
-                  placeholder="dd/mm/yy"
+                  placeholder="dd/mm/yyyy"
                 />
               </label>
             </div>

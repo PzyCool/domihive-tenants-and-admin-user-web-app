@@ -81,6 +81,10 @@ export const PropertiesProvider = ({ children }) => {
             name: app.property.title || 'Approved Property',
             location: app.property.location || 'Lagos, Nigeria',
             unitType: app.property.unitType || 'Unit',
+            bedrooms: Number(app.property.bedrooms || 0),
+            bathrooms: Number(app.property.bathrooms || 0),
+            size: app.property.size || '',
+            description: app.property.description || '',
             tenancyStatus: 'PENDING_MOVE_IN',
             leaseStart: today.toISOString().slice(0, 10),
             leaseEnd: nextYear.toISOString().slice(0, 10),
@@ -116,6 +120,48 @@ export const PropertiesProvider = ({ children }) => {
 
       if (!additions.length) return prev;
       return [...additions, ...prev];
+    });
+  }, [applications]);
+
+  useEffect(() => {
+    if (!applications.length) return;
+    setProperties((prev) => {
+      let changed = false;
+      const next = prev.map((prop) => {
+        const sourceApp = applications.find(
+          (app) => String(app?.id || '') === String(prop?.sourceApplicationId || '') && app?.property
+        );
+        if (!sourceApp?.property) return prop;
+        const source = sourceApp.property;
+        const updates = {};
+
+        if ((prop.rentAmount == null || Number(prop.rentAmount) === 0) && Number(source.price || 0) > 0) {
+          updates.rentAmount = Number(source.price || 0);
+        }
+        if ((prop.bedrooms == null || Number.isNaN(Number(prop.bedrooms))) && source.bedrooms != null) {
+          updates.bedrooms = Number(source.bedrooms || 0);
+        }
+        if ((prop.bathrooms == null || Number.isNaN(Number(prop.bathrooms))) && source.bathrooms != null) {
+          updates.bathrooms = Number(source.bathrooms || 0);
+        }
+        if ((!prop.size || !String(prop.size).trim()) && source.size) {
+          updates.size = source.size;
+        }
+        if ((!prop.description || !String(prop.description).trim()) && source.description) {
+          updates.description = source.description;
+        }
+        if ((!prop.unitType || !String(prop.unitType).trim()) && source.unitType) {
+          updates.unitType = source.unitType;
+        }
+        if ((!prop.image || !String(prop.image).trim()) && source.image) {
+          updates.image = source.image;
+        }
+
+        if (Object.keys(updates).length === 0) return prop;
+        changed = true;
+        return { ...prop, ...updates };
+      });
+      return changed ? next : prev;
     });
   }, [applications]);
 

@@ -8,7 +8,7 @@ import { Building2, Clock3, Wallet } from 'lucide-react';
 const MyProperties = () => {
   const navigate = useNavigate();
   const { properties } = useProperties();
-  const [statusFilter, setStatusFilter] = React.useState('all');
+  const [statusFilter, setStatusFilter] = React.useState('active');
   const [leaseFilter, setLeaseFilter] = React.useState('all');
   const [search, setSearch] = React.useState('');
 
@@ -22,13 +22,12 @@ const MyProperties = () => {
       );
     }
 
-    if (statusFilter !== 'all') {
-      list = list.filter((p) => {
-        if (statusFilter === 'active') return p.tenancyStatus === 'ACTIVE';
-        if (statusFilter === 'ended') return p.tenancyStatus === 'ENDED';
-        return p.tenancyStatus === 'PENDING_MOVE_IN';
-      });
-    }
+    list = list.filter((p) => {
+      if (statusFilter === 'active') return p.tenancyStatus === 'ACTIVE';
+      if (statusFilter === 'ended') return p.tenancyStatus === 'ENDED';
+      if (statusFilter === 'pending') return p.tenancyStatus === 'PENDING_MOVE_IN';
+      return true;
+    });
 
     if (leaseFilter === 'endingSoon') {
       const now = new Date();
@@ -110,13 +109,12 @@ const MyProperties = () => {
               className="w-full pl-9 pr-3 py-2.5 rounded-md border border-[var(--border-color,#e2e8f0)] bg-transparent text-sm text-[var(--text-color,#0e1f42)]"
             />
           </div>
-          <div className="flex flex-wrap items-center gap-3">
+          <div className="flex flex-wrap md:flex-nowrap items-center gap-3">
             <select
               value={statusFilter}
               onChange={(e) => setStatusFilter(e.target.value)}
-              className="px-3 py-2.5 rounded-md border border-[var(--border-color,#e2e8f0)] bg-transparent text-sm text-[var(--text-color,#0e1f42)] min-w-[155px]"
+              className="h-11 px-3 rounded-md border border-[var(--border-color,#e2e8f0)] bg-transparent text-sm text-[var(--text-color,#0e1f42)] min-w-[155px]"
             >
-              <option value="all">All Status</option>
               <option value="active">Currently Active</option>
               <option value="pending">Pending Move-in</option>
               <option value="ended">Ended</option>
@@ -124,12 +122,12 @@ const MyProperties = () => {
             <select
               value={leaseFilter}
               onChange={(e) => setLeaseFilter(e.target.value)}
-              className="px-3 py-2.5 rounded-md border border-[var(--border-color,#e2e8f0)] bg-transparent text-sm text-[var(--text-color,#0e1f42)] min-w-[185px]"
+              className="h-11 px-3 rounded-md border border-[var(--border-color,#e2e8f0)] bg-transparent text-sm text-[var(--text-color,#0e1f42)] min-w-[185px]"
             >
               <option value="all">All Lease Window</option>
               <option value="endingSoon">Ending Soon (60 days)</option>
             </select>
-            <div className="text-sm text-[var(--text-muted,#64748b)]">
+            <div className="h-11 inline-flex items-center text-sm text-[var(--text-muted,#64748b)] whitespace-nowrap">
               Showing <span className="font-semibold text-[var(--text-color,#0e1f42)]">{visibleProperties.length}</span> properties
             </div>
           </div>

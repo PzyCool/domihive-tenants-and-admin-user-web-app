@@ -26,6 +26,7 @@ import PropertyRenewal from './components/dashboard/rent/pages/PropertyRenewal';
 import MaintenancePage from './components/dashboard/rent/pages/MaintenancePage';
 import MaintenanceDetailPage from './components/dashboard/rent/pages/MaintenanceDetailPage';
 import MaintenancePolicyPage from './components/dashboard/rent/pages/MaintenancePolicyPage';
+import MaintenanceRequestPage from './components/dashboard/rent/pages/MaintenanceRequestPage';
 import PaymentsPage from './components/dashboard/rent/pages/PaymentsPage';
 import MessagesPage from './components/dashboard/rent/pages/MessagesPage';
 import SettingsPage from './components/dashboard/pages/SettingsPage';
@@ -306,6 +307,7 @@ function App() {
               )}
             />
             <Route path="maintenance" element={<MaintenancePage />} />
+            <Route path="maintenance/request" element={<MaintenanceRequestPage />} />
             <Route path="maintenance/:ticketId" element={<MaintenanceDetailPage />} />
             <Route path="maintenance/policy" element={<MaintenancePolicyPage />} />
             <Route path="payments" element={<PaymentsPage />} />

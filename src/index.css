@@ -79,6 +79,7 @@ body.dashboard-themed .text-gray-500 {
 :root[data-theme="light"] {
   --page-bg: #f8f9fa;
   --card-bg: #ffffff;
+  --surface-2: #f8fafc;
   --text-color: #0e1f42;
   --text-muted: #6c757d;
 }
@@ -86,6 +87,7 @@ body.dashboard-themed .text-gray-500 {
 :root[data-theme="dark-gray"] {
   --page-bg: #0b0f17;
   --card-bg: #0f172a;
+  --surface-2: #111c34;
   --text-color: #f8fafc;
   --text-muted: #94a3b8;
 }
@@ -93,6 +95,7 @@ body.dashboard-themed .text-gray-500 {
 :root[data-theme="gold-dark"] {
   --page-bg: #15110b;
   --card-bg: #1e1710;
+  --surface-2: #2a2117;
   --text-color: #f8f3eb;
   --text-muted: #cfbfa7;
 }
@@ -100,6 +103,39 @@ body.dashboard-themed .text-gray-500 {
 :root[data-theme="true-black"] {
   --page-bg: #000000;
   --card-bg: #0b0b0b;
+  --surface-2: #141414;
+  --text-color: #f8fafc;
+  --text-muted: #cbd5e1;
+}
+
+body.dashboard-themed[data-theme="light"] {
+  --page-bg: #f8f9fa;
+  --card-bg: #ffffff;
+  --surface-2: #f8fafc;
+  --text-color: #0e1f42;
+  --text-muted: #6c757d;
+}
+
+body.dashboard-themed[data-theme="dark-gray"] {
+  --page-bg: #0b0f17;
+  --card-bg: #0f172a;
+  --surface-2: #111c34;
+  --text-color: #f8fafc;
+  --text-muted: #94a3b8;
+}
+
+body.dashboard-themed[data-theme="gold-dark"] {
+  --page-bg: #15110b;
+  --card-bg: #1e1710;
+  --surface-2: #2a2117;
+  --text-color: #f8f3eb;
+  --text-muted: #cfbfa7;
+}
+
+body.dashboard-themed[data-theme="true-black"] {
+  --page-bg: #000000;
+  --card-bg: #0b0b0b;
+  --surface-2: #141414;
   --text-color: #f8fafc;
   --text-muted: #cbd5e1;
 }
@@ -2224,6 +2260,36 @@ body.dashboard-themed[data-theme="true-black"] .property-overview-updates {
   color: var(--text-color, #f8fafc) !important;
 }
 
+/* Property timeline page dark-mode hard overrides */
+body.dashboard-themed[data-theme="dark-gray"] .property-timeline-surface,
+body.dashboard-themed[data-theme="gold-dark"] .property-timeline-surface,
+body.dashboard-themed[data-theme="true-black"] .property-timeline-surface {
+  background: var(--surface-2, var(--card-bg, #111827)) !important;
+  border-color: rgba(255, 255, 255, 0.14) !important;
+}
+
+body.dashboard-themed[data-theme="dark-gray"] .property-timeline-toggle,
+body.dashboard-themed[data-theme="gold-dark"] .property-timeline-toggle,
+body.dashboard-themed[data-theme="true-black"] .property-timeline-toggle {
+  background: rgba(255, 255, 255, 0.06) !important;
+  border-color: rgba(255, 255, 255, 0.18) !important;
+}
+
+body.dashboard-themed[data-theme="dark-gray"] .property-timeline-details-btn,
+body.dashboard-themed[data-theme="gold-dark"] .property-timeline-details-btn,
+body.dashboard-themed[data-theme="true-black"] .property-timeline-details-btn {
+  background: rgba(255, 255, 255, 0.08) !important;
+  border-color: rgba(255, 255, 255, 0.18) !important;
+  color: var(--text-color, #f8fafc) !important;
+}
+
+body.dashboard-themed[data-theme="dark-gray"] .property-timeline-week-day,
+body.dashboard-themed[data-theme="gold-dark"] .property-timeline-week-day,
+body.dashboard-themed[data-theme="true-black"] .property-timeline-week-day {
+  background: var(--card-bg, #111827) !important;
+  border-color: rgba(255, 255, 255, 0.14) !important;
+}
+
 body.dashboard-themed[data-theme="dark-gray"] .property-overview-updates h3,
 body.dashboard-themed[data-theme="true-black"] .property-overview-updates h3,
 body.dashboard-themed[data-theme="dark-gray"] .property-overview-updates p,
@@ -2300,6 +2366,24 @@ body.dashboard-themed[data-theme="true-black"] .property-status {
   background: rgba(255, 255, 255, 0.08) !important;
   border-color: var(--accent-color, #9f7539) !important;
   color: #ffffff !important;
+}
+
+/* Keep Pending Move-in red in dark themes */
+body.dashboard-themed[data-theme="dark-gray"] .property-status.property-status--pending-move-in,
+body.dashboard-themed[data-theme="true-black"] .property-status.property-status--pending-move-in,
+body.dashboard-themed[data-theme="gold-dark"] .property-status.property-status--pending-move-in {
+  background: rgba(239, 68, 68, 0.18) !important;
+  border-color: rgba(239, 68, 68, 0.45) !important;
+  color: #ef4444 !important;
+}
+
+/* Keep Active status green in dark themes */
+body.dashboard-themed[data-theme="dark-gray"] .property-status.property-status--active,
+body.dashboard-themed[data-theme="true-black"] .property-status.property-status--active,
+body.dashboard-themed[data-theme="gold-dark"] .property-status.property-status--active {
+  background: rgba(16, 185, 129, 0.18) !important;
+  border-color: rgba(16, 185, 129, 0.45) !important;
+  color: #10b981 !important;
 }
 
 /* Maintenance policy box */

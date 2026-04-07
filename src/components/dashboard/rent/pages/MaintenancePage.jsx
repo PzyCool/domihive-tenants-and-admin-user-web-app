@@ -1,427 +1,230 @@
-import React, { useEffect, useMemo, useState } from 'react';
-import { useLocation, useNavigate } from 'react-router-dom';
+﻿import React, { useMemo, useState } from 'react';
+import { useNavigate } from 'react-router-dom';
+import { AlertTriangle, ClipboardList, Search, Wrench } from 'lucide-react';
+import UnifiedPanelPage, { UnifiedPanelSection } from '../../../shared/layout/UnifiedPanelPage';
 import { useMaintenance } from '../contexts/MaintenanceContext';
 import { useProperties } from '../contexts/PropertiesContext';
-import TicketCard from '../components/maintenance/TicketCard';
 
-const MAINTENANCE_DRAFT_KEY = 'domihive_maintenance_request_draft';
+const formatMoney = (value) => {
+  const amount = Number(value || 0);
+  return `₦${amount.toLocaleString()}/year`;
+};
+
+const formatMoneyWords = (value) => {
+  const amount = Number(value || 0);
+  if (amount >= 1000000) return `${(amount / 1000000).toFixed(1)} million naira yearly`;
+  if (amount >= 1000) return `${(amount / 1000).toFixed(1)} thousand naira yearly`;
+  return `${amount.toLocaleString('en-NG')} naira yearly`;
+};
+
+const formatSize = (size) => {
+  const raw = String(size ?? '').trim();
+  if (!raw) return '--';
+  const normalized = raw.toLowerCase();
+  if (normalized.includes('sqm') || normalized.includes('sq m') || normalized.includes('m2')) return raw;
+  return `${raw} sqm`;
+};
+
+const tenancyBadge = (status) => {
+  if (status === 'ACTIVE') return 'bg-emerald-100 text-emerald-800 border border-emerald-200';
+  if (status === 'PENDING_MOVE_IN') return 'bg-red-100 text-red-700 border border-red-200';
+  return 'bg-gray-100 text-gray-700 border border-gray-200';
+};
 
 const MaintenancePage = () => {
-  const { tickets, addTicket } = useMaintenance();
-  const { properties } = useProperties();
   const navigate = useNavigate();
-  const location = useLocation();
+  const { tickets } = useMaintenance();
+  const { properties } = useProperties();
 
-  const [activeTab, setActiveTab] = useState('new'); // new | active | tracking | history
-  const [policyAgreed, setPolicyAgreed] = useState(false);
-  const [successOpen, setSuccessOpen] = useState(false);
-  const [isDraftHydrated, setIsDraftHydrated] = useState(false);
+  const [propertySearch, setPropertySearch] = useState('');
+  const [tenancyFilter, setTenancyFilter] = useState('all');
 
-  const [form, setForm] = useState({
-    propertyId: '',
-    title: '',
-    category: '',
-    urgency: '',
-    preferredDate: '',
-    description: '',
-    contactPhone: '',
-    contactWindow: '',
-    allowEntry: false,
-    contactEmergency: false
-  });
-
-  useEffect(() => {
-    try {
-      const raw = localStorage.getItem(MAINTENANCE_DRAFT_KEY);
-      if (raw) {
-        const parsed = JSON.parse(raw);
-        if (parsed?.form && typeof parsed.form === 'object') {
-          setForm((prev) => ({ ...prev, ...parsed.form }));
-        }
-        if (typeof parsed?.policyAgreed === 'boolean') {
-          setPolicyAgreed(parsed.policyAgreed);
-        }
-        if (typeof parsed?.activeTab === 'string') {
-          setActiveTab(parsed.activeTab);
-        }
-      }
-    } catch (_error) {
-      // ignore malformed draft
-    } finally {
-      setIsDraftHydrated(true);
+  const filteredProperties = useMemo(() => {
+    let list = [...properties];
+    if (tenancyFilter === 'active') list = list.filter((p) => p.tenancyStatus === 'ACTIVE');
+    if (tenancyFilter === 'pending') list = list.filter((p) => p.tenancyStatus === 'PENDING_MOVE_IN');
+    if (tenancyFilter === 'ended') list = list.filter((p) => p.tenancyStatus === 'ENDED');
+    if (propertySearch.trim()) {
+      const q = propertySearch.toLowerCase();
+      list = list.filter((p) =>
+        `${p.name || ''} ${p.location || ''} ${p.description || ''} ${p.unitCode || ''}`
+          .toLowerCase()
+          .includes(q)
+      );
     }
-  }, []);
+    return list;
+  }, [properties, tenancyFilter, propertySearch]);
 
-  useEffect(() => {
-    const policyFromState = location.state?.policyAgreed;
-    if (policyFromState) {
-      setPolicyAgreed(true);
-      if (activeTab !== 'new') setActiveTab('new');
-      navigate(location.pathname, { replace: true, state: null });
-    }
-  }, [location, navigate, activeTab]);
+  const stats = useMemo(() => {
+    const activeTickets = tickets.filter(
+      (t) => !['COMPLETED', 'CANCELLED'].includes(String(t.status || '').toUpperCase())
+    );
+    const emergencies = activeTickets.filter((t) =>
+      String(t.urgency || '').toLowerCase().includes('emergency')
+    ).length;
 
-  useEffect(() => {
-    if (!isDraftHydrated) return;
-    const draft = {
-      form,
-      policyAgreed,
-      activeTab
+    return {
+      propertiesCount: properties.length,
+      openRequests: activeTickets.length,
+      emergencyCount: emergencies
     };
-    localStorage.setItem(MAINTENANCE_DRAFT_KEY, JSON.stringify(draft));
-  }, [form, policyAgreed, activeTab, isDraftHydrated]);
-
-  const activeTickets = useMemo(
-    () => tickets.filter((t) => !['COMPLETED', 'CANCELLED'].includes(t.status)),
-    [tickets]
-  );
-  const historyTickets = useMemo(
-    () => tickets.filter((t) => ['COMPLETED', 'CANCELLED'].includes(t.status)),
-    [tickets]
-  );
-  const trackingTicket = activeTickets[0] || tickets[0] || null;
-
-  const isFormValid =
-    form.propertyId &&
-    form.title &&
-    form.category &&
-    form.urgency &&
-    form.description &&
-    form.contactPhone &&
-    policyAgreed;
-
-  const handleSubmit = () => {
-    if (!isFormValid) return;
-    const property = properties.find((p) => p.propertyId === form.propertyId);
-    const newTicket = {
-      ticketId: `MT-${Date.now()}`,
-      propertyId: form.propertyId,
-      propertyName: property?.name || 'Property',
-      category: form.category,
-      title: form.title,
-      description: form.description,
-      urgency: form.urgency,
-      priority: form.urgency.includes('Emergency') ? 'Emergency' : 'Normal',
-      responsibility: 'Pending Assessment',
-      status: 'SUBMITTED',
-      createdAt: new Date().toISOString().slice(0, 10),
-      updates: [{ status: 'SUBMITTED', note: 'Request submitted', at: new Date().toISOString() }]
-    };
-    addTicket(newTicket);
-    setForm({
-      propertyId: '',
-      title: '',
-      category: '',
-      urgency: '',
-      preferredDate: '',
-      description: '',
-      contactPhone: '',
-      contactWindow: '',
-      allowEntry: false,
-      contactEmergency: false
-    });
-    setPolicyAgreed(false);
-    localStorage.removeItem(MAINTENANCE_DRAFT_KEY);
-    setSuccessOpen(true);
-    setActiveTab('active');
-  };
-
-  const renderTabs = () => (
-    <div className="flex flex-wrap gap-2 mb-4">
-      {[
-        { id: 'new', label: 'New Request' },
-        { id: 'active', label: 'Active Requests' },
-        { id: 'tracking', label: 'Tracking' },
-        { id: 'history', label: 'History' }
-      ].map((tab) => (
-        <button
-          key={tab.id}
-          onClick={() => setActiveTab(tab.id)}
-          className={`px-4 py-2 text-sm font-semibold border rounded-lg transition-colors maintenance-tab-btn ${
-            activeTab === tab.id ? '' : 'hover:bg-[var(--card-bg,#ffffff)] hover:text-[var(--accent-color,#9F7539)]'
-          }`}
-          style={{
-            borderColor: activeTab === tab.id ? 'var(--accent-color, #9F7539)' : 'var(--text-color, #0e1f42)',
-            color: activeTab === tab.id ? '#fff' : 'var(--text-color, #0e1f42)',
-            backgroundColor: activeTab === tab.id ? 'var(--accent-color, #9F7539)' : 'transparent'
-          }}
-          data-active={activeTab === tab.id}
-        >
-          {tab.label}
-        </button>
-      ))}
-    </div>
-  );
-
-  const renderNewRequest = () => (
-    <div className="bg-white border border-[#e2e8f0] rounded-2xl p-5 space-y-6 shadow-sm">
-      {properties.length === 0 && (
-        <div className="border border-[#e2e8f0] rounded-xl p-4 bg-[#f8fafc]">
-          <p className="text-sm font-semibold text-[#0e1f42]">No property available for maintenance yet</p>
-          <p className="text-xs text-[#64748b] mt-1">
-            Your maintenance form will unlock once you have an active tenancy in My Properties.
-          </p>
-        </div>
-      )}
-      <div className="grid gap-3 text-sm text-[#475467]">
-        <label className="flex flex-col gap-1">
-          Select Property *
-          <select
-            value={form.propertyId}
-            onChange={(e) => setForm((p) => ({ ...p, propertyId: e.target.value }))}
-            className="border border-[#e2e8f0] rounded-lg px-3 py-2"
-            disabled={properties.length === 0}
-          >
-            <option value="">Select property</option>
-            {properties.map((p) => (
-              <option key={p.propertyId} value={p.propertyId}>{p.name}</option>
-            ))}
-          </select>
-        </label>
-
-        <div className="grid md:grid-cols-2 gap-3">
-          <label className="flex flex-col gap-1">
-            Issue Title *
-            <input
-              value={form.title}
-              onChange={(e) => setForm((p) => ({ ...p, title: e.target.value }))}
-              className="border border-[#e2e8f0] rounded-lg px-3 py-2"
-              placeholder="Short title"
-            />
-          </label>
-          <label className="flex flex-col gap-1">
-            Category *
-            <select
-              value={form.category}
-              onChange={(e) => setForm((p) => ({ ...p, category: e.target.value }))}
-              className="border border-[#e2e8f0] rounded-lg px-3 py-2"
-            >
-              <option value="">Select category</option>
-              {['Plumbing','Electrical','AC','Appliance','Structural','Cleaning','Other'].map((c) => (
-                <option key={c} value={c}>{c}</option>
-              ))}
-            </select>
-          </label>
-        </div>
-
-        <div className="grid md:grid-cols-2 gap-3">
-          <label className="flex flex-col gap-1">
-            Urgency Level *
-            <select
-              value={form.urgency}
-              onChange={(e) => setForm((p) => ({ ...p, urgency: e.target.value }))}
-              className="border border-[#e2e8f0] rounded-lg px-3 py-2"
-            >
-              <option value="">Select urgency</option>
-              <option>Low — can wait a few days</option>
-              <option>Medium — within 48 hours</option>
-              <option>High — within 24 hours</option>
-              <option>Emergency — immediate action</option>
-            </select>
-          </label>
-          <label className="flex flex-col gap-1">
-            Preferred Repair Date (optional)
-            <input
-              type="date"
-              lang="en-GB"
-              value={form.preferredDate}
-              onChange={(e) => setForm((p) => ({ ...p, preferredDate: e.target.value }))}
-              className="border border-[#e2e8f0] rounded-lg px-3 py-2"
-            />
-          </label>
-        </div>
-
-        <label className="flex flex-col gap-1">
-          Detailed Description *
-          <textarea
-            value={form.description}
-            onChange={(e) => setForm((p) => ({ ...p, description: e.target.value }))}
-            className="border border-[#e2e8f0] rounded-lg px-3 py-2"
-            rows={4}
-            placeholder="Describe the issue in detail"
-          />
-        </label>
-
-        <div className="grid md:grid-cols-2 gap-4">
-          <div className="border border-dashed border-[#e2e8f0] rounded-xl p-3 text-center text-sm text-[#6c757d]">
-            Upload Photos (optional)
-            <div className="mt-2">
-              <button className="px-3 py-2 rounded-lg border border-[#e2e8f0] text-[#475467] font-semibold">Add Photo</button>
-            </div>
-          </div>
-          <div className="border border-dashed border-[#e2e8f0] rounded-xl p-3 text-center text-sm text-[#6c757d]">
-            Upload Videos (optional)
-            <div className="mt-2">
-              <button className="px-3 py-2 rounded-lg border border-[#e2e8f0] text-[#475467] font-semibold">Add Video</button>
-            </div>
-          </div>
-        </div>
-
-        <div className="grid md:grid-cols-2 gap-3">
-          <label className="flex flex-col gap-1">
-            Contact Phone *
-            <input
-              value={form.contactPhone}
-              onChange={(e) => setForm((p) => ({ ...p, contactPhone: e.target.value }))}
-              className="border border-[#e2e8f0] rounded-lg px-3 py-2"
-              placeholder="+234 ..."
-            />
-          </label>
-          <label className="flex flex-col gap-1">
-            Best Time to Contact (optional)
-            <select
-              value={form.contactWindow}
-              onChange={(e) => setForm((p) => ({ ...p, contactWindow: e.target.value }))}
-              className="border border-[#e2e8f0] rounded-lg px-3 py-2"
-            >
-              <option value="">Any time</option>
-              <option>Morning</option>
-              <option>Afternoon</option>
-              <option>Evening</option>
-            </select>
-          </label>
-        </div>
-
-        <div className="space-y-2 text-sm text-[#475467]">
-          <label className="flex items-center gap-2">
-            <input
-              type="checkbox"
-              checked={form.allowEntry}
-              onChange={() => setForm((p) => ({ ...p, allowEntry: !p.allowEntry }))}
-            />
-            I grant permission for maintenance staff to enter the property when I’m not home
-          </label>
-          <label className="flex items-center gap-2">
-            <input
-              type="checkbox"
-              checked={form.contactEmergency}
-              onChange={() => setForm((p) => ({ ...p, contactEmergency: !p.contactEmergency }))}
-            />
-            Contact me immediately for emergency repairs
-          </label>
-        </div>
-
-        <div className="space-y-2 text-sm text-[#475467] border border-[#e2e8f0] rounded-lg p-3 bg-[#f8fafc] maintenance-policy-box">
-          <p className="font-semibold text-[#0e1f42]">Please read and agree to the maintenance policy before submitting.</p>
-          <button
-            onClick={() => navigate('/dashboard/rent/maintenance/policy')}
-            className="text-[var(--accent-color,#9F7539)] font-semibold maintenance-policy-link"
-          >
-            Read Maintenance Policy
-          </button>
-          <label className="flex items-center gap-2">
-            <input
-              type="checkbox"
-              checked={policyAgreed}
-              onChange={() => setPolicyAgreed((prev) => !prev)}
-            />
-            I have read and agree to the maintenance policy
-          </label>
-        </div>
-
-        <div className="flex justify-end">
-          <button
-            disabled={!isFormValid}
-            onClick={handleSubmit}
-            className={`px-4 py-2 rounded-full text-sm font-semibold text-white shadow-sm bg-gradient-to-r from-[var(--primary-color,#0e1f42)] to-[#1a2d5f] hover:from-[#1a2d5f] hover:to-[var(--primary-color,#0e1f42)] transition-colors ${!isFormValid ? 'opacity-60 cursor-not-allowed' : ''}`}
-          >
-            Submit Request
-          </button>
-        </div>
-      </div>
-    </div>
-  );
-
-  const renderActive = () => (
-    <div className="bg-white border border-[#e2e8f0] rounded-2xl p-5 space-y-4 shadow-sm">
-      {activeTickets.length === 0 ? (
-        <p className="text-sm text-[#6c757d]">No active requests.</p>
-      ) : (
-        activeTickets.map((t) => <TicketCard key={t.ticketId} ticket={t} onView={(tk) => navigate(`/dashboard/rent/maintenance/${tk.ticketId}`)} />)
-      )}
-    </div>
-  );
-
-  const renderHistory = () => (
-    <div className="bg-white border border-[#e2e8f0] rounded-2xl p-5 space-y-4 shadow-sm">
-      {historyTickets.length === 0 ? (
-        <p className="text-sm text-[#6c757d]">No history yet.</p>
-      ) : (
-        historyTickets.map((t) => <TicketCard key={t.ticketId} ticket={t} onView={(tk) => navigate(`/dashboard/rent/maintenance/${tk.ticketId}`)} />)
-      )}
-    </div>
-  );
-
-  const renderTracking = () => (
-    <div className="bg-white border border-[#e2e8f0] rounded-2xl p-5 space-y-4 shadow-sm">
-      {!trackingTicket ? (
-        <p className="text-sm text-[#6c757d]">Select a request to track.</p>
-      ) : (
-        <>
-          <div className="flex items-start justify-between">
-            <div>
-              <p className="text-xs text-[#6c757d]">{trackingTicket.propertyName}</p>
-              <h3 className="text-lg font-semibold text-[#0e1f42]">{trackingTicket.title}</h3>
-              <p className="text-sm text-[#475467]">{trackingTicket.description}</p>
-            </div>
-            <span className="px-3 py-1 rounded-full text-xs font-semibold maintenance-status bg-[#fff7ed] text-[var(--accent-color,#9F7539)] border border-[var(--accent-color,#9F7539)]">
-              {trackingTicket.status.replace('_', ' ')}
-            </span>
-          </div>
-          <div className="space-y-2 text-sm text-[#475467]">
-            {(trackingTicket.updates || []).map((u, idx) => (
-              <div key={idx} className="flex items-start gap-2">
-                <div className="h-2 w-2 rounded-full bg-[var(--accent-color,#9F7539)] mt-1"></div>
-                <div>
-                  <p className="font-semibold text-[#0e1f42]">{u.status.replace('_', ' ')}</p>
-                  <p>{u.note}</p>
-                  <p className="text-xs text-[#6c757d]">{u.at}</p>
-                </div>
-              </div>
-            ))}
-          </div>
-        </>
-      )}
-    </div>
-  );
+  }, [properties.length, tickets]);
 
   return (
-    <div className="rent-overview-container bg-gradient-to-br from-gray-50 to-gray-100 min-h-screen p-4 md:p-6">
-      <div className="bg-white rounded-lg shadow-md border border-[#e2e8f0] p-6 space-y-6">
-        <div>
-          <h1 className="text-3xl font-bold text-[#0e1f42]">Maintenance</h1>
-          <p className="text-sm text-[#64748b]">Submit and track maintenance requests for your properties.</p>
-        </div>
-
-        {renderTabs()}
-
-        {activeTab === 'new' && renderNewRequest()}
-        {activeTab === 'active' && renderActive()}
-        {activeTab === 'tracking' && renderTracking()}
-        {activeTab === 'history' && renderHistory()}
-      </div>
-
-      {successOpen && (
-        <div className="modal-backdrop fixed inset-0 z-[1400] flex items-center justify-center bg-black/40 px-4">
-          <div className="bg-white rounded-2xl shadow-2xl w-full max-w-md p-6 text-center relative">
-            <button onClick={() => setSuccessOpen(false)} className="absolute top-4 right-4 text-gray-500 hover:text-gray-800">
-              <i className="fas fa-times"></i>
-            </button>
-            <i className="fas fa-check-circle text-4xl text-[#0e1f42]"></i>
-            <h3 className="text-xl font-semibold text-[#0e1f42] mt-2">Request submitted</h3>
-            <p className="text-sm text-[#475467] mt-1">We’ll review and update you shortly.</p>
-            <div className="mt-4 flex justify-center">
-              <button
-                onClick={() => setSuccessOpen(false)}
-                className="px-4 py-2 rounded-full text-sm font-semibold text-white shadow-sm bg-gradient-to-r from-[var(--primary-color,#0e1f42)] to-[#1a2d5f] hover:from-[#1a2d5f] hover:to-[var(--primary-color,#0e1f42)] transition-colors"
-              >
-                Close
-              </button>
+    <UnifiedPanelPage
+      title="Maintenance"
+      subtitle="Raise and track maintenance requests for your units."
+      stats={[
+        {
+          label: 'Managed Units',
+          value: stats.propertiesCount,
+          meta: `${stats.propertiesCount} available`,
+          icon: <ClipboardList size={20} />,
+          iconClass: 'bg-blue-100 text-blue-700 dark:bg-blue-500/10 dark:text-blue-400'
+        },
+        {
+          label: 'Open Requests',
+          value: stats.openRequests,
+          meta: `${stats.openRequests} ongoing`,
+          icon: <Wrench size={20} />,
+          iconClass: 'bg-amber-100 text-amber-700 dark:bg-amber-500/10 dark:text-amber-400'
+        },
+        {
+          label: 'Emergency',
+          value: stats.emergencyCount,
+          meta: `${stats.emergencyCount} urgent`,
+          icon: <AlertTriangle size={20} />,
+          iconClass: 'bg-red-100 text-red-700 dark:bg-red-500/10 dark:text-red-400'
+        }
+      ]}
+      filterBar={
+        <div className="flex flex-col gap-3 md:flex-row md:items-center md:justify-between">
+          <div className="relative w-full md:max-w-md">
+            <Search className="absolute left-3 top-1/2 -translate-y-1/2 text-[var(--text-muted,#64748b)]" size={16} />
+            <input
+              value={propertySearch}
+              onChange={(e) => setPropertySearch(e.target.value)}
+              placeholder="Search property, location, description..."
+              className="w-full pl-9 pr-3 py-2.5 rounded-md border text-sm"
+              style={{
+                borderColor: 'var(--border-color,#e2e8f0)',
+                color: 'var(--text-color,#0e1f42)',
+                backgroundColor: 'transparent'
+              }}
+            />
+          </div>
+          <div className="flex items-center gap-3 flex-wrap md:flex-nowrap">
+            <select
+              value={tenancyFilter}
+              onChange={(e) => setTenancyFilter(e.target.value)}
+              className="h-11 px-3 rounded-md border text-sm min-w-[165px]"
+              style={{
+                borderColor: 'var(--border-color,#e2e8f0)',
+                color: 'var(--text-color,#0e1f42)',
+                backgroundColor: 'transparent'
+              }}
+            >
+              <option value="all">All Status</option>
+              <option value="active">Active</option>
+              <option value="pending">Pending Move-in</option>
+              <option value="ended">Ended</option>
+            </select>
+            <div className="h-11 inline-flex items-center text-sm text-[var(--text-muted,#64748b)]">
+              Showing <span className="ml-1 font-semibold text-[var(--text-color,#0e1f42)]">{filteredProperties.length}</span>
             </div>
           </div>
         </div>
-      )}
-    </div>
+      }
+    >
+      <UnifiedPanelSection className="space-y-4">
+        {filteredProperties.length === 0 ? (
+          <div className="rounded-xl border px-4 py-5 text-sm" style={{ borderColor: 'var(--border-color,#e2e8f0)' }}>
+            <p className="font-semibold text-[var(--text-color,#0e1f42)]">No unit matched your filter.</p>
+          </div>
+        ) : (
+          filteredProperties.map((property) => {
+            const price = Number(property.rentAmount || property.price || property.nextPayment?.amount || 0);
+            return (
+              <div
+                key={property.propertyId}
+                className="rounded-xl border p-3 md:p-4"
+                style={{ borderColor: 'var(--border-color,#e2e8f0)', backgroundColor: 'var(--card-bg,#fff)' }}
+              >
+                <div className="flex flex-col lg:flex-row gap-4">
+                  <div className="relative w-24 h-24 md:w-28 md:h-28 rounded-lg overflow-hidden border border-[var(--border-color,#e2e8f0)]">
+                    <img
+                      src={property.image || 'https://via.placeholder.com/240x180?text=DomiHive'}
+                      alt={property.name || 'Property'}
+                      className="w-full h-full object-cover"
+                    />
+                  </div>
+                  <div className="flex-1 min-w-0">
+                    <div className="flex items-start justify-between gap-3">
+                      <div className="min-w-0">
+                        <div className="text-xl font-bold text-[var(--accent-color,#9F7539)]">{formatMoney(price)}</div>
+                        <div className="text-xs text-[var(--text-muted,#64748b)]">{formatMoneyWords(price)}</div>
+                        <h3 className="mt-1 text-2xl font-semibold leading-tight text-[var(--text-color,#0e1f42)]">
+                          {property.name || 'Property'}
+                        </h3>
+                        <div className="mt-1 inline-flex items-center gap-2 text-[var(--text-muted,#64748b)] text-sm">
+                          <i className="fas fa-map-marker-alt text-[var(--accent-color,#9F7539)]"></i>
+                          {property.location || 'Location not available'}
+                        </div>
+                      </div>
+                      <span className={`px-4 py-1 rounded-full text-sm font-semibold whitespace-nowrap ${tenancyBadge(property.tenancyStatus)}`}>
+                        {property.tenancyStatus === 'ACTIVE'
+                          ? 'Active'
+                          : property.tenancyStatus === 'PENDING_MOVE_IN'
+                            ? 'Pending Move-in'
+                            : 'Ended'}
+                      </span>
+                    </div>
+
+                    <div className="mt-2 flex flex-wrap items-center gap-4 text-sm text-[var(--text-color,#0e1f42)]">
+                      <span className="inline-flex items-center gap-2">
+                        <i className="fas fa-bed text-[var(--accent-color,#9F7539)]"></i>
+                        {Number(property.bedrooms || 0)} bed
+                      </span>
+                      <span className="inline-flex items-center gap-2">
+                        <i className="fas fa-bath text-[var(--accent-color,#9F7539)]"></i>
+                        {Number(property.bathrooms || 0)} bath
+                      </span>
+                      <span className="inline-flex items-center gap-2">
+                        <i className="fas fa-ruler-combined text-[var(--accent-color,#9F7539)]"></i>
+                        {formatSize(property.size)}
+                      </span>
+                    </div>
+
+                    <div className="mt-2">
+                      <div className="flex items-center gap-2 mb-0.5">
+                        <i className="fas fa-align-left text-[var(--accent-color,#9F7539)]"></i>
+                        <span className="font-semibold text-[var(--text-color,#0e1f42)]">About this property:</span>
+                      </div>
+                      <p className="text-[var(--text-color,#334155)] leading-snug text-sm line-clamp-2">
+                        {property.description || 'No unit description available yet.'}
+                      </p>
+                    </div>
+
+                    <div className="mt-3 flex justify-end">
+                      <button
+                        onClick={() =>
+                          navigate('/dashboard/rent/maintenance/request', {
+                            state: { propertyId: property.propertyId }
+                          })
+                        }
+                        className="rounded-full bg-[#102a62] px-4 py-2 text-sm font-semibold text-white transition-colors hover:bg-[#17377a]"
+                      >
+                        Request Maintenance
+                      </button>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            );
+          })
+        )}
+      </UnifiedPanelSection>
+    </UnifiedPanelPage>
   );
 };
 
