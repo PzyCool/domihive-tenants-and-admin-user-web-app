@@ -30,6 +30,7 @@ import MaintenanceRequestPage from './components/dashboard/rent/pages/Maintenanc
 import PaymentsPage from './components/dashboard/rent/pages/PaymentsPage';
 import PaymentWorkspacePage from './components/dashboard/rent/pages/PaymentWorkspacePage';
 import MessagesPage from './components/dashboard/rent/pages/MessagesPage';
+import MessageComposePage from './components/dashboard/rent/pages/MessageComposePage';
 import SettingsPage from './components/dashboard/pages/SettingsPage';
 import FavoritesPage from './components/dashboard/rent/pages/FavoritesPage';
 import AdminLayout from './components/admin/layout/AdminLayout';
@@ -314,6 +315,7 @@ function App() {
             <Route path="payments" element={<PaymentsPage />} />
             <Route path="payments/:propertyId" element={<PaymentWorkspacePage />} />
             <Route path="messages" element={<MessagesPage />} />
+            <Route path="messages/new" element={<MessageComposePage />} />
           </Route>
         </Route>
       </Routes>
