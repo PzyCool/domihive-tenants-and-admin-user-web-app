@@ -43,7 +43,7 @@ const Header = ({ toggleSidebar, isMobile }) => {
       '--text-muted': '#94a3b8'
     },
     'gold-dark': {
-      '--primary-color': '#0E1F42',
+      '--primary-color': '#2a2117',
       '--accent-color': '#9F7539',
       '--accent-light': '#b58a4a',
       '--page-bg': '#15110b',
@@ -67,9 +67,8 @@ const Header = ({ toggleSidebar, isMobile }) => {
     Object.entries(selected).forEach(([key, value]) => {
       document.documentElement.style.setProperty(key, value);
     });
-    const themeAttr = themeId === 'gold-dark' ? 'dark-gray' : themeId;
-    document.documentElement.setAttribute('data-theme', themeAttr);
-    document.body?.setAttribute('data-theme', themeAttr);
+    document.documentElement.setAttribute('data-theme', themeId);
+    document.body?.setAttribute('data-theme', themeId);
     localStorage.setItem('domihive_theme', themeId);
     if (themeId !== 'light') {
       localStorage.setItem('domihive_dark_theme', themeId);
@@ -83,7 +82,9 @@ const Header = ({ toggleSidebar, isMobile }) => {
     const currentTheme = localStorage.getItem('domihive_theme') || 'light';
     if (currentTheme === 'light') {
       const preferredDarkTheme = localStorage.getItem('domihive_dark_theme') || 'dark-gray';
-      applyTheme(preferredDarkTheme);
+      const nextDarkTheme = preferredDarkTheme === 'dark-gray' ? preferredDarkTheme : 'dark-gray';
+      localStorage.setItem('domihive_dark_theme', nextDarkTheme);
+      applyTheme(nextDarkTheme);
       return;
     }
     applyTheme('light');

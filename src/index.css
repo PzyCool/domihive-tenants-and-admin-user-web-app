@@ -77,6 +77,7 @@ body.dashboard-themed .text-gray-500 {
 
 /* Theme presets (for stronger overrides when data-theme is set) */
 :root[data-theme="light"] {
+  --primary-color: #0e1f42;
   --page-bg: #f8f9fa;
   --card-bg: #ffffff;
   --surface-2: #f8fafc;
@@ -85,6 +86,7 @@ body.dashboard-themed .text-gray-500 {
 }
 
 :root[data-theme="dark-gray"] {
+  --primary-color: #0e1f42;
   --page-bg: #0b0f17;
   --card-bg: #0f172a;
   --surface-2: #111c34;
@@ -93,6 +95,7 @@ body.dashboard-themed .text-gray-500 {
 }
 
 :root[data-theme="gold-dark"] {
+  --primary-color: #2a2117;
   --page-bg: #15110b;
   --card-bg: #1e1710;
   --surface-2: #2a2117;
@@ -101,6 +104,7 @@ body.dashboard-themed .text-gray-500 {
 }
 
 :root[data-theme="true-black"] {
+  --primary-color: #0e1f42;
   --page-bg: #000000;
   --card-bg: #0b0b0b;
   --surface-2: #141414;
@@ -109,6 +113,7 @@ body.dashboard-themed .text-gray-500 {
 }
 
 body.dashboard-themed[data-theme="light"] {
+  --primary-color: #0e1f42;
   --page-bg: #f8f9fa;
   --card-bg: #ffffff;
   --surface-2: #f8fafc;
@@ -117,6 +122,7 @@ body.dashboard-themed[data-theme="light"] {
 }
 
 body.dashboard-themed[data-theme="dark-gray"] {
+  --primary-color: #0e1f42;
   --page-bg: #0b0f17;
   --card-bg: #0f172a;
   --surface-2: #111c34;
@@ -125,6 +131,7 @@ body.dashboard-themed[data-theme="dark-gray"] {
 }
 
 body.dashboard-themed[data-theme="gold-dark"] {
+  --primary-color: #2a2117;
   --page-bg: #15110b;
   --card-bg: #1e1710;
   --surface-2: #2a2117;
@@ -133,6 +140,7 @@ body.dashboard-themed[data-theme="gold-dark"] {
 }
 
 body.dashboard-themed[data-theme="true-black"] {
+  --primary-color: #0e1f42;
   --page-bg: #000000;
   --card-bg: #0b0b0b;
   --surface-2: #141414;

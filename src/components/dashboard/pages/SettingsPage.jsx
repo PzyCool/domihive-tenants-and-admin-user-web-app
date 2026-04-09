@@ -171,7 +171,7 @@ const SettingsPage = () => {
       '--text-muted': '#94a3b8'
     },
     'gold-dark': {
-      '--primary-color': '#0E1F42',
+      '--primary-color': '#2a2117',
       '--accent-color': '#9F7539',
       '--accent-light': '#b58a4a',
       '--page-bg': '#15110b',
@@ -195,18 +195,21 @@ const SettingsPage = () => {
     Object.entries(selected).forEach(([key, value]) => {
       document.documentElement.style.setProperty(key, value);
     });
-    const themeAttr = themeId === 'gold-dark' ? 'dark-gray' : themeId;
-    document.documentElement.setAttribute('data-theme', themeAttr);
-    document.body?.setAttribute('data-theme', themeAttr);
+    document.documentElement.setAttribute('data-theme', themeId);
+    document.body?.setAttribute('data-theme', themeId);
     localStorage.setItem('domihive_theme', themeId);
     if (themeId !== 'light') {
       localStorage.setItem('domihive_dark_theme', themeId);
     }
   };
 
-  // Apply theme on mount
+  // Apply theme on mount (fallback to Blue Dark if a disabled theme was previously saved)
   React.useEffect(() => {
-    applyTheme(theme);
+    const effectiveTheme = theme === 'gold-dark' || theme === 'true-black' ? 'dark-gray' : theme;
+    if (effectiveTheme !== theme) {
+      setTheme(effectiveTheme);
+    }
+    applyTheme(effectiveTheme);
   }, []);
 
   // Keep avatar preview in sync with user updates
@@ -491,15 +494,20 @@ const SettingsPage = () => {
         <h3 className="text-xl font-semibold text-[var(--text-color,#0e1f42)] mb-4">Theme</h3>
         <div className="grid grid-cols-1 md:grid-cols-3 gap-4 md:gap-6 mb-6">
           {[
-            { id: 'dark-gray', label: 'Blue Dark', blocks: ['#0b0f17', '#0f172a', '#111827'] },
-            { id: 'gold-dark', label: 'Gold Dark', blocks: ['#15110b', '#1e1710', '#2a1f14'] },
-            { id: 'true-black', label: 'True Black', blocks: ['#000000', '#0b0b0b', '#151515'] }
+            { id: 'dark-gray', label: 'Blue Dark', blocks: ['#0b0f17', '#0f172a', '#111827'], comingSoon: false },
+            { id: 'gold-dark', label: 'Gold Dark', blocks: ['#15110b', '#1e1710', '#2a1f14'], comingSoon: true },
+            { id: 'true-black', label: 'True Black', blocks: ['#000000', '#0b0b0b', '#151515'], comingSoon: true }
           ].map((themeOption) => (
             <button
               key={themeOption.id}
-              onClick={() => setTheme(themeOption.id)}
+              onClick={() => !themeOption.comingSoon && setTheme(themeOption.id)}
+              disabled={themeOption.comingSoon}
               className={`flex flex-col items-center gap-3 border-2 rounded-2xl p-3 transition-all ${
-                theme === themeOption.id ? 'border-[var(--accent-color,#9F7539)] shadow-md' : 'border-[var(--gray-light,#e2e8f0)]'
+                theme === themeOption.id && !themeOption.comingSoon
+                  ? 'border-[var(--accent-color,#9F7539)] shadow-md'
+                  : 'border-[var(--gray-light,#e2e8f0)]'
+              } ${
+                themeOption.comingSoon ? 'opacity-60 cursor-not-allowed' : ''
               }`}
             >
               <div className="w-full h-24 rounded-xl overflow-hidden border border-[var(--gray-light,#e2e8f0)] flex flex-col">
@@ -509,7 +517,14 @@ const SettingsPage = () => {
                   <div className="flex-1" style={{ backgroundColor: themeOption.blocks[2] }}></div>
                 </div>
               </div>
-              <span className="text-[var(--text-color,#0e1f42)] font-semibold">{themeOption.label}</span>
+              <div className="flex items-center gap-1.5 flex-nowrap min-w-0">
+                <span className="whitespace-nowrap text-[var(--text-color,#0e1f42)] font-semibold">{themeOption.label}</span>
+                {themeOption.comingSoon && (
+                  <span className="whitespace-nowrap text-[9px] leading-none px-1.5 py-0.5 rounded-full bg-[var(--surface-2,#f8fafc)] border border-[var(--gray-light,#e2e8f0)] text-[var(--text-muted,#6c757d)]">
+                    Coming Soon
+                  </span>
+                )}
+              </div>
             </button>
           ))}
         </div>
@@ -540,34 +555,6 @@ const SettingsPage = () => {
           <p className="text-sm text-[var(--text-muted,#6c757d)]">Get a copy of all your data in a portable format</p>
         </div>
         <button className="px-4 py-2 rounded-md text-white font-semibold" style={{ backgroundColor: accent }}>Download Data</button>
-      </div>
-
-      <div className="border border-[var(--gray-light,#e2e8f0)] rounded-lg p-4 bg-[var(--card-bg,#ffffff)] space-y-4">
-        <div>
-          <p className="font-semibold text-[var(--text-color,#0e1f42)]">Demo Journey Controls</p>
-          <p className="text-sm text-[var(--text-muted,#6c757d)]">
-            Use this for presentation mode. Reset all user journey data or seed a guided demo flow.
-          </p>
-        </div>
-        <div className="flex flex-wrap gap-2">
-          <button
-            type="button"
-            onClick={handleResetJourneyData}
-            disabled={isJourneyActionRunning}
-            className="px-4 py-2 rounded-md border border-[var(--gray-light,#e2e8f0)] text-[var(--text-color,#0e1f42)] font-semibold disabled:opacity-60"
-          >
-            Reset User Journey Data
-          </button>
-          <button
-            type="button"
-            onClick={handleSeedPresentationJourney}
-            disabled={isJourneyActionRunning}
-            className="px-4 py-2 rounded-md text-white font-semibold disabled:opacity-60"
-            style={{ backgroundColor: accent }}
-          >
-            Seed Presentation Journey
-          </button>
-        </div>
       </div>
 
       <div className="border border-red-200 bg-[var(--card-bg,#ffffff)] rounded-lg p-4 space-y-4">
