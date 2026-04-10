@@ -376,7 +376,7 @@ const Sidebar = ({ sidebarState, toggleSidebar, closeMobileSidebar, isMobile, cu
                   onClick={handleNavClick}
                   title={isCollapsed ? item.label : undefined}
                   className={({ isActive }) =>
-                    `group relative flex items-center gap-3 ${isCollapsed ? 'px-0 py-3 justify-center' : 'px-4 py-3'} rounded-lg transition-all duration-200
+                    `nav-link group relative flex items-center gap-3 ${isCollapsed ? 'px-0 py-3 justify-center' : 'px-4 py-3'} rounded-lg transition-all duration-200
                     ${isActive
                       ? 'bg-white/40 text-[#0e1f42] backdrop-blur-sm'
                       : 'text-[#334155] hover:bg-white/40 hover:text-[#0e1f42] backdrop-blur-sm'
@@ -414,7 +414,7 @@ const Sidebar = ({ sidebarState, toggleSidebar, closeMobileSidebar, isMobile, cu
                   onClick={handleNavClick}
                   title={isCollapsed ? item.label : undefined}
                   className={({ isActive }) =>
-                    `group relative flex items-center gap-3 ${isCollapsed ? 'px-0 py-3 justify-center' : 'px-4 py-3'} rounded-lg transition-all duration-200
+                    `nav-link group relative flex items-center gap-3 ${isCollapsed ? 'px-0 py-3 justify-center' : 'px-4 py-3'} rounded-lg transition-all duration-200
                     ${isActive
                       ? 'bg-white/40 text-[#0e1f42] font-semibold backdrop-blur-sm'
                       : 'text-[#334155] hover:bg-white/40 hover:text-[#0e1f42] backdrop-blur-sm'
@@ -467,7 +467,7 @@ const Sidebar = ({ sidebarState, toggleSidebar, closeMobileSidebar, isMobile, cu
                     onClick={handleNavClick}
                     title={isCollapsed ? item.label : undefined}
                     className={({ isActive }) =>
-                      `group relative flex items-center gap-3 ${isCollapsed ? 'px-0 py-3 justify-center' : 'px-4 py-3'} rounded-lg transition-all duration-200
+                      `nav-link group relative flex items-center gap-3 ${isCollapsed ? 'px-0 py-3 justify-center' : 'px-4 py-3'} rounded-lg transition-all duration-200
                       ${isActive
                         ? 'bg-white/40 text-[#0e1f42] font-semibold backdrop-blur-sm'
                         : 'text-[#334155] hover:bg-white/40 hover:text-[#0e1f42] backdrop-blur-sm'

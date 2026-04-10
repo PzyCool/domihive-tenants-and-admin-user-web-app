@@ -214,7 +214,6 @@ body.dashboard-themed[data-theme="dark-gray"] h4,
 body.dashboard-themed[data-theme="dark-gray"] h5,
 body.dashboard-themed[data-theme="dark-gray"] h6,
 body.dashboard-themed[data-theme="dark-gray"] p,
-body.dashboard-themed[data-theme="dark-gray"] span,
 body.dashboard-themed[data-theme="dark-gray"] label,
 body.dashboard-themed[data-theme="dark-gray"] li,
 body.dashboard-themed[data-theme="true-black"] h1,
@@ -224,7 +223,6 @@ body.dashboard-themed[data-theme="true-black"] h4,
 body.dashboard-themed[data-theme="true-black"] h5,
 body.dashboard-themed[data-theme="true-black"] h6,
 body.dashboard-themed[data-theme="true-black"] p,
-body.dashboard-themed[data-theme="true-black"] span,
 body.dashboard-themed[data-theme="true-black"] label,
 body.dashboard-themed[data-theme="true-black"] li {
   color: var(--text-color, #f8fafc) !important;
@@ -2182,32 +2180,10 @@ body.dashboard-themed[data-theme="true-black"] .application-card h3,
 body.dashboard-themed[data-theme="dark-gray"] .application-card p,
 body.dashboard-themed[data-theme="gold-dark"] .application-card p,
 body.dashboard-themed[data-theme="true-black"] .application-card p,
-body.dashboard-themed[data-theme="dark-gray"] .application-card span,
-body.dashboard-themed[data-theme="gold-dark"] .application-card span,
-body.dashboard-themed[data-theme="true-black"] .application-card span {
+body.dashboard-themed[data-theme="dark-gray"] .application-card .application-text,
+body.dashboard-themed[data-theme="gold-dark"] .application-card .application-text,
+body.dashboard-themed[data-theme="true-black"] .application-card .application-text {
   color: var(--text-color) !important;
-}
-
-body.dashboard-themed[data-theme="dark-gray"]
-  .application-card
-  .app-status-badge,
-body.dashboard-themed[data-theme="gold-dark"]
-  .application-card
-  .app-status-badge,
-body.dashboard-themed[data-theme="true-black"]
-  .application-card
-  .app-status-badge {
-  background: rgba(255, 255, 255, 0.08) !important;
-  border-color: var(--accent-color, #9f7539) !important;
-  color: #ffffff !important;
-}
-
-body.dashboard-themed[data-theme="dark-gray"] .app-track-badge,
-body.dashboard-themed[data-theme="gold-dark"] .app-track-badge,
-body.dashboard-themed[data-theme="true-black"] .app-track-badge {
-  background: rgba(255, 255, 255, 0.08) !important;
-  border-color: var(--accent-color, #9f7539) !important;
-  color: #ffffff !important;
 }
 
 body.dashboard-themed[data-theme="dark-gray"] .application-card-footer,
@@ -2694,7 +2670,14 @@ body.dashboard-themed[data-theme="true-black"] .dashboard-sidebar {
 body.dashboard-themed[data-theme="dark-gray"] .dashboard-sidebar .nav-link,
 body.dashboard-themed[data-theme="true-black"] .dashboard-sidebar .nav-link {
   color: var(--text-color) !important;
+  opacity: 1 !important;
   border-radius: 12px !important;
+}
+
+body.dashboard-themed[data-theme="dark-gray"] .dashboard-sidebar .nav-section-title,
+body.dashboard-themed[data-theme="true-black"] .dashboard-sidebar .nav-section-title {
+  color: var(--text-muted, #cbd5e1) !important;
+  opacity: 0.95 !important;
 }
 
 body.dashboard-themed[data-theme="dark-gray"] .dashboard-sidebar .nav-link i,

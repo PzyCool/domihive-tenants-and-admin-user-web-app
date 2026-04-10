@@ -191,6 +191,7 @@ export const PropertiesProvider = ({ children }) => {
       const adminData = readAdminStorage() || {};
       const tenants = Array.isArray(adminData.tenants) ? adminData.tenants : [];
       const adminProperties = Array.isArray(adminData.properties) ? adminData.properties : [];
+      const adminApplications = Array.isArray(adminData.applications) ? adminData.applications : [];
 
       const normalizedPhone = String(user?.phone || '').trim();
       const normalizedPhoneDigits = normalizedPhone.replace(/\D+/g, '');
@@ -231,6 +232,11 @@ export const PropertiesProvider = ({ children }) => {
       const hydrated = matchedTenants.map((tenant, index) => {
         const propertyId = String(tenant?.propertyId || `tenant_property_${tenant?.id || index}`);
         const adminProperty = adminProperties.find((item) => String(item?.id || '') === propertyId);
+        const sourceApplication =
+          (applications || []).find((app) => String(app?.id || '') === String(tenant?.applicationId || '')) ||
+          adminApplications.find((app) => String(app?.id || '') === String(tenant?.applicationId || '')) ||
+          null;
+        const sourceProperty = sourceApplication?.property || {};
         const units = Array.isArray(adminProperty?.units) ? adminProperty.units : [];
         const tenantUnitCode = String(tenant?.unitCode || tenant?.unitNumber || '').trim();
         const matchedUnit = units.find((unit) => {
@@ -241,6 +247,7 @@ export const PropertiesProvider = ({ children }) => {
         const rentAmount = Number(
           tenant?.rentAmount ??
             matchedUnit?.price ??
+            sourceProperty?.price ??
             adminProperty?.price ??
             0
         );
@@ -248,6 +255,7 @@ export const PropertiesProvider = ({ children }) => {
           tenant?.cautionFee ??
             tenant?.cautionDeposit ??
             matchedUnit?.cautionFee ??
+            sourceProperty?.cautionFee ??
             adminProperty?.cautionFee ??
             0
         );
@@ -279,17 +287,24 @@ export const PropertiesProvider = ({ children }) => {
         return {
           propertyId,
           sourceApplicationId: String(tenant?.applicationId || ''),
-          name: adminProperty?.title || tenant?.propertyTitle || 'Property',
+          name: adminProperty?.title || tenant?.propertyTitle || sourceProperty?.title || 'Property',
           location:
             adminProperty?.location ||
             tenant?.propertyLocation ||
+            sourceProperty?.location ||
             'Lagos, Nigeria',
-          unitType: matchedUnit?.unitType || matchedUnit?.type || adminProperty?.type || 'Unit',
-          bedrooms: Number(matchedUnit?.bedrooms ?? adminProperty?.bedrooms ?? 0),
-          bathrooms: Number(matchedUnit?.bathrooms ?? adminProperty?.bathrooms ?? 0),
-          size: matchedUnit?.size ?? adminProperty?.size ?? '',
+          unitType:
+            matchedUnit?.unitType ||
+            matchedUnit?.type ||
+            sourceProperty?.unitType ||
+            adminProperty?.type ||
+            'Unit',
+          bedrooms: Number(matchedUnit?.bedrooms ?? sourceProperty?.bedrooms ?? adminProperty?.bedrooms ?? 0),
+          bathrooms: Number(matchedUnit?.bathrooms ?? sourceProperty?.bathrooms ?? adminProperty?.bathrooms ?? 0),
+          size: matchedUnit?.size ?? sourceProperty?.size ?? adminProperty?.size ?? '',
           description:
             matchedUnit?.description ||
+            sourceProperty?.description ||
             adminProperty?.description ||
             '',
           tenancyStatus,
@@ -321,11 +336,15 @@ export const PropertiesProvider = ({ children }) => {
           image:
             matchedUnit?.unitSlides?.[0] ||
             matchedUnit?.image ||
+            sourceProperty?.image ||
             adminProperty?.slides?.[0] ||
             adminProperty?.coverImage ||
             adminProperty?.image ||
             '',
-          unitCode: tenantUnitCode || String(matchedUnit?.unitNumber || matchedUnit?.number || ''),
+          unitCode:
+            tenantUnitCode ||
+            String(sourceProperty?.unitCode || '').trim() ||
+            String(matchedUnit?.unitNumber || matchedUnit?.number || ''),
           isPrimaryJourneyProperty: index === 0
         };
       });

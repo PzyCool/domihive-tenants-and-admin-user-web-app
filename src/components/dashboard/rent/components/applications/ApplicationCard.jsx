@@ -1,6 +1,4 @@
 ﻿import React, { useEffect, useMemo, useState } from 'react';
-import { useNavigate } from 'react-router-dom';
-import MapSection from '../property-details/components/Tabs/LocationTab/MapSection';
 import NoShowOverlay from './NoShowOverlay';
 import InspectionCompletedOverlay from './InspectionCompletedOverlay';
 import { INSPECTION_BOOKING_STATUSES } from '../../../../shared/utils/inspectionBookings';
@@ -58,8 +56,48 @@ const CancelledOverlay = ({ application }) => (
   </div>
 );
 
+const buildDirectionsUrl = (property = {}) => {
+  const locationName = property?.locationName || property?.location || '';
+  const area = property?.area || '';
+  const address = property?.address || '';
+  const state = property?.state || '';
+  const query = [locationName, area, address, state, 'Nigeria'].filter(Boolean).join(', ');
+  const encodedQuery = encodeURIComponent(query || 'Lagos, Nigeria');
+  return `https://www.google.com/maps/dir/?api=1&destination=${encodedQuery}`;
+};
+
+const ScheduledInspectionOverlay = ({ application, countdown }) => {
+  const directionsUrl = buildDirectionsUrl(application?.property || {});
+
+  return (
+    <div className="absolute inset-0 z-20 flex items-end p-3 md:p-4 pointer-events-none">
+      <div className="w-full rounded-xl border border-[var(--accent-color,#9f7539)]/30 bg-[var(--card-bg,#0e1f42)]/95 backdrop-blur-[1px] p-4 pointer-events-auto">
+        <h4 className="text-base md:text-lg font-semibold text-[var(--text-color,#ffffff)]">
+          Inspection Scheduled
+        </h4>
+        <p className="text-sm text-[var(--text-muted,#e2e8f0)] mt-1">
+          Come back here to proceed to application after you have done your inspection.
+        </p>
+        <p className="text-sm font-semibold text-[var(--accent-color,#9f7539)] mt-2">
+          {countdown
+            ? `Inspection countdown: ${countdown.days}d ${countdown.hours}h ${countdown.minutes}m ${countdown.seconds}s`
+            : 'Inspection time reached'}
+        </p>
+        <button
+          type="button"
+          onClick={() => window.open(directionsUrl, '_blank', 'noopener,noreferrer')}
+          className="mt-3 inline-flex items-center gap-2 text-sm font-semibold text-[var(--accent-color,#9f7539)] underline underline-offset-2 hover:opacity-90"
+        >
+          <i className="fas fa-map-marker-alt" aria-hidden="true" />
+          <span>Get direction</span>
+          <i className="fas fa-arrow-right" aria-hidden="true" />
+        </button>
+      </div>
+    </div>
+  );
+};
+
 const ApplicationCard = ({ application, onAction, compact = false }) => {
-  const navigate = useNavigate();
   const [nowTick, setNowTick] = useState(Date.now());
 
   const actionLabel = ACTION_LABELS[application.status] || 'View Details';
@@ -138,6 +176,10 @@ const ApplicationCard = ({ application, onAction, compact = false }) => {
 
   const overlayNode = (
     <>
+      {isScheduled && !isNoShow && !isInspectionCompleted && !isCancelled && (
+        <ScheduledInspectionOverlay application={application} countdown={countdown} />
+      )}
+
       {isNoShow && !isCancelled && (
         <NoShowOverlay
           application={application}
@@ -165,30 +207,6 @@ const ApplicationCard = ({ application, onAction, compact = false }) => {
       {isCancelled && <CancelledOverlay application={application} />}
     </>
   );
-
-  const footerPanel = isScheduled ? (
-    <div className="border-t border-[var(--border-color,#e2e8f0)] bg-[var(--card-bg,#f8fafc)] px-5 py-4 mt-4">
-      <div className="flex flex-wrap items-center justify-between gap-2">
-        <p className="text-sm font-semibold text-[#9f7539]">
-          {countdown
-            ? `Inspection countdown: ${countdown.days}d ${countdown.hours}h ${countdown.minutes}m ${countdown.seconds}s`
-            : 'Inspection time reached'}
-        </p>
-        <button
-          onClick={() => navigate('/dashboard/rent/browse')}
-          className="text-xs px-3 py-1.5 rounded-full border border-[#9f7539]/30 text-[#9f7539] hover:bg-[#9f7539]/10"
-        >
-          Need to reschedule
-        </button>
-      </div>
-      <p className="text-xs text-[var(--text-muted,#475467)] mt-2">
-        Please arrive at this address early and come with your verification documents.
-      </p>
-      <div className="mt-4 rounded-lg border border-[var(--border-color,#e2e8f0)] bg-[var(--card-bg,#ffffff)] p-4">
-        <MapSection property={application.property} />
-      </div>
-    </div>
-  ) : null;
 
   return (
     <TenantUnitCard
@@ -219,7 +237,6 @@ const ApplicationCard = ({ application, onAction, compact = false }) => {
       }
       actions={actionNode}
       overlay={overlayNode}
-      footerPanel={footerPanel}
     />
   );
 };
