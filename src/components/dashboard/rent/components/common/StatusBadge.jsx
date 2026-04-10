@@ -1,6 +1,17 @@
 import React from 'react';
 
-const RED_TOKENS = ['REJECTED', 'CANCELLED', 'NO_SHOW', 'FAILED', 'DENIED', 'ENDED'];
+const RED_TOKENS = [
+  'REJECTED',
+  'CANCELLED',
+  'NO_SHOW',
+  'FAILED',
+  'DENIED',
+  'ENDED',
+  'PENDING_MOVE_IN',
+  'MOVE_IN_PENDING',
+  'PENDING MOVE IN',
+  'PENDING MOVE-IN'
+];
 const YELLOW_TOKENS = [
   'PENDING',
   'UNDER_REVIEW',
@@ -60,4 +71,3 @@ const StatusBadge = ({ status, label, tone, className = '' }) => {
 };
 
 export default StatusBadge;
-
