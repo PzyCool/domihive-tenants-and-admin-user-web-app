@@ -7,6 +7,7 @@ import { INSPECTION_BOOKING_STATUSES } from '../../../../shared/utils/inspection
 import TenantUnitCard, {
   formatUnitSize
 } from '../common/TenantUnitCard';
+import StatusBadge from '../common/StatusBadge';
 
 const STATUS_LABELS = {
   INSPECTION_SCHEDULED: 'Inspection Scheduled',
@@ -28,25 +29,6 @@ const ACTION_LABELS = {
   APPROVED: 'View Move-in',
   REJECTED: 'View Feedback',
   CANCELLED: 'View Details'
-};
-
-const badgeStyles = {
-  INSPECTION_VERIFIED: 'bg-blue-100 text-[#0e1f42] border border-blue-200',
-  APPLICATION_STARTED: 'bg-[#fefce8] text-[#9f7539] border border-[#fef08a]',
-  APPLICATION_SUBMITTED: 'bg-[#ecfccb] text-[#15803d] border border-[#bbf7d0]',
-  UNDER_REVIEW: 'bg-[#e0f2fe] text-[#0284c7] border border-[#bae6fd]',
-  APPROVED: 'bg-[#dcfce7] text-[#047857] border border-[#86efac]',
-  REJECTED: 'bg-[#ffe4e6] text-[#be123c] border border-[#fecdd3]',
-  CANCELLED: 'bg-red-100 text-red-700 border border-red-300'
-};
-
-const inspectionStatusBadgeStyles = {
-  [INSPECTION_BOOKING_STATUSES.PENDING_CONFIRMATION]:
-    'bg-[var(--accent-color,#9f7539)] text-white border border-[var(--accent-color,#9f7539)]',
-  [INSPECTION_BOOKING_STATUSES.SCHEDULED]: 'bg-green-600 text-white border border-green-500',
-  [INSPECTION_BOOKING_STATUSES.NO_SHOW]: 'bg-red-100 text-red-700 border border-red-200',
-  [INSPECTION_BOOKING_STATUSES.INSPECTION_COMPLETED]:
-    'bg-emerald-600 text-white border border-emerald-500'
 };
 
 const getInspectionCountdown = (inspectionDateISO) => {
@@ -81,7 +63,6 @@ const ApplicationCard = ({ application, onAction, compact = false }) => {
   const [nowTick, setNowTick] = useState(Date.now());
 
   const actionLabel = ACTION_LABELS[application.status] || 'View Details';
-  const fallbackBadgeClass = badgeStyles[application.status] || badgeStyles.APPLICATION_STARTED;
   const inspectionStatus =
     application.inspectionStatus || INSPECTION_BOOKING_STATUSES.PENDING_CONFIRMATION;
   const isInspectionStage = application.status === 'INSPECTION_SCHEDULED';
@@ -103,27 +84,16 @@ const ApplicationCard = ({ application, onAction, compact = false }) => {
     return () => window.clearInterval(timer);
   }, [isScheduled]);
 
-  const badgeClass = isInspectionStage
-    ? (inspectionStatusBadgeStyles[inspectionStatus] ||
-      inspectionStatusBadgeStyles[INSPECTION_BOOKING_STATUSES.PENDING_CONFIRMATION])
-    : fallbackBadgeClass;
-
-  const badgeStyleOverride = (() => {
-    if (isCancelled) {
-      return {
-        backgroundColor: 'rgba(239, 68, 68, 0.18)',
-        color: '#ef4444',
-        borderColor: 'rgba(239, 68, 68, 0.45)'
-      };
+  const badgeTone = (() => {
+    if (isInspectionStage) {
+      if (inspectionStatus === INSPECTION_BOOKING_STATUSES.NO_SHOW) return 'danger';
+      if (inspectionStatus === INSPECTION_BOOKING_STATUSES.SCHEDULED) return 'success';
+      if (inspectionStatus === INSPECTION_BOOKING_STATUSES.INSPECTION_COMPLETED) return 'success';
+      return 'warning';
     }
-    if (!isInspectionStage && application.status === 'APPLICATION_SUBMITTED') {
-      return {
-        backgroundColor: 'rgba(16, 185, 129, 0.18)',
-        color: '#10b981',
-        borderColor: 'rgba(16, 185, 129, 0.45)'
-      };
-    }
-    return undefined;
+    if (application.status === 'REJECTED' || application.status === 'CANCELLED') return 'danger';
+    if (application.status === 'UNDER_REVIEW') return 'warning';
+    return 'success';
   })();
 
   const contentStateClass = `${
@@ -235,12 +205,12 @@ const ApplicationCard = ({ application, onAction, compact = false }) => {
       size={formatUnitSize(application.property?.size)}
       description={application.property?.description || 'No unit description available yet.'}
       badge={
-        <span
-          className={`px-4 py-1 text-sm rounded-full font-semibold whitespace-nowrap text-center ${badgeStyleOverride ? '' : badgeClass}`}
-          style={badgeStyleOverride}
-        >
-          {isInspectionStage ? inspectionStatus : (STATUS_LABELS[application.status] || 'In Progress')}
-        </span>
+        <StatusBadge
+          status={isInspectionStage ? inspectionStatus : application.status}
+          label={isInspectionStage ? inspectionStatus : (STATUS_LABELS[application.status] || 'In Progress')}
+          tone={badgeTone}
+          className="px-4 py-1 text-sm"
+        />
       }
       afterDescription={
         <div className="text-sm text-[var(--text-color,#0e1f42)]">

@@ -5,16 +5,7 @@ import UnifiedPanelPage, { UnifiedPanelSection } from '../../../shared/layout/Un
 import { useMaintenance } from '../contexts/MaintenanceContext';
 import { useProperties } from '../contexts/PropertiesContext';
 import TenantUnitCard from '../components/common/TenantUnitCard';
-
-const tenancyBadge = (status) => {
-  if (status === 'ACTIVE') {
-    return 'bg-emerald-100 text-emerald-800 border border-emerald-200 property-status property-status--active';
-  }
-  if (status === 'PENDING_MOVE_IN') {
-    return 'bg-red-100 text-red-700 border border-red-200 property-status property-status--pending-move-in';
-  }
-  return 'bg-gray-100 text-gray-700 border border-gray-200 property-status';
-};
+import StatusBadge from '../components/common/StatusBadge';
 
 const MaintenancePage = () => {
   const navigate = useNavigate();
@@ -143,13 +134,16 @@ const MaintenancePage = () => {
                   size={property.size}
                   description={property.description}
                   badge={
-                    <span className={`px-4 py-1 rounded-full text-sm font-semibold whitespace-nowrap ${tenancyBadge(property.tenancyStatus)}`}>
-                      {property.tenancyStatus === 'ACTIVE'
-                        ? 'Active'
-                        : property.tenancyStatus === 'PENDING_MOVE_IN'
-                          ? 'Pending Move-in'
-                          : 'Ended'}
-                    </span>
+                    <StatusBadge
+                      status={property.tenancyStatus}
+                      label={
+                        property.tenancyStatus === 'ACTIVE'
+                          ? 'Active'
+                          : property.tenancyStatus === 'PENDING_MOVE_IN'
+                            ? 'Pending Move-in'
+                            : 'Ended'
+                      }
+                    />
                   }
                   actions={
                     <button

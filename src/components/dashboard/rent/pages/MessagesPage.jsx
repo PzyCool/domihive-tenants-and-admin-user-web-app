@@ -22,7 +22,7 @@ const MessagesPage = () => {
   const { threads } = useMessages();
 
   const [search, setSearch] = useState('');
-  const [statusFilter, setStatusFilter] = useState('active');
+  const [statusFilter, setStatusFilter] = useState('all');
 
   const visibleProperties = useMemo(() => {
     let list = [...properties];
@@ -107,6 +107,7 @@ const MessagesPage = () => {
                 backgroundColor: 'transparent'
               }}
             >
+              <option value="all">All Status</option>
               <option value="active">Active</option>
               <option value="pending">Pending Move-in</option>
               <option value="ended">Ended</option>

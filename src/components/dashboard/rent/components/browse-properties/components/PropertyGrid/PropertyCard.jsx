@@ -1,5 +1,6 @@
-import React, { useState } from 'react';
+﻿import React, { useState } from 'react';
 import { formatDateDDMMYY } from '../../../../../../shared/utils/dateFormat';
+import { formatNairaYear } from '../../../../../../shared/utils/moneyFormat';
 
 const PropertyCard = ({ property, onViewDetails, onToggleFavorite, onBookNowClick }) => { // ADD onBookNowClick prop
   const [isFavorite, setIsFavorite] = useState(false);
@@ -61,12 +62,7 @@ const PropertyCard = ({ property, onViewDetails, onToggleFavorite, onBookNowClic
   const propertyTypeInfo = getPropertyTypeInfo();
   
   // Format price with Nigerian formatting
-  const formatPrice = (price) => {
-    if (price >= 1000000) {
-      return `₦${(price / 1000000).toFixed(1)}M/year`;
-    }
-    return `₦${price.toLocaleString('en-NG')}/year`;
-  };
+  const formatPrice = (price) => formatNairaYear(price, { compact: true });
   
   // Handle favorite toggle
   const handleFavoriteClick = (e) => {
@@ -329,3 +325,4 @@ const PropertyCard = ({ property, onViewDetails, onToggleFavorite, onBookNowClic
 };
 
 export default PropertyCard;
+

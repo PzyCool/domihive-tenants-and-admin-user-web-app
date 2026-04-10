@@ -1,16 +1,12 @@
-import React from 'react';
+﻿import React from 'react';
+import {
+  formatNairaYear,
+  formatPriceWordsYearly
+} from '../../../../shared/utils/moneyFormat';
 
-export const formatUnitPrice = (value) => {
-  const amount = Number(value || 0);
-  return `₦${amount.toLocaleString()}/year`;
-};
+export const formatUnitPrice = (value) => formatNairaYear(value, { compact: true });
 
-export const formatUnitPriceWords = (value) => {
-  const amount = Number(value || 0);
-  if (amount >= 1000000) return `${(amount / 1000000).toFixed(1)} million naira yearly`;
-  if (amount >= 1000) return `${(amount / 1000).toFixed(1)} thousand naira yearly`;
-  return `${amount.toLocaleString('en-NG')} naira yearly`;
-};
+export const formatUnitPriceWords = (value) => formatPriceWordsYearly(value);
 
 export const formatUnitSize = (size) => {
   const raw = String(size ?? '').trim();

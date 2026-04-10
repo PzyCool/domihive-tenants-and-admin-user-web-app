@@ -1,11 +1,6 @@
 ﻿import React from 'react';
 import TenantUnitCard from '../common/TenantUnitCard';
-
-const statusStyles = {
-  PENDING_MOVE_IN: 'bg-red-100 text-red-700 border border-red-200 property-status',
-  ACTIVE: 'bg-emerald-100 text-emerald-800 border border-emerald-200 property-status',
-  ENDED: 'bg-gray-100 text-gray-700 border border-gray-200 property-status'
-};
+import StatusBadge from '../common/StatusBadge';
 
 const statusLabel = {
   PENDING_MOVE_IN: 'Pending Move-in',
@@ -29,10 +24,6 @@ const quickActionsForStatus = (status) => {
 
 const PropertyCard = ({ property, onAction }) => {
   const actions = quickActionsForStatus(property.tenancyStatus);
-  const statusClass = statusStyles[property.tenancyStatus] || statusStyles.PENDING_MOVE_IN;
-  const pendingStatusClass =
-    property.tenancyStatus === 'PENDING_MOVE_IN' ? ' property-status--pending-move-in' : '';
-  const activeStatusClass = property.tenancyStatus === 'ACTIVE' ? ' property-status--active' : '';
 
   const displayPrice = Number(property.rentAmount || property.price || property.nextPayment?.amount || 0);
   const bedrooms = Number(property.bedrooms || property.property?.bedrooms || 0);
@@ -72,11 +63,10 @@ const PropertyCard = ({ property, onAction }) => {
       }
       description={description}
       badge={
-        <span
-          className={`px-4 py-1 text-sm rounded-full font-semibold whitespace-nowrap text-center ${statusClass}${pendingStatusClass}${activeStatusClass}`}
-        >
-          {statusLabel[property.tenancyStatus] || property.tenancyStatus}
-        </span>
+        <StatusBadge
+          status={property.tenancyStatus}
+          label={statusLabel[property.tenancyStatus] || property.tenancyStatus}
+        />
       }
       actions={
         <div className="flex flex-wrap gap-2">

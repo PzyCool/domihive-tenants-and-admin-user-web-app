@@ -69,7 +69,17 @@ const sanitizeApplicationForStorage = (application) => {
     delete docs.governmentIdPreview;
     delete docs.governmentIdMimeType;
   }
-  return docs ? { ...application, applicantDocs: docs } : application;
+  const nextApplication = docs ? { ...application, applicantDocs: docs } : { ...application };
+  if (nextApplication.property && typeof nextApplication.property === 'object') {
+    const property = { ...nextApplication.property };
+    const image = String(property.image || '');
+    // Blob/data URLs are heavy and unstable across refresh.
+    if (image.startsWith('blob:') || image.startsWith('data:')) {
+      property.image = '';
+    }
+    nextApplication.property = property;
+  }
+  return nextApplication;
 };
 
 const sanitizeApplicationsForStorage = (applications) =>

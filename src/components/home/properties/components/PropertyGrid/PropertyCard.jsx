@@ -1,6 +1,7 @@
-// src/components/home/properties/components/PropertyGrid/PropertyCard.jsx
+﻿// src/components/home/properties/components/PropertyGrid/PropertyCard.jsx
 import React, { useState } from 'react';
 import { formatDateDDMMYY } from '../../../../shared/utils/dateFormat';
+import { formatNairaYear, formatPriceWordsYearly } from '../../../../shared/utils/moneyFormat';
 
 const PropertyCard = ({
   property,
@@ -15,20 +16,9 @@ const PropertyCard = ({
   
   if (!property) return null;
   
-  const formatPrice = (price) => {
-    if (price >= 1000000) {
-      return `₦${(price / 1000000).toFixed(1)}M/year`;
-    }
-    return `₦${price.toLocaleString('en-NG')}/year`;
-  };
+  const formatPrice = (price) => formatNairaYear(price, { compact: true });
 
-  const formatPriceWords = (price) => {
-    const amount = Number(price) || 0;
-    if (amount >= 1000000000) return `${(amount / 1000000000).toFixed(1)} billion naira yearly`;
-    if (amount >= 1000000) return `${(amount / 1000000).toFixed(1)} million naira yearly`;
-    if (amount >= 1000) return `${(amount / 1000).toFixed(1)} thousand naira yearly`;
-    return `${amount.toLocaleString('en-NG')} naira yearly`;
-  };
+  const formatPriceWords = (price) => formatPriceWordsYearly(price);
   const formatSize = (size) => {
     const raw = String(size ?? '').trim();
     if (!raw) return '—';
@@ -460,3 +450,5 @@ const PropertyCard = ({
 };
 
 export default PropertyCard;
+
+

@@ -1,6 +1,8 @@
-import React, { useEffect, useMemo, useState } from 'react';
+﻿import React, { useEffect, useMemo, useState } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
 import { useApplications } from '../contexts/ApplicationsContext';
+import StatusBadge from '../components/common/StatusBadge';
+import { formatNairaYear, formatPriceWordsYearly } from '../../../shared/utils/moneyFormat';
 
 const STATUS_FLOW = [
   'INSPECTION_SCHEDULED',
@@ -20,31 +22,8 @@ const STATUS_LABELS = {
   VERDICT: 'Verdict'
 };
 
-const statusColor = (status) => {
-  switch (status) {
-    case 'APPROVED':
-      return 'bg-green-100 text-green-800 border border-green-200';
-    case 'REJECTED':
-    case 'CANCELLED':
-      return 'bg-red-100 text-red-700 border border-red-200';
-    case 'APPLICATION_SUBMITTED':
-      return 'bg-green-100 text-green-800 border border-green-200';
-    case 'UNDER_REVIEW':
-      return 'bg-amber-100 text-amber-800 border border-amber-200';
-    default:
-      return 'bg-blue-100 text-blue-800 border border-blue-200';
-  }
-};
-
-const formatNaira = (value) => `₦${Number(value || 0).toLocaleString()}`;
-
-const formatPriceWords = (price) => {
-  const amount = Number(price) || 0;
-  if (amount >= 1000000000) return `${(amount / 1000000000).toFixed(1)} billion naira yearly`;
-  if (amount >= 1000000) return `${(amount / 1000000).toFixed(1)} million naira yearly`;
-  if (amount >= 1000) return `${(amount / 1000).toFixed(1)} thousand naira yearly`;
-  return `${amount.toLocaleString('en-NG')} naira yearly`;
-};
+const formatNaira = (value) => formatNairaYear(value, { compact: true }).replace('/year', '');
+const formatPriceWords = (price) => formatPriceWordsYearly(price);
 
 const formatSize = (size) => {
   const raw = String(size ?? '').trim();
@@ -146,12 +125,20 @@ const ApplicationTrackPage = () => {
               <p className="text-xs text-[#6c757d]">Application ID</p>
               <p className="text-sm font-semibold text-[#0e1f42]">{application.id}</p>
             </div>
-            <span
-              className={`px-3 py-1 rounded-full text-xs font-semibold app-track-badge ${statusColor(application.status)}`}
-            >
-              {isVerdictStatus ? `Verdict: ${verdictLabel}` : (STATUS_LABELS[flowStatus] || application.status)}
-            </span>
+            <StatusBadge
+              status={application.status}
+              label={isVerdictStatus ? `Verdict: ${verdictLabel}` : (STATUS_LABELS[flowStatus] || application.status)}
+              tone={
+                application.status === 'REJECTED' || application.status === 'CANCELLED'
+                  ? 'danger'
+                  : application.status === 'UNDER_REVIEW'
+                    ? 'warning'
+                    : 'success'
+              }
+              className="app-track-badge"
+            />
           </div>
+
           <div className="flex flex-wrap gap-4">
             <img
               src={application.property?.image}
@@ -199,11 +186,13 @@ const ApplicationTrackPage = () => {
 
           {isVerdictStatus && (
             <div className="absolute inset-0 z-20 flex items-end p-4 md:p-5">
-              <div className={`w-full rounded-xl border p-4 md:p-5 backdrop-blur-[1px] ${
-                application.status === 'APPROVED'
-                  ? 'bg-green-500/15 border-green-300/40'
-                  : 'bg-red-500/15 border-red-300/40'
-              }`}>
+              <div
+                className={`w-full rounded-xl border p-4 md:p-5 backdrop-blur-[1px] ${
+                  application.status === 'APPROVED'
+                    ? 'bg-green-500/15 border-green-300/40'
+                    : 'bg-red-500/15 border-red-300/40'
+                }`}
+              >
                 <h3 className="text-lg font-bold text-[var(--text-color,#0e1f42)]">
                   {application.status === 'APPROVED' ? 'Congratulations! Application Approved' : 'Application Result'}
                 </h3>
@@ -292,10 +281,10 @@ const ApplicationTrackPage = () => {
                         {status === 'INSPECTION_SCHEDULED' && application.inspectionDate
                           ? `Scheduled for ${application.inspectionDate}`
                           : status === 'UNDER_REVIEW' && active
-                          ? dueText
-                          : status === 'VERDICT'
-                          ? verdictText
-                          : 'Status in progress'}
+                            ? dueText
+                            : status === 'VERDICT'
+                              ? verdictText
+                              : 'Status in progress'}
                       </p>
                     </div>
                   </div>

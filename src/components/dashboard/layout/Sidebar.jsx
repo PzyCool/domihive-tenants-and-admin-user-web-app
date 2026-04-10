@@ -3,8 +3,10 @@ import React, { useState, useEffect, useRef } from 'react';
 import { NavLink, useLocation } from 'react-router-dom';
 import { useAuth } from '../../../context/AuthContext';
 import { useDashboard } from '../../../context/DashboardContext';
+import { readAdminStorage } from '../../../context/adminPersistence';
 import { useApplications } from '../rent/contexts/ApplicationsContext';
 import { useProperties } from '../rent/contexts/PropertiesContext';
+import { getUserStorageKey } from '../../shared/utils/userStorageKey';
 import iconImage from '../../../assets/domihive-lcon.png';
 import logoImage from '../../../assets/domihive-logo.png';
 
@@ -52,11 +54,102 @@ const Sidebar = ({ sidebarState, toggleSidebar, closeMobileSidebar, isMobile, cu
   const navItems = getDashboardNavItems();
   const isExpanded = sidebarState === 'expanded';
   const isCollapsed = sidebarState === 'collapsed';
+  const userKey = getUserStorageKey(user);
+  const managementUnlockKey = `domihive_management_unlocked_${userKey}`;
+  const managementUnlockSessionKey = `domihive_management_unlocked_session_${userKey}`;
+  const managementUnlockCookieKey = `domihive_management_unlocked_cookie_${userKey}`;
+
+  const readManagementUnlock = () => {
+    try {
+      if (localStorage.getItem(managementUnlockKey) === '1') return true;
+    } catch (_error) {
+      // ignore
+    }
+    try {
+      if (sessionStorage.getItem(managementUnlockSessionKey) === '1') return true;
+    } catch (_error) {
+      // ignore
+    }
+    try {
+      const cookieToken = `${managementUnlockCookieKey}=1`;
+      if (document.cookie.split(';').some((item) => item.trim() === cookieToken)) return true;
+    } catch (_error) {
+      // ignore
+    }
+    return false;
+  };
+
+  const writeManagementUnlock = () => {
+    let unlocked = false;
+    try {
+      localStorage.setItem(managementUnlockKey, '1');
+      unlocked = true;
+    } catch (_error) {
+      // ignore and try fallbacks
+    }
+    try {
+      sessionStorage.setItem(managementUnlockSessionKey, '1');
+      unlocked = true;
+    } catch (_error) {
+      // ignore
+    }
+    try {
+      document.cookie = `${managementUnlockCookieKey}=1; path=/; max-age=${60 * 60 * 24 * 30}; SameSite=Lax`;
+      unlocked = true;
+    } catch (_error) {
+      // ignore
+    }
+    return unlocked;
+  };
+
+  const [managementUnlocked, setManagementUnlocked] = useState(() => {
+    return readManagementUnlock();
+  });
   const hasApprovedRental = applications.some((application) => application.status === 'APPROVED');
   const hasManagedProperty = properties.some((property) =>
     ['PENDING_MOVE_IN', 'ACTIVE'].includes(property.tenancyStatus)
   );
-  const canAccessManagement = hasApprovedRental || hasManagedProperty;
+  const hasAdminTenantRecord = (() => {
+    try {
+      const adminData = readAdminStorage() || {};
+      const tenants = Array.isArray(adminData.tenants) ? adminData.tenants : [];
+      const normalizedPhone = String(user?.phone || '').trim();
+      const normalizedEmail = String(user?.email || '').trim().toLowerCase();
+      const normalizedName = String(user?.name || '').trim().toLowerCase();
+      if (!normalizedPhone && !normalizedEmail && !normalizedName) return false;
+      return tenants.some((tenant) => {
+        const tenantPhone = String(tenant?.phone || '').trim();
+        const tenantEmail = String(tenant?.email || '').trim().toLowerCase();
+        const tenantName = String(tenant?.name || '').trim().toLowerCase();
+        return (
+          (normalizedPhone && tenantPhone && tenantPhone === normalizedPhone) ||
+          (normalizedEmail && tenantEmail && tenantEmail === normalizedEmail) ||
+          (normalizedName && tenantName && tenantName === normalizedName)
+        );
+      });
+    } catch (_error) {
+      return false;
+    }
+  })();
+  const canAccessManagement =
+    managementUnlocked || hasApprovedRental || hasManagedProperty || hasAdminTenantRecord;
+
+  useEffect(() => {
+    setManagementUnlocked(readManagementUnlock());
+  }, [managementUnlockKey, managementUnlockSessionKey, managementUnlockCookieKey]);
+
+  useEffect(() => {
+    if (!hasApprovedRental && !hasManagedProperty && !hasAdminTenantRecord) return;
+    const persisted = writeManagementUnlock();
+    setManagementUnlocked(persisted || true);
+  }, [
+    hasApprovedRental,
+    hasManagedProperty,
+    hasAdminTenantRecord,
+    managementUnlockKey,
+    managementUnlockSessionKey,
+    managementUnlockCookieKey
+  ]);
 
   // Add CSS for scroll highlight effect - MOVE THIS HOOK BEFORE CONDITIONAL RETURN
   useEffect(() => {

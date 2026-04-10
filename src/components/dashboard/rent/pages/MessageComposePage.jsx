@@ -1,18 +1,25 @@
-import React, { useEffect, useMemo, useState } from 'react';
+﻿import React, { useEffect, useMemo, useState } from 'react';
 import { useNavigate, useSearchParams } from 'react-router-dom';
 import { ArrowLeft, MessageCircle, Plus, Send } from 'lucide-react';
 import { useMessages } from '../contexts/MessagesContext';
 import { useProperties } from '../contexts/PropertiesContext';
 import { formatDateDDMMYY } from '../../../shared/utils/dateFormat';
+import StatusBadge from '../components/common/StatusBadge';
 
-const statusBadgeClass = (status) =>
-  String(status || '').toUpperCase() === 'ENDED_CHAT'
-    ? 'bg-red-100 text-red-700 border border-red-300'
-    : String(status || '').toUpperCase() === 'PENDING_CHAT'
-      ? 'bg-amber-100 text-amber-700 border border-amber-300'
-      : String(status || '').toUpperCase() === 'RESOLVED'
-        ? 'bg-slate-100 text-slate-700 border border-slate-300'
-        : 'bg-emerald-100 text-emerald-700 border border-emerald-300';
+const getStatusLabel = (status) => {
+  const normalized = String(status || 'PENDING_CHAT').toUpperCase();
+  if (normalized === 'ENDED_CHAT') return 'Ended Chat';
+  if (normalized === 'PENDING_CHAT') return 'Pending Chat';
+  if (normalized === 'RESOLVED') return 'Resolved';
+  return 'Open';
+};
+
+const getStatusTone = (status) => {
+  const normalized = String(status || 'PENDING_CHAT').toUpperCase();
+  if (normalized === 'ENDED_CHAT') return 'danger';
+  if (normalized === 'PENDING_CHAT') return 'warning';
+  return 'success';
+};
 
 const ISSUE_OPTIONS = [
   'Payment issue',
@@ -26,7 +33,7 @@ const ISSUE_OPTIONS = [
 const MessageComposePage = () => {
   const navigate = useNavigate();
   const [params] = useSearchParams();
-  const { threads, addThread, addMessage, setStatus } = useMessages();
+  const { threads, addThread, addMessage } = useMessages();
   const { properties } = useProperties();
 
   const propertyIdFromQuery = params.get('propertyId') || '';
@@ -40,7 +47,6 @@ const MessageComposePage = () => {
   const [selectedIssue, setSelectedIssue] = useState('');
   const [otherIssueText, setOtherIssueText] = useState('');
   const [connecting, setConnecting] = useState(false);
-  const [draftAttachmentName, setDraftAttachmentName] = useState('');
   const [pendingNewThreadId, setPendingNewThreadId] = useState('');
 
   const teamLabel =
@@ -168,15 +174,11 @@ const MessageComposePage = () => {
           </div>
         </div>
 
-        <div
-          className="rounded-3xl border shadow-sm overflow-hidden"
-          style={{ backgroundColor: 'var(--card-bg,#fff)', borderColor: 'var(--border-color,#e2e8f0)' }}
-        >
-          <div className="grid lg:grid-cols-12 min-h-[640px]">
-            <aside
-              className="lg:col-span-4 border-r p-4 md:p-5 space-y-4"
-              style={{ borderColor: 'var(--border-color,#e2e8f0)' }}
-            >
+        <div className="grid lg:grid-cols-12 gap-4 lg:gap-5">
+          <aside
+            className="lg:col-span-4 rounded-3xl border shadow-sm p-4 md:p-5 h-[460px] lg:h-[500px] flex flex-col gap-4"
+            style={{ backgroundColor: 'var(--card-bg,#fff)', borderColor: 'var(--border-color,#e2e8f0)' }}
+          >
               <button
                 onClick={() => {
                   setStartNewChat(true);
@@ -210,7 +212,7 @@ const MessageComposePage = () => {
                 <option value="resolved">Resolved</option>
               </select>
 
-              <div className="space-y-2 max-h-[470px] overflow-auto pr-1">
+              <div className="space-y-2 flex-1 min-h-0 overflow-auto pr-1">
                 {filteredThreads.length === 0 ? (
                   <div className="rounded-lg border p-4 text-sm" style={{ borderColor: 'var(--border-color,#e2e8f0)' }}>
                     <p className="font-semibold text-[var(--text-color,#0e1f42)]">No threads found.</p>
@@ -229,9 +231,12 @@ const MessageComposePage = () => {
                     >
                       <div className="flex items-start justify-between gap-2">
                         <p className="font-semibold text-sm text-[var(--text-color,#0e1f42)] line-clamp-1">{thread.subject}</p>
-                        <span className={`px-2 py-0.5 rounded-full text-[10px] font-semibold ${statusBadgeClass(thread.status)}`}>
-                          {thread.status || 'OPEN'}
-                        </span>
+                        <StatusBadge
+                          status={thread.status}
+                          label={getStatusLabel(thread.status)}
+                          tone={getStatusTone(thread.status)}
+                          className="text-[10px] px-2 py-0.5"
+                        />
                       </div>
                       <p className="text-xs text-[var(--text-muted,#6c757d)] line-clamp-1 mt-1">{thread.lastMessage || 'No message yet'}</p>
                       <p className="text-[11px] text-[var(--text-muted,#6c757d)] mt-1">
@@ -241,9 +246,12 @@ const MessageComposePage = () => {
                   ))
                 )}
               </div>
-            </aside>
+          </aside>
 
-            <section className="lg:col-span-8 flex flex-col min-h-[640px]">
+          <section
+            className="lg:col-span-8 rounded-3xl border shadow-sm overflow-hidden flex flex-col min-h-[640px]"
+            style={{ backgroundColor: 'var(--card-bg,#fff)', borderColor: 'var(--border-color,#e2e8f0)' }}
+          >
               {!selectedThread && !startNewChat ? (
                 <div className="flex-1 flex items-center justify-center p-6">
                   <div className="text-center space-y-2">
@@ -267,25 +275,12 @@ const MessageComposePage = () => {
                       </p>
                     </div>
                     <div className="flex items-center gap-2">
-                      <span className={`px-2 py-1 rounded-full text-xs font-semibold ${statusBadgeClass(selectedThread?.status)}`}>
-                        {selectedThread?.status || 'PENDING_CHAT'}
-                      </span>
-                      <select
-                        value={selectedThread?.status || 'PENDING_CHAT'}
-                        onChange={(e) => selectedThread && setStatus(selectedThread.threadId, e.target.value)}
-                        disabled={!selectedThread}
-                        className="h-8 px-2 rounded-md border text-xs"
-                        style={{
-                          borderColor: 'var(--border-color,#e2e8f0)',
-                          color: 'var(--text-color,#0e1f42)',
-                          backgroundColor: 'transparent'
-                        }}
-                      >
-                        <option value="PENDING_CHAT">Pending Chat</option>
-                        <option value="OPEN">Open</option>
-                        <option value="ENDED_CHAT">Ended Chat</option>
-                        <option value="RESOLVED">Resolved</option>
-                      </select>
+                      <StatusBadge
+                        status={selectedThread?.status || 'PENDING_CHAT'}
+                        label={getStatusLabel(selectedThread?.status || 'PENDING_CHAT')}
+                        tone={getStatusTone(selectedThread?.status || 'PENDING_CHAT')}
+                        className="text-xs px-3 py-1"
+                      />
                     </div>
                   </div>
 
@@ -410,8 +405,7 @@ const MessageComposePage = () => {
                   </div>
                 </>
               )}
-            </section>
-          </div>
+          </section>
         </div>
       </div>
     </div>
@@ -419,3 +413,4 @@ const MessageComposePage = () => {
 };
 
 export default MessageComposePage;
+

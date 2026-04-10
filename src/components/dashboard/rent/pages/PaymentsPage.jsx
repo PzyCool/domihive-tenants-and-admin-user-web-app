@@ -1,20 +1,11 @@
-import React, { useMemo, useState } from 'react';
+﻿import React, { useMemo, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { CreditCard, ReceiptText, Search, Wallet } from 'lucide-react';
 import UnifiedPanelPage, { UnifiedPanelSection } from '../../../shared/layout/UnifiedPanelPage';
 import { usePayments } from '../contexts/PaymentsContext';
 import { useProperties } from '../contexts/PropertiesContext';
 import TenantUnitCard from '../components/common/TenantUnitCard';
-
-const tenancyBadge = (status) => {
-  if (status === 'ACTIVE') {
-    return 'bg-emerald-100 text-emerald-800 border border-emerald-200 property-status property-status--active';
-  }
-  if (status === 'PENDING_MOVE_IN') {
-    return 'bg-red-100 text-red-700 border border-red-200 property-status property-status--pending-move-in';
-  }
-  return 'bg-gray-100 text-gray-700 border border-gray-200 property-status';
-};
+import StatusBadge from '../components/common/StatusBadge';
 
 const PaymentsPage = () => {
   const navigate = useNavigate();
@@ -22,14 +13,13 @@ const PaymentsPage = () => {
   const { properties } = useProperties();
 
   const [propertySearch, setPropertySearch] = useState('');
-  const [tenancyFilter, setTenancyFilter] = useState('active');
+  const [tenancyFilter, setTenancyFilter] = useState('all');
 
   const filteredProperties = useMemo(() => {
     let list = [...properties];
     if (tenancyFilter === 'active') list = list.filter((p) => p.tenancyStatus === 'ACTIVE');
     if (tenancyFilter === 'pending') list = list.filter((p) => p.tenancyStatus === 'PENDING_MOVE_IN');
     if (tenancyFilter === 'ended') list = list.filter((p) => p.tenancyStatus === 'ENDED');
-    if (tenancyFilter === 'all') list = list;
 
     if (propertySearch.trim()) {
       const q = propertySearch.toLowerCase();
@@ -108,10 +98,10 @@ const PaymentsPage = () => {
                 backgroundColor: 'transparent'
               }}
             >
+              <option value="all">All Status</option>
               <option value="active">Active</option>
               <option value="pending">Pending Move-in</option>
               <option value="ended">Ended</option>
-              <option value="all">All Status</option>
             </select>
             <div className="h-11 inline-flex items-center text-sm text-[var(--text-muted,#64748b)]">
               Showing <span className="ml-1 font-semibold text-[var(--text-color,#0e1f42)]">{filteredProperties.length}</span>
@@ -142,13 +132,16 @@ const PaymentsPage = () => {
                   size={property.size}
                   description={property.description}
                   badge={
-                    <span className={`px-4 py-1 rounded-full text-sm font-semibold whitespace-nowrap ${tenancyBadge(property.tenancyStatus)}`}>
-                      {property.tenancyStatus === 'ACTIVE'
-                        ? 'Active'
-                        : property.tenancyStatus === 'PENDING_MOVE_IN'
-                          ? 'Pending Move-in'
-                          : 'Ended'}
-                    </span>
+                    <StatusBadge
+                      status={property.tenancyStatus}
+                      label={
+                        property.tenancyStatus === 'ACTIVE'
+                          ? 'Active'
+                          : property.tenancyStatus === 'PENDING_MOVE_IN'
+                            ? 'Pending Move-in'
+                            : 'Ended'
+                      }
+                    />
                   }
                   actions={
                     <button

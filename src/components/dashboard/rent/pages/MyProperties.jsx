@@ -8,7 +8,7 @@ import { Building2, Clock3, Wallet } from 'lucide-react';
 const MyProperties = () => {
   const navigate = useNavigate();
   const { properties } = useProperties();
-  const [statusFilter, setStatusFilter] = React.useState('active');
+  const [statusFilter, setStatusFilter] = React.useState('all');
   const [leaseFilter, setLeaseFilter] = React.useState('all');
   const [search, setSearch] = React.useState('');
 
@@ -115,6 +115,7 @@ const MyProperties = () => {
               onChange={(e) => setStatusFilter(e.target.value)}
               className="h-11 px-3 rounded-md border border-[var(--border-color,#e2e8f0)] bg-transparent text-sm text-[var(--text-color,#0e1f42)] min-w-[155px]"
             >
+              <option value="all">All Status</option>
               <option value="active">Currently Active</option>
               <option value="pending">Pending Move-in</option>
               <option value="ended">Ended</option>

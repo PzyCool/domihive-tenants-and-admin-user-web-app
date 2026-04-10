@@ -25,6 +25,19 @@ export const PropertiesProvider = ({ children }) => {
   const [properties, setProperties] = useState(EMPTY_PROPERTIES);
   const [favorites, setFavorites] = useState([]);
 
+  const sanitizePropertiesForStorage = (list) => {
+    if (!Array.isArray(list)) return [];
+    return list.map((property) => {
+      if (!property || typeof property !== 'object') return property;
+      const next = { ...property };
+      const image = String(next.image || '');
+      if (image.startsWith('blob:') || image.startsWith('data:')) {
+        next.image = '';
+      }
+      return next;
+    });
+  };
+
   useEffect(() => {
     try {
       const raw = localStorage.getItem(propertiesStorageKey);
@@ -55,7 +68,12 @@ export const PropertiesProvider = ({ children }) => {
     try {
       localStorage.setItem(propertiesStorageKey, JSON.stringify(properties));
     } catch (err) {
-      console.error('Error saving properties', err);
+      try {
+        const fallback = sanitizePropertiesForStorage(properties);
+        localStorage.setItem(propertiesStorageKey, JSON.stringify(fallback));
+      } catch (retryErr) {
+        console.error('Error saving properties', retryErr);
+      }
     }
   }, [properties, propertiesStorageKey]);
 
@@ -164,6 +182,161 @@ export const PropertiesProvider = ({ children }) => {
       return changed ? next : prev;
     });
   }, [applications]);
+
+  useEffect(() => {
+    if (!user) return;
+    if (properties.length > 0) return;
+
+    try {
+      const adminData = readAdminStorage() || {};
+      const tenants = Array.isArray(adminData.tenants) ? adminData.tenants : [];
+      const adminProperties = Array.isArray(adminData.properties) ? adminData.properties : [];
+
+      const normalizedPhone = String(user?.phone || '').trim();
+      const normalizedPhoneDigits = normalizedPhone.replace(/\D+/g, '');
+      const normalizedEmail = String(user?.email || '').trim().toLowerCase();
+      const normalizedName = String(user?.name || '').trim().toLowerCase();
+      const localApplicationIds = new Set(
+        (applications || []).map((app) => String(app?.id || '')).filter(Boolean)
+      );
+      const localPropertyIds = new Set(
+        (applications || [])
+          .map((app) => String(app?.property?.id || app?.propertyId || ''))
+          .filter(Boolean)
+      );
+
+      const matchedTenants = tenants.filter((tenant) => {
+        const tenantPhone = String(tenant?.phone || '').trim();
+        const tenantPhoneDigits = tenantPhone.replace(/\D+/g, '');
+        const tenantEmail = String(tenant?.email || '').trim().toLowerCase();
+        const tenantName = String(tenant?.name || '').trim().toLowerCase();
+        const tenantApplicationId = String(tenant?.applicationId || '');
+        const tenantPropertyId = String(tenant?.propertyId || '');
+        return (
+          (tenantApplicationId && localApplicationIds.has(tenantApplicationId)) ||
+          (tenantPropertyId && localPropertyIds.has(tenantPropertyId)) ||
+          (normalizedPhone && tenantPhone && tenantPhone === normalizedPhone) ||
+          (normalizedPhoneDigits &&
+            tenantPhoneDigits &&
+            (tenantPhoneDigits === normalizedPhoneDigits ||
+              tenantPhoneDigits.endsWith(normalizedPhoneDigits) ||
+              normalizedPhoneDigits.endsWith(tenantPhoneDigits))) ||
+          (normalizedEmail && tenantEmail && tenantEmail === normalizedEmail) ||
+          (normalizedName && tenantName && tenantName === normalizedName)
+        );
+      });
+
+      if (!matchedTenants.length) return;
+
+      const hydrated = matchedTenants.map((tenant, index) => {
+        const propertyId = String(tenant?.propertyId || `tenant_property_${tenant?.id || index}`);
+        const adminProperty = adminProperties.find((item) => String(item?.id || '') === propertyId);
+        const units = Array.isArray(adminProperty?.units) ? adminProperty.units : [];
+        const tenantUnitCode = String(tenant?.unitCode || tenant?.unitNumber || '').trim();
+        const matchedUnit = units.find((unit) => {
+          const unitCode = String(unit?.unitNumber || unit?.number || '').trim();
+          return tenantUnitCode && unitCode && unitCode === tenantUnitCode;
+        });
+
+        const rentAmount = Number(
+          tenant?.rentAmount ??
+            matchedUnit?.price ??
+            adminProperty?.price ??
+            0
+        );
+        const cautionAmount = Number(
+          tenant?.cautionFee ??
+            tenant?.cautionDeposit ??
+            matchedUnit?.cautionFee ??
+            adminProperty?.cautionFee ??
+            0
+        );
+
+        const start = String(tenant?.leaseStart || '').trim() || new Date().toISOString().slice(0, 10);
+        const end = String(tenant?.leaseEnd || '').trim() || (() => {
+          const oneYear = new Date(start);
+          if (Number.isNaN(oneYear.getTime())) return '';
+          oneYear.setFullYear(oneYear.getFullYear() + 1);
+          return oneYear.toISOString().slice(0, 10);
+        })();
+
+        const dueDate = (() => {
+          const provided = String(tenant?.nextDueDate || tenant?.dueDate || '').trim();
+          if (provided) return provided;
+          const ref = new Date(end || start);
+          if (Number.isNaN(ref.getTime())) return '';
+          ref.setMonth(ref.getMonth() - 1);
+          return ref.toISOString().slice(0, 10);
+        })();
+
+        const rawStatus = String(tenant?.status || '').toLowerCase();
+        const tenancyStatus = rawStatus.includes('pending')
+          ? 'PENDING_MOVE_IN'
+          : rawStatus.includes('end')
+            ? 'ENDED'
+            : 'ACTIVE';
+
+        return {
+          propertyId,
+          sourceApplicationId: String(tenant?.applicationId || ''),
+          name: adminProperty?.title || tenant?.propertyTitle || 'Property',
+          location:
+            adminProperty?.location ||
+            tenant?.propertyLocation ||
+            'Lagos, Nigeria',
+          unitType: matchedUnit?.unitType || matchedUnit?.type || adminProperty?.type || 'Unit',
+          bedrooms: Number(matchedUnit?.bedrooms ?? adminProperty?.bedrooms ?? 0),
+          bathrooms: Number(matchedUnit?.bathrooms ?? adminProperty?.bathrooms ?? 0),
+          size: matchedUnit?.size ?? adminProperty?.size ?? '',
+          description:
+            matchedUnit?.description ||
+            adminProperty?.description ||
+            '',
+          tenancyStatus,
+          leaseStart: start,
+          leaseEnd: end,
+          rentAmount,
+          paymentPlan: 'Yearly',
+          cautionDepositStatus: cautionAmount > 0 ? 'Paid' : 'Pending',
+          includedBillsSummary: 'Service charge included, utilities excluded',
+          houseRules: ['No smoking indoors', 'Pets on request', 'Respect quiet hours 10pm-6am'],
+          inventoryChecklist: [],
+          payments: [],
+          nextPayment: {
+            dueDate,
+            amount: rentAmount,
+            status: 'Upcoming'
+          },
+          moveInChecklist: {
+            keysReceived: tenancyStatus === 'ACTIVE',
+            meterReading: '',
+            inventoryConfirmed: tenancyStatus === 'ACTIVE',
+            moveInDateConfirmed: tenancyStatus === 'ACTIVE',
+            keyNumber: String(tenant?.keyNumber || ''),
+            moveInDate: String(tenant?.moveInDate || '')
+          },
+          moveOutNotice: null,
+          moveOutInspection: null,
+          refundStatus: null,
+          image:
+            matchedUnit?.unitSlides?.[0] ||
+            matchedUnit?.image ||
+            adminProperty?.slides?.[0] ||
+            adminProperty?.coverImage ||
+            adminProperty?.image ||
+            '',
+          unitCode: tenantUnitCode || String(matchedUnit?.unitNumber || matchedUnit?.number || ''),
+          isPrimaryJourneyProperty: index === 0
+        };
+      });
+
+      if (hydrated.length) {
+        setProperties(hydrated);
+      }
+    } catch (_error) {
+      // keep UI resilient when shared admin data is not available
+    }
+  }, [user, properties.length, applications]);
 
   const updateProperty = (propertyId, changes) => {
     setProperties((prev) =>
