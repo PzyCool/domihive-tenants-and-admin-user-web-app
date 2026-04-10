@@ -183,6 +183,12 @@ body.dashboard-themed[data-theme="true-black"] .text-gray-800 {
   color: var(--text-muted) !important;
 }
 
+body.dashboard-themed[data-theme="dark-gray"] .text-gray-900,
+body.dashboard-themed[data-theme="gold-dark"] .text-gray-900,
+body.dashboard-themed[data-theme="true-black"] .text-gray-900 {
+  color: var(--text-color, #f8fafc) !important;
+}
+
 /* Property cards: improve contrast for Blue Dark / dark themes */
 body.dashboard-themed[data-theme="dark-gray"] .property-price-main,
 body.dashboard-themed[data-theme="gold-dark"] .property-price-main,
@@ -2566,7 +2572,8 @@ body.dashboard-themed[data-theme="true-black"] .bg-white.shadow-md {
 
 /* Apply theme across dashboard chrome */
 body.dashboard-themed[data-theme="dark-gray"] .dashboard-header,
-body.dashboard-themed[data-theme="true-black"] .dashboard-header {
+body.dashboard-themed[data-theme="true-black"] .dashboard-header,
+body.dashboard-themed[data-theme="gold-dark"] .dashboard-header {
   background: var(--card-bg) !important;
   color: var(--text-color) !important;
   border-color: rgba(255, 255, 255, 0.08) !important;
@@ -2575,9 +2582,26 @@ body.dashboard-themed[data-theme="true-black"] .dashboard-header {
 /* Header user text in dark themes */
 body.dashboard-themed[data-theme="dark-gray"] .dashboard-header .user-name-sm,
 body.dashboard-themed[data-theme="true-black"] .dashboard-header .user-name-sm,
+body.dashboard-themed[data-theme="gold-dark"] .dashboard-header .user-name-sm,
 body.dashboard-themed[data-theme="dark-gray"] .dashboard-header .user-role,
-body.dashboard-themed[data-theme="true-black"] .dashboard-header .user-role {
+body.dashboard-themed[data-theme="true-black"] .dashboard-header .user-role,
+body.dashboard-themed[data-theme="gold-dark"] .dashboard-header .user-role {
   color: #ffffff !important;
+}
+
+body.dashboard-themed[data-theme="dark-gray"] .dashboard-header .breadcrumb,
+body.dashboard-themed[data-theme="true-black"] .dashboard-header .breadcrumb,
+body.dashboard-themed[data-theme="gold-dark"] .dashboard-header .breadcrumb {
+  color: var(--text-muted, #cbd5e1) !important;
+}
+
+body.dashboard-themed[data-theme="dark-gray"] .dashboard-header .breadcrumb span,
+body.dashboard-themed[data-theme="true-black"] .dashboard-header .breadcrumb span,
+body.dashboard-themed[data-theme="gold-dark"] .dashboard-header .breadcrumb span,
+body.dashboard-themed[data-theme="dark-gray"] .dashboard-header .dashboard-switcher-btn span,
+body.dashboard-themed[data-theme="true-black"] .dashboard-header .dashboard-switcher-btn span,
+body.dashboard-themed[data-theme="gold-dark"] .dashboard-header .dashboard-switcher-btn span {
+  color: var(--text-color, #f8fafc) !important;
 }
 
 body.dashboard-themed[data-theme="dark-gray"]

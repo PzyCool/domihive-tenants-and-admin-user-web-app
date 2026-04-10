@@ -13,8 +13,6 @@ const ACTIVE_APPLICATION_STATUSES = [
   'UNDER_REVIEW'
 ];
 
-const ARCHIVED_APPLICATION_STATUSES = ['APPROVED', 'REJECTED', 'CANCELLED'];
-
 const RentApplications = () => {
   const navigate = useNavigate();
   const { applications, updateApplication, addNotification } = useApplications();
@@ -60,7 +58,7 @@ const RentApplications = () => {
       actionMeta?.type === 'inspection_completed_missed_cancel'
     ) {
       updateApplication(application.id, { status: 'CANCELLED', updatedAt: 'Just now' });
-      setStatusFilter('active');
+      setStatusFilter('cancelled');
       addNotification({
         type: 'application',
         title: 'Request Closed',
@@ -103,8 +101,8 @@ const RentApplications = () => {
       list = list.filter((app) => app.status === 'APPROVED');
     } else if (statusFilter === 'rejected') {
       list = list.filter((app) => app.status === 'REJECTED');
-    } else if (statusFilter === 'archived') {
-      list = list.filter((app) => ARCHIVED_APPLICATION_STATUSES.includes(app.status));
+    } else if (statusFilter === 'cancelled') {
+      list = list.filter((app) => app.status === 'CANCELLED');
     } else {
       list = list.filter((app) => app.status === statusFilter);
     }
@@ -177,7 +175,7 @@ const RentApplications = () => {
               <option value="active">Active</option>
               <option value="approved">Approved</option>
               <option value="rejected">Rejected</option>
-              <option value="archived">Cancelled (Archived)</option>
+              <option value="cancelled">Cancelled</option>
             </select>
             <select
               value={sortBy}

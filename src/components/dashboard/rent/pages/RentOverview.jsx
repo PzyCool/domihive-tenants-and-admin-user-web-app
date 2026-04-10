@@ -122,9 +122,9 @@ const RentOverview = () => {
         <div className="grid grid-cols-2 md:grid-cols-4 gap-2 md:gap-4">
           <div className="bg-white dark:bg-[#111827] rounded-lg p-4 shadow border border-gray-100 dark:border-white/10 flex items-center justify-between">
             <div>
-              <div className="text-xs md:text-sm text-gray-500 dark:text-gray-400">Active Applications</div>
-              <div className="text-2xl font-bold text-[#0e1f42] dark:text-white">{stats.activeApplications}</div>
-              <div className="text-xs text-gray-600 dark:text-gray-400">In progress</div>
+              <div className="text-xs md:text-sm text-[var(--text-muted,#64748b)]">Active Applications</div>
+              <div className="text-2xl font-bold text-[var(--text-color,#0e1f42)]">{stats.activeApplications}</div>
+              <div className="text-xs text-[var(--text-muted,#64748b)]">In progress</div>
             </div>
             <div className="bg-amber-100 text-amber-700 dark:bg-amber-500/10 dark:text-amber-400 rounded-lg p-2">
               <FileText />
@@ -133,9 +133,9 @@ const RentOverview = () => {
 
           <div className="bg-white dark:bg-[#111827] rounded-lg p-4 shadow border border-gray-100 dark:border-white/10 flex items-center justify-between">
             <div>
-              <div className="text-xs md:text-sm text-gray-500 dark:text-gray-400">Upcoming Inspections</div>
-              <div className="text-2xl font-bold text-[#0e1f42] dark:text-white">{stats.upcomingInspections}</div>
-              <div className="text-xs text-gray-600 dark:text-gray-400">Scheduled</div>
+              <div className="text-xs md:text-sm text-[var(--text-muted,#64748b)]">Upcoming Inspections</div>
+              <div className="text-2xl font-bold text-[var(--text-color,#0e1f42)]">{stats.upcomingInspections}</div>
+              <div className="text-xs text-[var(--text-muted,#64748b)]">Scheduled</div>
             </div>
             <div className="bg-blue-100 text-blue-700 dark:bg-blue-500/10 dark:text-blue-400 rounded-lg p-2">
               <Calendar />
@@ -144,9 +144,9 @@ const RentOverview = () => {
 
           <div className="bg-white dark:bg-[#111827] rounded-lg p-4 shadow border border-gray-100 dark:border-white/10 flex items-center justify-between">
             <div>
-              <div className="text-xs md:text-sm text-gray-500 dark:text-gray-400">Active Properties</div>
-              <div className="text-2xl font-bold text-[#0e1f42] dark:text-white">{stats.activeProperties}</div>
-              <div className="text-xs text-gray-600 dark:text-gray-400">Managed</div>
+              <div className="text-xs md:text-sm text-[var(--text-muted,#64748b)]">Active Properties</div>
+              <div className="text-2xl font-bold text-[var(--text-color,#0e1f42)]">{stats.activeProperties}</div>
+              <div className="text-xs text-[var(--text-muted,#64748b)]">Managed</div>
             </div>
             <div className="bg-green-100 text-green-700 dark:bg-green-500/10 dark:text-green-400 rounded-lg p-2">
               <Home />
@@ -155,9 +155,9 @@ const RentOverview = () => {
 
           <div className="bg-white dark:bg-[#111827] rounded-lg p-4 shadow border border-gray-100 dark:border-white/10 flex items-center justify-between">
             <div>
-              <div className="text-xs md:text-sm text-gray-500 dark:text-gray-400">Unread Messages</div>
-              <div className="text-2xl font-bold text-[#0e1f42] dark:text-white">{stats.unreadMessages}</div>
-              <div className="text-xs text-gray-600 dark:text-gray-400">Needs response</div>
+              <div className="text-xs md:text-sm text-[var(--text-muted,#64748b)]">Unread Messages</div>
+              <div className="text-2xl font-bold text-[var(--text-color,#0e1f42)]">{stats.unreadMessages}</div>
+              <div className="text-xs text-[var(--text-muted,#64748b)]">Needs response</div>
             </div>
             <div className="bg-purple-100 text-purple-700 dark:bg-purple-500/10 dark:text-purple-400 rounded-lg p-2">
               <MessageCircle />
@@ -282,4 +282,3 @@ const RentOverview = () => {
 };
 
 export default RentOverview;
-

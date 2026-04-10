@@ -128,6 +128,7 @@ const MessagesPage = () => {
           ) : (
             visibleProperties.map((property) => {
               const price = Number(property.rentAmount || property.price || property.nextPayment?.amount || 0);
+              const isMoveInPending = property.tenancyStatus === 'PENDING_MOVE_IN';
               return (
                 <TenantUnitCard
                   key={property.propertyId}
@@ -153,10 +154,14 @@ const MessagesPage = () => {
                     <div className="flex gap-2 flex-wrap justify-end">
                       <button
                         onClick={() => navigate(`/dashboard/rent/messages/new?propertyId=${property.propertyId}&team=customer-service`)}
-                        className="rounded-full bg-[#102a62] px-4 py-2 text-sm font-semibold text-white transition-colors hover:bg-[#17377a]"
+                        disabled={isMoveInPending}
+                        className="rounded-full bg-[#102a62] px-4 py-2 text-sm font-semibold text-white transition-colors hover:bg-[#17377a] disabled:opacity-50 disabled:cursor-not-allowed disabled:hover:bg-[#102a62]"
                       >
                         Chat with Customer Service
                       </button>
+                      {isMoveInPending ? (
+                        <p className="w-full text-right text-xs text-[var(--text-muted,#64748b)]">Complete move-in checklist first</p>
+                      ) : null}
                     </div>
                   )}
                 />

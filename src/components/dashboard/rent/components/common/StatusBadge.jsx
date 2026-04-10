@@ -31,6 +31,20 @@ const GREEN_TOKENS = [
 ];
 
 const normalizeStatus = (status) => String(status || '').toUpperCase();
+const isPendingMoveInStatus = (status) => {
+  const normalized = normalizeStatus(status);
+  return (
+    normalized.includes('PENDING_MOVE_IN') ||
+    normalized.includes('MOVE_IN_PENDING') ||
+    normalized.includes('PENDING MOVE IN') ||
+    normalized.includes('PENDING MOVE-IN')
+  );
+};
+
+const isActiveStatus = (status) => {
+  const normalized = normalizeStatus(status);
+  return normalized === 'ACTIVE' || normalized.includes(' ACTIVE');
+};
 
 const resolveTone = (status, tone) => {
   if (tone) return tone;
@@ -52,6 +66,28 @@ const formatLabel = (label, status) => {
 };
 
 const StatusBadge = ({ status, label, tone, className = '' }) => {
+  if (isPendingMoveInStatus(status)) {
+    return (
+      <span
+        className={`bg-red-100 text-red-700 border border-red-200 property-status property-status--pending-move-in inline-flex items-center justify-center rounded-full whitespace-nowrap font-semibold px-4 py-1 text-sm ${className}`.trim()}
+        title={formatLabel(label, status)}
+      >
+        {formatLabel(label, status)}
+      </span>
+    );
+  }
+
+  if (isActiveStatus(status)) {
+    return (
+      <span
+        className={`bg-emerald-100 text-emerald-800 border border-emerald-200 property-status property-status--active inline-flex items-center justify-center rounded-full whitespace-nowrap font-semibold px-4 py-1 text-sm ${className}`.trim()}
+        title={formatLabel(label, status)}
+      >
+        {formatLabel(label, status)}
+      </span>
+    );
+  }
+
   const resolvedTone = resolveTone(status, tone);
   const toneClass =
     resolvedTone === 'success'
