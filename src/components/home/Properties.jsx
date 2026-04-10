@@ -9,6 +9,7 @@ import PropertyDetailsPage from "./properties/components/PropertyDetailsPage/Pro
 import { fetchBrowseSnapshot } from "../dashboard/rent/services/mockBrowseService";
 import { buildListingFilterMeta } from "../shared/services/adminListings";
 import { showNotification } from '../auth/utils/notifications';
+import { pushRecentProperty } from '../shared/utils/recentProperties';
 
 const Properties = () => {
   const navigate = useNavigate();
@@ -219,6 +220,9 @@ const Properties = () => {
       allProperties.find(
         (property) => String(property.id || property.propertyId) === String(propertyId)
       ) || null;
+    if (matchedProperty) {
+      pushRecentProperty(matchedProperty);
+    }
     setSelectedPropertyData(matchedProperty);
     setSelectedPropertyId(propertyId || matchedProperty?.id || matchedProperty?.propertyId || null);
     setShowPropertyDetails(true);
@@ -230,6 +234,13 @@ const Properties = () => {
   };
   
   const handleBookNowClick = (propertyId) => {
+    const matchedProperty =
+      allProperties.find(
+        (property) => String(property.id || property.propertyId) === String(propertyId)
+      ) || null;
+    if (matchedProperty) {
+      pushRecentProperty(matchedProperty);
+    }
     showNotification('Please sign up first to book.', 'warning');
     navigate('/signup');
   };

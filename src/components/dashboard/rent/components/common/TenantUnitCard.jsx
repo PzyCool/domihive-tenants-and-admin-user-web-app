@@ -21,6 +21,7 @@ export const formatUnitSize = (size) => {
 const TenantUnitCard = ({
   className = '',
   contentClassName = '',
+  viewType = 'list',
   image,
   imageAlt = 'Unit',
   price,
@@ -39,13 +40,19 @@ const TenantUnitCard = ({
   overlay = null,
   footerPanel = null
 }) => {
+  const isGrid = viewType === 'grid';
+
   return (
     <div
       className={`relative rounded-xl border p-3 md:p-4 ${className}`.trim()}
       style={{ borderColor: 'var(--border-color,#e2e8f0)', backgroundColor: 'var(--card-bg,#fff)' }}
     >
-      <div className={`flex flex-col lg:flex-row gap-4 ${contentClassName}`.trim()}>
-        <div className="relative w-24 h-24 md:w-28 md:h-28 rounded-lg overflow-hidden border border-[var(--border-color,#e2e8f0)] bg-[var(--surface-2,#f1f5f9)]">
+      <div className={`${isGrid ? 'flex flex-col gap-3' : 'flex flex-col lg:flex-row gap-4'} ${contentClassName}`.trim()}>
+        <div
+          className={`relative rounded-lg overflow-hidden border border-[var(--border-color,#e2e8f0)] bg-[var(--surface-2,#f1f5f9)] ${
+            isGrid ? 'w-full h-40' : 'w-24 h-24 md:w-28 md:h-28'
+          }`}
+        >
           <img
             src={image || 'https://via.placeholder.com/240x180?text=DomiHive'}
             alt={imageAlt}
@@ -54,12 +61,12 @@ const TenantUnitCard = ({
         </div>
 
         <div className="flex-1 min-w-0">
-          <div className="flex items-start justify-between gap-3">
+          <div className="flex items-start justify-between gap-2">
             <div className="min-w-0">
               <div className="text-xl font-bold text-[var(--accent-color,#9F7539)]">{formatUnitPrice(price)}</div>
               <div className="text-xs text-[var(--text-muted,#64748b)]">{formatUnitPriceWords(price)}</div>
               {topMeta ? <div className="text-sm text-[var(--text-muted,#64748b)] mt-0.5">{topMeta}</div> : null}
-              <h3 className="mt-1 text-2xl font-semibold leading-tight text-[var(--text-color,#0e1f42)]">
+              <h3 className={`${isGrid ? 'mt-1 text-xl' : 'mt-1 text-2xl'} font-semibold leading-tight text-[var(--text-color,#0e1f42)]`}>
                 {title || 'Property'}
               </h3>
               {location ? (
@@ -72,7 +79,7 @@ const TenantUnitCard = ({
             {badge}
           </div>
 
-          <div className="mt-2 flex flex-wrap items-center gap-4 text-sm text-[var(--text-color,#0e1f42)]">
+          <div className={`mt-2 flex flex-wrap items-center ${isGrid ? 'gap-3' : 'gap-4'} text-sm text-[var(--text-color,#0e1f42)]`}>
             <span className="inline-flex items-center gap-2">
               <i className="fas fa-bed text-[var(--accent-color,#9F7539)]"></i>
               {Number(bedrooms || 0)} bed
@@ -100,7 +107,7 @@ const TenantUnitCard = ({
 
           {afterDescription ? <div className="mt-1">{afterDescription}</div> : null}
           {detailsRow ? <div className="mt-1">{detailsRow}</div> : null}
-          {actions ? <div className="mt-3 flex justify-end">{actions}</div> : null}
+          {actions ? <div className={`mt-3 flex ${isGrid ? 'justify-start' : 'justify-end'}`}>{actions}</div> : null}
         </div>
       </div>
 

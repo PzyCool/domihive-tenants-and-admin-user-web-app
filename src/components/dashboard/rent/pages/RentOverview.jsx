@@ -1,36 +1,14 @@
-import React, { useMemo } from 'react';
+import React, { useEffect, useMemo, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { Calendar, Eye, FileText, Home, MessageCircle, Search, Wrench } from 'lucide-react';
+import { Bath, BedDouble, Calendar, Eye, FileText, Home, MessageCircle, Ruler, Search, Wrench } from 'lucide-react';
 import { useApplications } from '../contexts/ApplicationsContext';
 import { useProperties } from '../contexts/PropertiesContext';
 import { useMessages } from '../contexts/MessagesContext';
 import { useMaintenance } from '../contexts/MaintenanceContext';
 import { formatDateTimeDDMMYY } from '../../../shared/utils/dateFormat';
-
-const readRecentlyViewed = () => {
-  const normalize = (raw) => ({
-    id: raw?.id || raw?.propertyId || '',
-    title: raw?.title || raw?.name || 'Property',
-    location: raw?.location || raw?.address || 'Location',
-    image: raw?.image || raw?.images?.[0] || 'https://via.placeholder.com/420x240?text=DomiHive',
-    viewedAt: raw?.viewedAt || raw?.updatedAt || new Date().toISOString()
-  });
-
-  try {
-    const pending = localStorage.getItem('domihive_pending_booking');
-    if (pending) return [normalize(JSON.parse(pending))];
-
-    const bookingProperty = localStorage.getItem('domihive_booking_property');
-    if (bookingProperty) return [normalize(JSON.parse(bookingProperty))];
-
-    const raw = localStorage.getItem('domihive_recent_properties');
-    const parsed = raw ? JSON.parse(raw) : [];
-    if (!Array.isArray(parsed)) return [];
-    return parsed.slice(0, 4).map(normalize);
-  } catch (_error) {
-    return [];
-  }
-};
+import { getOverviewRecentProperties, RECENT_PROPERTIES_EVENT } from '../../../shared/utils/recentProperties';
+import { formatNairaYear } from '../../../shared/utils/moneyFormat';
+const RECENT_FALLBACK_IMAGE = 'https://images.unsplash.com/photo-1560448204-603b3fc33ddc?w=1400&h=900&fit=crop';
 
 const statusStyles = {
   approved: 'bg-green-100 text-green-700 dark:bg-green-500/10 dark:text-green-400',
@@ -107,7 +85,23 @@ const RentOverview = () => {
       .slice(0, 8);
   }, [applications, tickets, threads, notifications]);
 
-  const recentlyViewed = useMemo(() => readRecentlyViewed(), []);
+  const [recentlyViewed, setRecentlyViewed] = useState(() => getOverviewRecentProperties());
+
+  useEffect(() => {
+    const syncRecentlyViewed = () => {
+      setRecentlyViewed(getOverviewRecentProperties());
+    };
+
+    window.addEventListener('storage', syncRecentlyViewed);
+    window.addEventListener(RECENT_PROPERTIES_EVENT, syncRecentlyViewed);
+    window.addEventListener('focus', syncRecentlyViewed);
+
+    return () => {
+      window.removeEventListener('storage', syncRecentlyViewed);
+      window.removeEventListener(RECENT_PROPERTIES_EVENT, syncRecentlyViewed);
+      window.removeEventListener('focus', syncRecentlyViewed);
+    };
+  }, []);
 
   return (
     <div className="rent-overview-container bg-gradient-to-br from-gray-50 to-gray-100 min-h-screen p-4 md:p-6">
@@ -255,17 +249,58 @@ const RentOverview = () => {
               {recentlyViewed.map((item) => (
                 <button
                   key={item.id || `${item.title}-${item.viewedAt}`}
-                  onClick={() => navigate('/dashboard/rent/browse')}
-                  className="text-left rounded-xl overflow-hidden border border-gray-200 dark:border-white/10 bg-[#f8fafc] dark:bg-[#0b1220] hover:shadow-md transition"
+                  onClick={() => {
+                    if (item?.id) {
+                      navigate('/dashboard/rent/browse', {
+                        state: { openPropertyId: item.id, openPropertyData: item }
+                      });
+                      return;
+                    }
+                    navigate('/dashboard/rent/browse');
+                  }}
+                  className="text-left rounded-xl overflow-hidden border hover:shadow-md transition"
+                  style={{
+                    backgroundColor: 'var(--card-bg,#0b1220)',
+                    borderColor: 'var(--border-color,#1e293b)'
+                  }}
                 >
                   <img
-                    src={item.image}
+                    src={item.image || RECENT_FALLBACK_IMAGE}
                     alt={item.title}
                     className="w-full h-24 object-cover"
+                    onError={(event) => {
+                      event.currentTarget.onerror = null;
+                      event.currentTarget.src = RECENT_FALLBACK_IMAGE;
+                    }}
                   />
                   <div className="p-3 space-y-1">
-                    <p className="text-sm font-semibold text-[#0e1f42] dark:text-white line-clamp-1">{item.title}</p>
-                    <p className="text-xs text-gray-500 dark:text-gray-400 line-clamp-1">{item.location}</p>
+                    <p className="text-sm font-semibold line-clamp-1" style={{ color: 'var(--text-color,#ffffff)' }}>
+                      {item.title || 'Property'}
+                    </p>
+                    <p className="text-xs line-clamp-1" style={{ color: 'var(--text-muted,#94a3b8)' }}>
+                      {item.location || 'Lagos, Nigeria'}
+                    </p>
+                    <p className="text-xs font-bold text-[#9f7539]">
+                      {Number(item.price || 0) > 0 ? formatNairaYear(item.price, { compact: true }) : 'Price on request'}
+                    </p>
+                    <div className="flex items-center gap-3 text-[11px]" style={{ color: 'var(--text-muted,#94a3b8)' }}>
+                      <span className="inline-flex items-center gap-1">
+                        <BedDouble size={12} className="text-[#9f7539]" />
+                        {Number(item.bedrooms || 0)}
+                      </span>
+                      <span className="inline-flex items-center gap-1">
+                        <Bath size={12} className="text-[#9f7539]" />
+                        {Number(item.bathrooms || 0)}
+                      </span>
+                      <span className="inline-flex items-center gap-1">
+                        <Ruler size={12} className="text-[#9f7539]" />
+                        {item.size || '-'}
+                        {String(item.size || '').includes('sqm') ? '' : ' sqm'}
+                      </span>
+                    </div>
+                    <p className="text-[11px] line-clamp-2" style={{ color: 'var(--text-muted,#94a3b8)' }}>
+                      {item.description || 'Recently viewed property'}
+                    </p>
                     <div className="inline-flex items-center gap-1 text-[11px] text-[#9F7539] font-medium">
                       <Eye size={12} />
                       {item.viewedAt ? formatDateTimeDDMMYY(item.viewedAt) : 'Recently'}

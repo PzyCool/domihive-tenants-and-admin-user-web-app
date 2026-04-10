@@ -97,7 +97,7 @@ const ScheduledInspectionOverlay = ({ application, countdown }) => {
   );
 };
 
-const ApplicationCard = ({ application, onAction, compact = false }) => {
+const ApplicationCard = ({ application, onAction, compact = false, viewType = 'list' }) => {
   const [nowTick, setNowTick] = useState(Date.now());
 
   const actionLabel = ACTION_LABELS[application.status] || 'View Details';
@@ -211,6 +211,7 @@ const ApplicationCard = ({ application, onAction, compact = false }) => {
   return (
     <TenantUnitCard
       className={`application-card property-card ${compact ? 'w-full' : 'w-full'} shadow-md overflow-hidden transition-all duration-300`}
+      viewType={viewType}
       contentClassName={contentStateClass}
       image={application.property?.image}
       imageAlt={application.property?.title || 'Property'}

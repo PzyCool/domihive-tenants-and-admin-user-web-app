@@ -1,35 +1,83 @@
-import React from 'react';
+import React, { useMemo } from 'react';
+import { useNavigate } from 'react-router-dom';
+import { CheckCircle2, Heart, Home } from 'lucide-react';
 import { useProperties } from '../contexts/PropertiesContext';
 import PropertyGrid from '../components/browse-properties/components/PropertyGrid/PropertyGrid';
+import UnifiedPanelPage, { UnifiedPanelSection } from '../../../shared/layout/UnifiedPanelPage';
+import { useUnitCardView } from '../contexts/UnitCardViewContext';
 
 const FavoritesPage = () => {
+  const navigate = useNavigate();
   const { favoriteProperties, toggleFavorite, isFavorite } = useProperties();
+  const { viewType, isGrid } = useUnitCardView();
 
   const handleFavoriteToggle = (property) => toggleFavorite(property);
 
-  return (
-    <div className="favorites-page p-4 md:p-6 bg-[var(--light-gray,#f8f9fa)] min-h-screen">
-      <div className="max-w-6xl mx-auto space-y-4">
-        <div className="favorites-card bg-white rounded-xl shadow-md border border-[var(--gray-light,#e2e8f0)] p-5">
-          <h1 className="text-2xl font-bold text-[var(--primary-color,#0e1f42)]">Favorites</h1>
-          <p className="text-sm text-[var(--gray,#6c757d)]">Saved properties will appear here.</p>
-        </div>
+  const stats = useMemo(() => {
+    const total = favoriteProperties.length;
+    const available = favoriteProperties.filter((item) =>
+      ['vacant', 'available'].includes(String(item.tenantStatus || item.status || '').toLowerCase())
+    ).length;
+    const occupied = favoriteProperties.filter((item) =>
+      ['occupied', 'rented'].includes(String(item.tenantStatus || item.status || '').toLowerCase())
+    ).length;
+    return { total, available, occupied };
+  }, [favoriteProperties]);
 
-        {favoriteProperties.length === 0 ? (
-          <div className="favorites-empty bg-white rounded-xl shadow-sm border border-[var(--gray-light,#e2e8f0)] p-6 text-[var(--gray,#6c757d)]">
-            No favorites yet. Browse properties and tap the heart icon to save homes you like.
+  return (
+    <UnifiedPanelPage
+      title="Favorites"
+      subtitle="Saved units from your browse journey."
+      stats={[
+        {
+          label: 'Saved Units',
+          value: stats.total,
+          meta: `${stats.total} total`,
+          icon: <Heart size={18} />,
+          iconClass: 'bg-blue-100 text-blue-700 dark:bg-blue-500/10 dark:text-blue-400'
+        },
+        {
+          label: 'Available',
+          value: stats.available,
+          meta: `${stats.available} ready to book`,
+          icon: <CheckCircle2 size={18} />,
+          iconClass: 'bg-green-100 text-green-700 dark:bg-green-500/10 dark:text-green-400'
+        },
+        {
+          label: 'Occupied',
+          value: stats.occupied,
+          meta: `${stats.occupied} unavailable`,
+          icon: <Home size={18} />,
+          iconClass: 'bg-red-100 text-red-700 dark:bg-red-500/10 dark:text-red-400'
+        }
+      ]}
+    >
+      {favoriteProperties.length === 0 ? (
+        <UnifiedPanelSection>
+          <div className="text-[var(--text-muted,#64748b)]">
+            No favorites yet. Browse properties and tap the heart icon to save units you like.
           </div>
-        ) : (
-          <div className="favorites-grid bg-white rounded-xl shadow-sm border border-[var(--gray-light,#e2e8f0)] p-4 md:p-6">
-            <PropertyGrid
-              properties={favoriteProperties.map((p) => ({ ...p, isFavorite: isFavorite(p.id || p.propertyId) }))}
-              onFavoriteToggle={handleFavoriteToggle}
-              onPropertyClick={() => {}}
-            />
-          </div>
-        )}
-      </div>
-    </div>
+        </UnifiedPanelSection>
+      ) : (
+        <UnifiedPanelSection>
+          <PropertyGrid
+            properties={favoriteProperties.map((p) => ({
+              ...p,
+              isFavorite: isFavorite(p.id || p.propertyId)
+            }))}
+            viewType={viewType}
+            onFavoriteToggle={handleFavoriteToggle}
+            onPropertyClick={(propertyId) =>
+              navigate('/dashboard/rent/browse', { state: { openPropertyId: propertyId } })
+            }
+            onBookNowClick={(propertyId) =>
+              navigate('/dashboard/rent/browse', { state: { openPropertyId: propertyId } })
+            }
+          />
+          {isGrid ? <div className="h-1"></div> : null}
+        </UnifiedPanelSection>
+      )}
+    </UnifiedPanelPage>
   );
 };
 

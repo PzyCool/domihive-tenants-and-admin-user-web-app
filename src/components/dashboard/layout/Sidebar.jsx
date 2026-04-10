@@ -1,11 +1,13 @@
 // src/components/dashboard/layout/Sidebar.jsx
-import React, { useState, useEffect, useRef } from 'react';
+import React, { useState, useEffect, useMemo, useRef } from 'react';
 import { NavLink, useLocation } from 'react-router-dom';
 import { useAuth } from '../../../context/AuthContext';
 import { useDashboard } from '../../../context/DashboardContext';
 import { readAdminStorage } from '../../../context/adminPersistence';
 import { useApplications } from '../rent/contexts/ApplicationsContext';
 import { useProperties } from '../rent/contexts/PropertiesContext';
+import { useMessages } from '../rent/contexts/MessagesContext';
+import { useMaintenance } from '../rent/contexts/MaintenanceContext';
 import { getUserStorageKey } from '../../shared/utils/userStorageKey';
 import iconImage from '../../../assets/domihive-lcon.png';
 import logoImage from '../../../assets/domihive-logo.png';
@@ -13,7 +15,9 @@ import logoImage from '../../../assets/domihive-logo.png';
 const Sidebar = ({ sidebarState, toggleSidebar, closeMobileSidebar, isMobile, currentDashboard }) => {
   const { user, logout } = useAuth();
   const { applications } = useApplications();
-  const { properties } = useProperties();
+  const { properties, favorites } = useProperties();
+  const { threads } = useMessages();
+  const { tickets } = useMaintenance();
   const location = useLocation();
   const sidebarNavRef = useRef(null);
   const activeLinkRef = useRef(null);
@@ -52,6 +56,36 @@ const Sidebar = ({ sidebarState, toggleSidebar, closeMobileSidebar, isMobile, cu
   };
 
   const navItems = getDashboardNavItems();
+  const navBadges = useMemo(() => {
+    const activeApplicationCount = applications.filter((app) =>
+      ['INSPECTION_SCHEDULED', 'INSPECTION_VERIFIED', 'APPLICATION_STARTED', 'APPLICATION_SUBMITTED', 'UNDER_REVIEW']
+        .includes(String(app?.status || '').toUpperCase())
+    ).length;
+
+    const unreadMessages = threads.reduce(
+      (sum, thread) => sum + Number(thread?.unreadCount || 0),
+      0
+    );
+
+    const openMaintenance = tickets.filter((ticket) => {
+      const status = String(ticket?.status || '').toUpperCase();
+      return status !== 'COMPLETED' && status !== 'CANCELLED';
+    }).length;
+
+    const pendingMoveIn = properties.filter(
+      (property) => String(property?.tenancyStatus || '').toUpperCase() === 'PENDING_MOVE_IN'
+    ).length;
+
+    return {
+      '/dashboard/rent/favorites': Number(favorites?.length || 0),
+      '/dashboard/rent/applications': activeApplicationCount,
+      '/dashboard/rent/my-properties': pendingMoveIn,
+      '/dashboard/rent/maintenance': openMaintenance,
+      '/dashboard/rent/messages': unreadMessages
+    };
+  }, [applications, favorites, properties, threads, tickets]);
+
+  const getBadgeCount = (path) => Number(navBadges[path] || 0);
   const isExpanded = sidebarState === 'expanded';
   const isCollapsed = sidebarState === 'collapsed';
   const userKey = getUserStorageKey(user);
@@ -370,6 +404,9 @@ const Sidebar = ({ sidebarState, toggleSidebar, closeMobileSidebar, isMobile, cu
 
             <div className="space-y-1 px-3">
               {navItems.main.map((item) => (
+                (() => {
+                  const badgeCount = getBadgeCount(item.path);
+                  return (
                 <NavLink
                   key={item.path}
                   to={item.path}
@@ -388,12 +425,26 @@ const Sidebar = ({ sidebarState, toggleSidebar, closeMobileSidebar, isMobile, cu
                     <>
                       <i className={`fas fa-${item.icon} ${isCollapsed ? 'text-lg' : 'text-base'} w-5 text-center ${isActive ? 'text-(--accent-color,#9f7539)' : 'text-[#64748b]'} icon-clean transition-colors`}></i>
                       {!isCollapsed && (
-                        <span className="nav-text font-medium text-sm">{item.label}</span>
+                        <>
+                          <span className="nav-text font-medium text-sm">{item.label}</span>
+                          {badgeCount > 0 && (
+                            <span className="nav-badge bg-red-500 text-white text-[10px] font-bold rounded-full min-w-5 h-5 px-1 flex items-center justify-center ml-auto">
+                              {badgeCount > 99 ? '99+' : badgeCount}
+                            </span>
+                          )}
+                        </>
                       )}
 
+                      {isCollapsed && badgeCount > 0 && (
+                        <span className="nav-badge absolute top-2 right-2 bg-red-500 text-white text-[9px] font-bold rounded-full w-4 h-4 flex items-center justify-center shadow-md">
+                          {badgeCount > 9 ? '9+' : badgeCount}
+                        </span>
+                      )}
                     </>
                   )}
                 </NavLink>
+                  );
+                })()
               ))}
             </div>
           </div>
@@ -408,6 +459,9 @@ const Sidebar = ({ sidebarState, toggleSidebar, closeMobileSidebar, isMobile, cu
 
             <div className="space-y-1 px-3">
               {navItems.applications.map((item) => (
+                (() => {
+                  const badgeCount = getBadgeCount(item.path);
+                  return (
                 <NavLink
                   key={item.path}
                   to={item.path}
@@ -428,24 +482,26 @@ const Sidebar = ({ sidebarState, toggleSidebar, closeMobileSidebar, isMobile, cu
                       {!isCollapsed && (
                         <>
                           <span className="nav-text font-medium text-sm">{item.label}</span>
-                          {item.badge > 0 && (
-                            <span className="nav-badge bg-(--accent-color,#9f7539) text-white text-xs font-semibold rounded-full w-5 h-5 flex items-center justify-center ml-auto">
-                              {item.badge > 99 ? '99+' : item.badge}
+                          {badgeCount > 0 && (
+                            <span className="nav-badge bg-red-500 text-white text-[10px] font-bold rounded-full min-w-5 h-5 px-1 flex items-center justify-center ml-auto">
+                              {badgeCount > 99 ? '99+' : badgeCount}
                             </span>
                           )}
                         </>
                       )}
 
                       {/* Badge for collapsed state */}
-                      {isCollapsed && item.badge > 0 && (
-                        <span className="nav-badge absolute top-2 right-2 bg-(--accent-color,#9f7539) text-white text-[9px] font-bold rounded-full w-4 h-4 flex items-center justify-center shadow-md">
-                          {item.badge > 9 ? '9+' : item.badge}
+                      {isCollapsed && badgeCount > 0 && (
+                        <span className="nav-badge absolute top-2 right-2 bg-red-500 text-white text-[9px] font-bold rounded-full w-4 h-4 flex items-center justify-center shadow-md">
+                          {badgeCount > 9 ? '9+' : badgeCount}
                         </span>
                       )}
 
                     </>
                   )}
                 </NavLink>
+                  );
+                })()
               ))}
             </div>
           </div>
@@ -461,6 +517,9 @@ const Sidebar = ({ sidebarState, toggleSidebar, closeMobileSidebar, isMobile, cu
 
               <div className="space-y-1 px-3">
                 {navItems.management.map((item) => (
+                  (() => {
+                    const badgeCount = getBadgeCount(item.path);
+                    return (
                   <NavLink
                     key={item.path}
                     to={item.path}
@@ -479,12 +538,26 @@ const Sidebar = ({ sidebarState, toggleSidebar, closeMobileSidebar, isMobile, cu
                       <>
                         <i className={`fas fa-${item.icon} ${isCollapsed ? 'text-lg' : 'text-base'} w-5 text-center ${isActive ? 'text-(--accent-color,#9f7539)' : 'text-[#64748b]'} transition-colors`}></i>
                         {!isCollapsed && (
-                          <span className="nav-text font-medium text-sm">{item.label}</span>
+                          <>
+                            <span className="nav-text font-medium text-sm">{item.label}</span>
+                            {badgeCount > 0 && (
+                              <span className="nav-badge bg-red-500 text-white text-[10px] font-bold rounded-full min-w-5 h-5 px-1 flex items-center justify-center ml-auto">
+                                {badgeCount > 99 ? '99+' : badgeCount}
+                              </span>
+                            )}
+                          </>
                         )}
 
+                        {isCollapsed && badgeCount > 0 && (
+                          <span className="nav-badge absolute top-2 right-2 bg-red-500 text-white text-[9px] font-bold rounded-full w-4 h-4 flex items-center justify-center shadow-md">
+                            {badgeCount > 9 ? '9+' : badgeCount}
+                          </span>
+                        )}
                       </>
                     )}
                   </NavLink>
+                    );
+                  })()
                 ))}
               </div>
             </div>

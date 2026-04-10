@@ -1,5 +1,5 @@
-import React, { useEffect, useMemo, useState } from 'react';
-import { useSearchParams } from 'react-router-dom';
+import React, { useEffect, useMemo, useRef, useState } from 'react';
+import { useLocation, useSearchParams } from 'react-router-dom';
 import { VIEW_TYPES, ITEMS_PER_PAGE } from '../components/browse-properties/utils/constants';
 import PropertyDetailsModal from '../components/property-details/PropertyDetailsModal';
 import BookInspectionPage from '../components/book-inspection/BookInspectionPage';
@@ -9,6 +9,9 @@ import SearchHeader from '../components/browse-properties/components/SearchHeade
 import PropertyGrid from '../components/browse-properties/components/PropertyGrid/PropertyGrid';
 import { buildListingFilterMeta } from '../../../shared/services/adminListings';
 import { formatDateTimeDDMMYY } from '../../../shared/utils/dateFormat';
+import { pushRecentProperty } from '../../../shared/utils/recentProperties';
+import resolvePropertyById from '../../../shared/utils/propertyResolver';
+import { useUnitCardView } from '../contexts/UnitCardViewContext';
 
 const DEFAULT_FILTERS = {
   searchQuery: '',
@@ -214,13 +217,16 @@ const sliceForPage = (items, page) => {
 };
 
 const RentBrowse = () => {
+  const location = useLocation();
   const [searchParams, setSearchParams] = useSearchParams();
   const { toggleFavorite, isFavorite, favorites } = useProperties();
+  const { viewType: globalViewType, setViewType: setGlobalViewType } = useUnitCardView();
 
   const [allProperties, setAllProperties] = useState([]);
   const initialFromUrl = useMemo(() => parseParamsToState(searchParams), [searchParams]);
+  const initialViewType = searchParams.get('view') ? initialFromUrl.nextViewType : globalViewType;
   const [filters, setFilters] = useState(initialFromUrl.nextFilters);
-  const [viewType, setViewType] = useState(initialFromUrl.nextViewType);
+  const [viewType, setViewType] = useState(initialViewType);
   const [currentPage, setCurrentPage] = useState(initialFromUrl.nextPage);
   const [totalPages, setTotalPages] = useState(1);
   const [filterMeta, setFilterMeta] = useState({
@@ -242,6 +248,7 @@ const RentBrowse = () => {
   const [error, setError] = useState('');
   const [syncedAt, setSyncedAt] = useState('');
   const [isStale, setIsStale] = useState(false);
+  const autoOpenedPropertyRef = useRef('');
 
   const syncBrowse = async ({ forceRefresh = false } = {}) => {
     if (allProperties.length === 0 || forceRefresh) setLoading(true);
@@ -268,20 +275,67 @@ const RentBrowse = () => {
 
   useEffect(() => {
     const { nextFilters, nextViewType, nextPage } = parseParamsToState(searchParams);
+    const hasViewParam = searchParams.has('view');
     setFilters((prev) => {
       const prevSerialized = JSON.stringify(prev);
       const nextSerialized = JSON.stringify(nextFilters);
       return prevSerialized === nextSerialized ? prev : nextFilters;
     });
-    setViewType((prev) => (prev === nextViewType ? prev : nextViewType));
+    if (hasViewParam) {
+      setViewType((prev) => (prev === nextViewType ? prev : nextViewType));
+    }
     setCurrentPage((prev) => (prev === nextPage ? prev : nextPage));
   }, [searchParams]);
+
+  useEffect(() => {
+    setGlobalViewType(viewType);
+  }, [viewType, setGlobalViewType]);
 
   useEffect(() => {
     if (!syncedAt) return undefined;
     const timer = window.setTimeout(() => setIsStale(true), 60_000);
     return () => window.clearTimeout(timer);
   }, [syncedAt]);
+
+  useEffect(() => {
+    const requestedId = String(location.state?.openPropertyId || '').trim();
+    if (!requestedId || !allProperties.length) return;
+    if (autoOpenedPropertyRef.current === requestedId) return;
+
+    const matchedProperty =
+      allProperties.find(
+        (property) => String(property.id || property.propertyId) === requestedId
+      ) || null;
+    if (!matchedProperty) return;
+
+    autoOpenedPropertyRef.current = requestedId;
+    setSelectedPropertyData(matchedProperty);
+    setSelectedPropertyId(requestedId);
+    setShowPropertyDetails(true);
+    setShowBookInspection(false);
+  }, [location.state, allProperties]);
+
+  useEffect(() => {
+    const requestedId = String(location.state?.openPropertyId || '').trim();
+    if (!requestedId) return;
+    if (autoOpenedPropertyRef.current === requestedId) return;
+
+    const fallbackFromState =
+      location.state?.openPropertyData && typeof location.state.openPropertyData === 'object'
+        ? location.state.openPropertyData
+        : null;
+    const resolved = resolvePropertyById(requestedId);
+    const propertyData = resolved || fallbackFromState;
+    if (!propertyData) return;
+
+    autoOpenedPropertyRef.current = requestedId;
+    setSelectedPropertyData(propertyData);
+    setSelectedPropertyId(
+      requestedId || propertyData?.id || propertyData?.propertyId || null
+    );
+    setShowPropertyDetails(true);
+    setShowBookInspection(false);
+  }, [location.state]);
 
   useEffect(() => {
     const nextParams = buildSearchParamsFromState({ filters, currentPage, viewType });
@@ -333,6 +387,9 @@ const RentBrowse = () => {
   const handleBookNowClick = (propertyId) => {
     const matchedProperty =
       allProperties.find((property) => (property.id || property.propertyId) === propertyId) || null;
+    if (matchedProperty) {
+      pushRecentProperty(matchedProperty);
+    }
     const normalized = String(matchedProperty?.tenantStatus || matchedProperty?.status || '').toLowerCase();
     const isBookable =
       matchedProperty?.canBook !== false && !['reserved', 'occupied', 'rented'].includes(normalized);
@@ -359,6 +416,9 @@ const RentBrowse = () => {
         (property) =>
           String(property.id || property.propertyId) === String(propertyId)
       ) || null;
+    if (matchedProperty) {
+      pushRecentProperty(matchedProperty);
+    }
     setSelectedPropertyData(matchedProperty);
     setSelectedPropertyId(propertyId || matchedProperty?.id || matchedProperty?.propertyId || null);
     setShowPropertyDetails(true);

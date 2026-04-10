@@ -25,6 +25,17 @@ export const PropertiesProvider = ({ children }) => {
   const [properties, setProperties] = useState(EMPTY_PROPERTIES);
   const [favorites, setFavorites] = useState([]);
 
+  const readArrayStorage = (key) => {
+    try {
+      const raw = localStorage.getItem(key);
+      if (!raw) return [];
+      const parsed = JSON.parse(raw);
+      return Array.isArray(parsed) ? parsed : [];
+    } catch (_error) {
+      return [];
+    }
+  };
+
   const sanitizePropertiesForStorage = (list) => {
     if (!Array.isArray(list)) return [];
     return list.map((property) => {
@@ -50,7 +61,8 @@ export const PropertiesProvider = ({ children }) => {
   useEffect(() => {
     try {
       const raw = localStorage.getItem(favoritesStorageKey);
-      setFavorites(raw ? JSON.parse(raw) : []);
+      const parsed = raw ? JSON.parse(raw) : [];
+      setFavorites(Array.isArray(parsed) ? parsed.map((item) => String(item)) : []);
     } catch (_error) {
       setFavorites([]);
     }
@@ -435,25 +447,85 @@ export const PropertiesProvider = ({ children }) => {
     );
   };
 
-  const getPropertyId = (property) => property?.id || property?.propertyId;
+  const getPropertyId = (property) => String(property?.id || property?.propertyId || '').trim();
 
-  const toggleFavorite = (property) => {
-    const pid = getPropertyId(property);
+  const toggleFavorite = (propertyOrId) => {
+    const pid =
+      typeof propertyOrId === 'string' || typeof propertyOrId === 'number'
+        ? String(propertyOrId).trim()
+        : getPropertyId(propertyOrId);
     if (!pid) return;
     setFavorites((prev) => {
-      if (prev.includes(pid)) {
-        return prev.filter((id) => id !== pid);
+      const normalized = prev.map((item) => String(item));
+      if (normalized.includes(pid)) {
+        return normalized.filter((id) => id !== pid);
       }
-      return [...prev, pid];
+      return [...normalized, pid];
     });
   };
 
   const isFavorite = (propertyId) => {
-    const pid = propertyId;
-    return favorites.includes(pid);
+    const pid = String(propertyId || '').trim();
+    if (!pid) return false;
+    return favorites.map((item) => String(item)).includes(pid);
   };
 
-  const favoriteProperties = properties.filter((p) => favorites.includes(getPropertyId(p)));
+  const favoriteProperties = useMemo(() => {
+    const favoriteIds = new Set(favorites.map((item) => String(item).trim()).filter(Boolean));
+    if (favoriteIds.size === 0) return [];
+
+    const cacheItems = [
+      ...readArrayStorage('domihive_browse_cache_v2').flatMap((entry) => (entry?.items ? entry.items : [])),
+      ...readArrayStorage('domihive_browse_cache_v1').flatMap((entry) => (entry?.items ? entry.items : [])),
+      ...(() => {
+        const raw = readArrayStorage('domihive_home_properties_cache_v1');
+        return Array.isArray(raw) ? raw : [];
+      })(),
+      ...(() => {
+        try {
+          const raw = localStorage.getItem('domihive_browse_cache_v2');
+          const parsed = raw ? JSON.parse(raw) : null;
+          return Array.isArray(parsed?.items) ? parsed.items : [];
+        } catch (_error) {
+          return [];
+        }
+      })(),
+      ...(() => {
+        try {
+          const raw = localStorage.getItem('domihive_browse_cache_v1');
+          const parsed = raw ? JSON.parse(raw) : null;
+          return Array.isArray(parsed?.items) ? parsed.items : [];
+        } catch (_error) {
+          return [];
+        }
+      })()
+    ];
+
+    const index = new Map();
+    cacheItems.forEach((item) => {
+      if (!item || typeof item !== 'object') return;
+      const id = String(item.id || item.propertyId || '').trim();
+      if (!id || index.has(id)) return;
+      index.set(id, item);
+    });
+
+    // Fallback to existing managed properties when available.
+    properties.forEach((item) => {
+      const id = String(item?.id || item?.propertyId || '').trim();
+      if (!id || index.has(id)) return;
+      index.set(id, item);
+    });
+
+    return Array.from(favoriteIds)
+      .map((id) => index.get(id))
+      .filter(Boolean)
+      .map((item) => ({
+        ...item,
+        id: String(item.id || item.propertyId || '').trim(),
+        propertyId: String(item.propertyId || item.id || '').trim(),
+        isFavorite: true
+      }));
+  }, [favorites, properties]);
 
   const value = useMemo(
     () => ({

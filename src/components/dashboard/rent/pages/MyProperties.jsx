@@ -4,10 +4,12 @@ import { useProperties } from '../contexts/PropertiesContext';
 import PropertyCard from '../components/properties/PropertyCard';
 import UnifiedPanelPage, { UnifiedPanelSection } from '../../../shared/layout/UnifiedPanelPage';
 import { Building2, Clock3, Wallet } from 'lucide-react';
+import { useUnitCardView } from '../contexts/UnitCardViewContext';
 
 const MyProperties = () => {
   const navigate = useNavigate();
   const { properties } = useProperties();
+  const { viewType, isGrid } = useUnitCardView();
   const [statusFilter, setStatusFilter] = React.useState('all');
   const [leaseFilter, setLeaseFilter] = React.useState('all');
   const [search, setSearch] = React.useState('');
@@ -136,7 +138,7 @@ const MyProperties = () => {
       }
     >
       <UnifiedPanelSection unstyled className="pt-1">
-        <div className="grid gap-4">
+        <div className={isGrid ? 'grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-4' : 'grid gap-4'}>
           {visibleProperties.length === 0 ? (
             <div className="bg-white border border-[#e2e8f0] rounded-2xl p-6 text-center">
               <p className="text-base font-semibold text-[#0e1f42]">No active tenancy yet</p>
@@ -146,7 +148,12 @@ const MyProperties = () => {
             </div>
           ) : (
             visibleProperties.map((property) => (
-              <PropertyCard key={property.propertyId} property={property} onAction={handleAction} />
+              <PropertyCard
+                key={property.propertyId}
+                property={property}
+                onAction={handleAction}
+                viewType={viewType}
+              />
             ))
           )}
         </div>

@@ -5,6 +5,7 @@ import UnifiedPanelPage, { UnifiedPanelSection } from '../../../shared/layout/Un
 import TenantUnitCard from '../components/common/TenantUnitCard';
 import { useProperties } from '../contexts/PropertiesContext';
 import { useMessages } from '../contexts/MessagesContext';
+import { useUnitCardView } from '../contexts/UnitCardViewContext';
 
 const tenancyBadge = (status) => {
   if (status === 'ACTIVE') {
@@ -20,6 +21,7 @@ const MessagesPage = () => {
   const navigate = useNavigate();
   const { properties } = useProperties();
   const { threads } = useMessages();
+  const { viewType, isGrid } = useUnitCardView();
 
   const [search, setSearch] = useState('');
   const [statusFilter, setStatusFilter] = useState('all');
@@ -120,7 +122,7 @@ const MessagesPage = () => {
       )}
     >
       <UnifiedPanelSection unstyled className="pt-1">
-        <div className="space-y-4">
+        <div className={isGrid ? 'grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-4' : 'space-y-4'}>
           {visibleProperties.length === 0 ? (
             <div className="rounded-xl border px-4 py-5 text-sm" style={{ borderColor: 'var(--border-color,#e2e8f0)' }}>
               <p className="font-semibold text-[var(--text-color,#0e1f42)]">No unit matched your filter.</p>
@@ -132,6 +134,7 @@ const MessagesPage = () => {
               return (
                 <TenantUnitCard
                   key={property.propertyId}
+                  viewType={viewType}
                   image={property.image}
                   imageAlt={property.name || 'Property'}
                   price={price}

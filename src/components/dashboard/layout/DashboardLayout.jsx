@@ -11,6 +11,7 @@ import { MaintenanceProvider } from '../rent/contexts/MaintenanceContext';
 import { PaymentsProvider } from '../rent/contexts/PaymentsContext';
 import { MessagesProvider } from '../rent/contexts/MessagesContext';
 import { JourneyProvider } from '../rent/contexts/JourneyContext';
+import { UnitCardViewProvider } from '../rent/contexts/UnitCardViewContext';
 
 const DashboardLayout = () => {
   const [sidebarState, setSidebarState] = useState('expanded'); // 'expanded' | 'collapsed'
@@ -116,41 +117,43 @@ const DashboardLayout = () => {
         <MaintenanceProvider>
           <PaymentsProvider>
             <MessagesProvider>
-              <JourneyProvider>
-                <div className="dashboard-layout flex h-screen overflow-hidden bg-(--light-gray)">
-                  {/* Sidebar - fixed position */}
-                  <Sidebar
-                    sidebarState={sidebarState}
-                    toggleSidebar={toggleSidebar}
-                    closeMobileSidebar={closeMobileSidebar}
-                    isMobile={isMobile}
-                    currentDashboard={currentDashboard}
-                  />
-
-                  {/* Main Content Area */}
-                  <div className={`dashboard-main flex-1 flex flex-col h-screen overflow-hidden transition-all duration-300 ease-in-out ${getMainMargin()}`}>
-                    {/* Header - fixed at top */}
-                    <Header
-                      toggleSidebar={toggleSidebar}
-                      isMobile={isMobile}
+              <UnitCardViewProvider>
+                <JourneyProvider>
+                  <div className="dashboard-layout flex h-screen overflow-hidden bg-(--light-gray)">
+                    {/* Sidebar - fixed position */}
+                    <Sidebar
                       sidebarState={sidebarState}
+                      toggleSidebar={toggleSidebar}
+                      closeMobileSidebar={closeMobileSidebar}
+                      isMobile={isMobile}
+                      currentDashboard={currentDashboard}
                     />
 
-                    {/* Content Area - scrollable */}
-                    <main className="dashboard-content no-scrollbar flex-1 overflow-auto">
-                      {guardToast && !isBlockedGuardToast(guardToast) && (
-                        <div className="sticky top-0 z-[1190] px-4 md:px-6 pt-3">
-                          <div className="mx-auto max-w-4xl rounded-xl border border-[#f59e0b]/35 bg-[#fff7ed] text-[#9a3412] px-4 py-2 text-sm font-medium shadow-sm">
-                            <i className="fas fa-circle-info mr-2"></i>
-                            {guardToast}
+                    {/* Main Content Area */}
+                    <div className={`dashboard-main flex-1 flex flex-col h-screen overflow-hidden transition-all duration-300 ease-in-out ${getMainMargin()}`}>
+                      {/* Header - fixed at top */}
+                      <Header
+                        toggleSidebar={toggleSidebar}
+                        isMobile={isMobile}
+                        sidebarState={sidebarState}
+                      />
+
+                      {/* Content Area - scrollable */}
+                      <main className="dashboard-content no-scrollbar flex-1 overflow-auto">
+                        {guardToast && !isBlockedGuardToast(guardToast) && (
+                          <div className="sticky top-0 z-[1190] px-4 md:px-6 pt-3">
+                            <div className="mx-auto max-w-4xl rounded-xl border border-[#f59e0b]/35 bg-[#fff7ed] text-[#9a3412] px-4 py-2 text-sm font-medium shadow-sm">
+                              <i className="fas fa-circle-info mr-2"></i>
+                              {guardToast}
+                            </div>
                           </div>
-                        </div>
-                      )}
-                      <Outlet />
-                    </main>
+                        )}
+                        <Outlet />
+                      </main>
+                    </div>
                   </div>
-                </div>
-              </JourneyProvider>
+                </JourneyProvider>
+              </UnitCardViewProvider>
             </MessagesProvider>
           </PaymentsProvider>
         </MaintenanceProvider>

@@ -22,7 +22,7 @@ const quickActionsForStatus = (status) => {
   return [];
 };
 
-const PropertyCard = ({ property, onAction }) => {
+const PropertyCard = ({ property, onAction, viewType = 'list' }) => {
   const actions = quickActionsForStatus(property.tenancyStatus);
 
   const displayPrice = Number(property.rentAmount || property.price || property.nextPayment?.amount || 0);
@@ -41,6 +41,7 @@ const PropertyCard = ({ property, onAction }) => {
   return (
     <TenantUnitCard
       className="application-card property-card w-full shadow-md overflow-hidden transition-all duration-300"
+      viewType={viewType}
       image={property.image || property.property?.image}
       imageAlt={property.name}
       price={displayPrice}

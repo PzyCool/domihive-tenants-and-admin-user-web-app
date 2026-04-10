@@ -4,6 +4,7 @@ import ApplicationCard from '../components/applications/ApplicationCard';
 import { useApplications } from '../contexts/ApplicationsContext';
 import UnifiedPanelPage, { UnifiedPanelSection } from '../../../shared/layout/UnifiedPanelPage';
 import { FilePlus2, FileClock, CheckCircle2 } from 'lucide-react';
+import { useUnitCardView } from '../contexts/UnitCardViewContext';
 
 const ACTIVE_APPLICATION_STATUSES = [
   'INSPECTION_SCHEDULED',
@@ -16,6 +17,7 @@ const ACTIVE_APPLICATION_STATUSES = [
 const RentApplications = () => {
   const navigate = useNavigate();
   const { applications, updateApplication, addNotification } = useApplications();
+  const { viewType, isGrid } = useUnitCardView();
   const [search, setSearch] = useState('');
   const [statusFilter, setStatusFilter] = useState('active');
   const [sortBy, setSortBy] = useState('newest');
@@ -193,7 +195,7 @@ const RentApplications = () => {
       }
     >
       <UnifiedPanelSection unstyled className="pt-1">
-        <div className="grid gap-4">
+        <div className={isGrid ? 'grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-4' : 'grid gap-4'}>
           {filteredApplications.length === 0 ? (
             <div className="bg-white border border-[#e2e8f0] rounded-2xl p-6 text-center">
               <p className="text-base font-semibold text-[#0e1f42]">No applications found</p>
@@ -206,6 +208,7 @@ const RentApplications = () => {
                   application={application}
                   onAction={handleCardAction}
                   compact
+                  viewType={viewType}
                 />
               </div>
             ))

@@ -1,8 +1,10 @@
 // src/dashboards/rent/components/book-inspection/PropertySummary.jsx
 import React from 'react';
 import TenantUnitCard, { formatUnitSize } from '../common/TenantUnitCard';
+import { useUnitCardView } from '../../contexts/UnitCardViewContext';
 
 const PropertySummary = ({ propertyData }) => {
+  const { viewType } = useUnitCardView();
   const fallbackProperty = {
     title: 'Luxury 3-Bedroom Apartment in Ikoyi',
     price: 4500000,
@@ -28,6 +30,7 @@ const PropertySummary = ({ propertyData }) => {
 
       <TenantUnitCard
         className="inspection-summary-inner"
+        viewType={viewType}
         image={property.image}
         imageAlt={property.title}
         price={property.price}
