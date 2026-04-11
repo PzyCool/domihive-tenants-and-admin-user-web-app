@@ -5,6 +5,7 @@ import { useProperties } from '../contexts/PropertiesContext';
 import PropertyGrid from '../components/browse-properties/components/PropertyGrid/PropertyGrid';
 import UnifiedPanelPage, { UnifiedPanelSection } from '../../../shared/layout/UnifiedPanelPage';
 import { useUnitCardView } from '../contexts/UnitCardViewContext';
+import { TenantPageEmptyState } from '../components/common/TenantPageControls';
 
 const FavoritesPage = () => {
   const navigate = useNavigate();
@@ -54,9 +55,10 @@ const FavoritesPage = () => {
     >
       {favoriteProperties.length === 0 ? (
         <UnifiedPanelSection>
-          <div className="text-[var(--text-muted,#64748b)]">
-            No favorites yet. Browse properties and tap the heart icon to save units you like.
-          </div>
+          <TenantPageEmptyState
+            title="No favorites yet"
+            description="Browse properties and tap the heart icon to save units you like."
+          />
         </UnifiedPanelSection>
       ) : (
         <UnifiedPanelSection>

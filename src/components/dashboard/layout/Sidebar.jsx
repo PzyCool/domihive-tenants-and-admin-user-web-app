@@ -21,6 +21,10 @@ const Sidebar = ({ sidebarState, toggleSidebar, closeMobileSidebar, isMobile, cu
   const location = useLocation();
   const sidebarNavRef = useRef(null);
   const activeLinkRef = useRef(null);
+  const userKey = getUserStorageKey(user);
+  const managementUnlockKey = `domihive_management_unlocked_${userKey}`;
+  const managementUnlockSessionKey = `domihive_management_unlocked_session_${userKey}`;
+  const managementUnlockCookieKey = `domihive_management_unlocked_cookie_${userKey}`;
 
   const getIsoMs = (value) => {
     const ms = new Date(value || 0).getTime();
@@ -237,10 +241,6 @@ const Sidebar = ({ sidebarState, toggleSidebar, closeMobileSidebar, isMobile, cu
   const getBadgeCount = (path) => Number(navBadges[path] || 0);
   const isExpanded = sidebarState === 'expanded';
   const isCollapsed = sidebarState === 'collapsed';
-  const userKey = getUserStorageKey(user);
-  const managementUnlockKey = `domihive_management_unlocked_${userKey}`;
-  const managementUnlockSessionKey = `domihive_management_unlocked_session_${userKey}`;
-  const managementUnlockCookieKey = `domihive_management_unlocked_cookie_${userKey}`;
 
   const readManagementUnlock = () => {
     try {

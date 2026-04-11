@@ -5,6 +5,13 @@ import { useApplications } from '../contexts/ApplicationsContext';
 import UnifiedPanelPage, { UnifiedPanelSection } from '../../../shared/layout/UnifiedPanelPage';
 import { FilePlus2, FileClock, CheckCircle2 } from 'lucide-react';
 import { useUnitCardView } from '../contexts/UnitCardViewContext';
+import {
+  TenantPageEmptyState,
+  TenantPageFilterBar,
+  TenantPageResultsCount,
+  TenantPageSearchInput,
+  TenantPageSelect
+} from '../components/common/TenantPageControls';
 
 const ACTIVE_APPLICATION_STATUSES = [
   'INSPECTION_SCHEDULED',
@@ -158,49 +165,48 @@ const RentApplications = () => {
       ]}
       className="applications-page"
       filterBar={
-        <div className="flex flex-col gap-3 md:flex-row md:items-center md:justify-between">
-          <div className="relative w-full md:max-w-md">
-            <i className="fas fa-search absolute left-3 top-1/2 -translate-y-1/2 text-[var(--text-muted,#64748b)] text-sm"></i>
-            <input
+        <TenantPageFilterBar
+          left={(
+            <TenantPageSearchInput
               value={search}
               onChange={(e) => setSearch(e.target.value)}
               placeholder="Search applicant, property..."
-              className="w-full pl-9 pr-3 py-2.5 rounded-md border border-[var(--border-color,#e2e8f0)] bg-transparent text-sm text-[var(--text-color,#0e1f42)]"
             />
-          </div>
-          <div className="flex flex-wrap md:flex-nowrap items-center gap-3">
-            <select
+          )}
+          right={(
+            <>
+            <TenantPageSelect
               value={statusFilter}
               onChange={(e) => setStatusFilter(e.target.value)}
-              className="h-11 px-3 rounded-md border border-[var(--border-color,#e2e8f0)] bg-transparent text-sm text-[var(--text-color,#0e1f42)] min-w-[155px]"
+              minWidth={155}
             >
               <option value="active">Active</option>
               <option value="approved">Approved</option>
               <option value="rejected">Rejected</option>
               <option value="cancelled">Cancelled</option>
-            </select>
-            <select
+            </TenantPageSelect>
+            <TenantPageSelect
               value={sortBy}
               onChange={(e) => setSortBy(e.target.value)}
-              className="h-11 px-3 rounded-md border border-[var(--border-color,#e2e8f0)] bg-transparent text-sm text-[var(--text-color,#0e1f42)] min-w-[155px]"
+              minWidth={155}
             >
               <option value="newest">Sort: Newest</option>
               <option value="oldest">Sort: Oldest</option>
-            </select>
-            <div className="h-11 inline-flex items-center text-sm text-[var(--text-muted,#64748b)] whitespace-nowrap">
-              Showing <span className="font-semibold text-[var(--text-color,#0e1f42)]">{filteredApplications.length}</span> applications
-            </div>
-          </div>
-        </div>
+            </TenantPageSelect>
+            <TenantPageResultsCount value={filteredApplications.length} label="applications" className="whitespace-nowrap" />
+            </>
+          )}
+        />
       }
     >
       <UnifiedPanelSection unstyled className="pt-1">
         <div className={isGrid ? 'grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-4' : 'grid gap-4'}>
           {filteredApplications.length === 0 ? (
-            <div className="bg-white border border-[#e2e8f0] rounded-2xl p-6 text-center">
-              <p className="text-base font-semibold text-[#0e1f42]">No applications found</p>
-              <p className="text-sm text-[#64748b] mt-1">Try another status filter or book an inspection from Browse Properties.</p>
-            </div>
+            <TenantPageEmptyState
+              className="rounded-2xl p-6 text-center"
+              title="No applications found"
+              description="Try another status filter or book an inspection from Browse Properties."
+            />
           ) : (
             filteredApplications.map((application) => (
               <div key={application.id} className="w-full">
