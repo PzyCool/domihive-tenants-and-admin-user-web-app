@@ -7,6 +7,15 @@ import { useProperties } from '../contexts/PropertiesContext';
 import TenantUnitCard from '../components/common/TenantUnitCard';
 import StatusBadge from '../components/common/StatusBadge';
 import { useUnitCardView } from '../contexts/UnitCardViewContext';
+import {
+  TenantPageEmptyState,
+  TenantPageFilterBar,
+  TenantPageResultsCount,
+  TenantPageSearchInput,
+  TenantPageSelect
+} from '../components/common/TenantPageControls';
+import TenantCardActionButton from '../components/common/TenantCardActionButton';
+import { getTenancyStatusLabel } from '../components/common/tenancyStatus';
 
 const MaintenancePage = () => {
   const navigate = useNavigate();
@@ -76,50 +85,36 @@ const MaintenancePage = () => {
         }
       ]}
       filterBar={
-        <div className="flex flex-col gap-3 md:flex-row md:items-center md:justify-between">
-          <div className="relative w-full md:max-w-md">
-            <Search className="absolute left-3 top-1/2 -translate-y-1/2 text-[var(--text-muted,#64748b)]" size={16} />
-            <input
+        <TenantPageFilterBar
+          left={(
+            <TenantPageSearchInput
               value={propertySearch}
               onChange={(e) => setPropertySearch(e.target.value)}
               placeholder="Search property, location, description..."
-              className="w-full pl-9 pr-3 py-2.5 rounded-md border text-sm"
-              style={{
-                borderColor: 'var(--border-color,#e2e8f0)',
-                color: 'var(--text-color,#0e1f42)',
-                backgroundColor: 'transparent'
-              }}
             />
-          </div>
-          <div className="flex items-center gap-3 flex-wrap md:flex-nowrap">
-            <select
-              value={tenancyFilter}
-              onChange={(e) => setTenancyFilter(e.target.value)}
-              className="h-11 px-3 rounded-md border text-sm min-w-[165px]"
-              style={{
-                borderColor: 'var(--border-color,#e2e8f0)',
-                color: 'var(--text-color,#0e1f42)',
-                backgroundColor: 'transparent'
-              }}
-            >
+          )}
+          right={(
+            <>
+              <TenantPageSelect
+                value={tenancyFilter}
+                onChange={(e) => setTenancyFilter(e.target.value)}
+                minWidth={165}
+              >
               <option value="all">All Status</option>
               <option value="active">Active</option>
               <option value="pending">Pending Move-in</option>
               <option value="ended">Ended</option>
-            </select>
-            <div className="h-11 inline-flex items-center text-sm text-[var(--text-muted,#64748b)]">
-              Showing <span className="ml-1 font-semibold text-[var(--text-color,#0e1f42)]">{filteredProperties.length}</span>
-            </div>
-          </div>
-        </div>
+              </TenantPageSelect>
+              <TenantPageResultsCount value={filteredProperties.length} />
+            </>
+          )}
+        />
       }
     >
       <UnifiedPanelSection unstyled className="pt-1">
         <div className={isGrid ? 'grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-4' : 'space-y-4'}>
           {filteredProperties.length === 0 ? (
-            <div className="rounded-xl border px-4 py-5 text-sm" style={{ borderColor: 'var(--border-color,#e2e8f0)' }}>
-              <p className="font-semibold text-[var(--text-color,#0e1f42)]">No unit matched your filter.</p>
-            </div>
+            <TenantPageEmptyState title="No unit matched your filter." />
           ) : (
             filteredProperties.map((property) => {
               const price = Number(property.rentAmount || property.price || property.nextPayment?.amount || 0);
@@ -140,32 +135,20 @@ const MaintenancePage = () => {
                   badge={
                     <StatusBadge
                       status={property.tenancyStatus}
-                      label={
-                        property.tenancyStatus === 'ACTIVE'
-                          ? 'Active'
-                          : property.tenancyStatus === 'PENDING_MOVE_IN'
-                            ? 'Pending Move-in'
-                            : 'Ended'
-                      }
+                      label={getTenancyStatusLabel(property.tenancyStatus, 'Ended')}
                     />
                   }
                   actions={
-                    <div className="flex flex-col items-end gap-1">
-                      <button
-                        onClick={() =>
-                          navigate('/dashboard/rent/maintenance/request', {
-                            state: { propertyId: property.propertyId }
-                          })
-                        }
-                        disabled={isMoveInPending}
-                        className="rounded-full bg-[#102a62] px-4 py-2 text-sm font-semibold text-white transition-colors hover:bg-[#17377a] disabled:opacity-50 disabled:cursor-not-allowed disabled:hover:bg-[#102a62]"
-                      >
-                        Request Maintenance
-                      </button>
-                      {isMoveInPending ? (
-                        <p className="text-xs text-[var(--text-muted,#64748b)]">Complete move-in checklist first</p>
-                      ) : null}
-                    </div>
+                    <TenantCardActionButton
+                      label="Request Maintenance"
+                      onClick={() =>
+                        navigate('/dashboard/rent/maintenance/request', {
+                          state: { propertyId: property.propertyId }
+                        })
+                      }
+                      disabled={isMoveInPending}
+                      helperText="Complete move-in checklist first"
+                    />
                   }
                 />
               );

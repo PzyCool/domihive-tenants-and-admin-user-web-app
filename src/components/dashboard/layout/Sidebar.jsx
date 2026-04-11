@@ -22,6 +22,19 @@ const Sidebar = ({ sidebarState, toggleSidebar, closeMobileSidebar, isMobile, cu
   const sidebarNavRef = useRef(null);
   const activeLinkRef = useRef(null);
 
+  const getIsoMs = (value) => {
+    const ms = new Date(value || 0).getTime();
+    return Number.isNaN(ms) ? 0 : ms;
+  };
+
+  const sameStringArray = (a = [], b = []) => {
+    if (a.length !== b.length) return false;
+    for (let i = 0; i < a.length; i += 1) {
+      if (String(a[i]) !== String(b[i])) return false;
+    }
+    return true;
+  };
+
   // Image paths constants
   const IMAGES = {
     icon: iconImage,
@@ -56,34 +69,170 @@ const Sidebar = ({ sidebarState, toggleSidebar, closeMobileSidebar, isMobile, cu
   };
 
   const navItems = getDashboardNavItems();
+  const sidebarReadStateKey = `domihive_sidebar_module_reads_${userKey}`;
+  const [moduleReadState, setModuleReadState] = useState(() => {
+    try {
+      const raw = localStorage.getItem(sidebarReadStateKey);
+      const parsed = raw ? JSON.parse(raw) : {};
+      return {
+        messagesSeenAt: parsed?.messagesSeenAt || '',
+        maintenanceSeenAt: parsed?.maintenanceSeenAt || '',
+        applicationsSeenAt: parsed?.applicationsSeenAt || '',
+        seenPendingPropertyIds: Array.isArray(parsed?.seenPendingPropertyIds)
+          ? parsed.seenPendingPropertyIds.map((item) => String(item))
+          : [],
+        seenFavoriteIds: Array.isArray(parsed?.seenFavoriteIds)
+          ? parsed.seenFavoriteIds.map((item) => String(item))
+          : []
+      };
+    } catch (_error) {
+      return {
+        messagesSeenAt: '',
+        maintenanceSeenAt: '',
+        applicationsSeenAt: '',
+        seenPendingPropertyIds: [],
+        seenFavoriteIds: []
+      };
+    }
+  });
+
+  useEffect(() => {
+    try {
+      const raw = localStorage.getItem(sidebarReadStateKey);
+      const parsed = raw ? JSON.parse(raw) : {};
+      setModuleReadState({
+        messagesSeenAt: parsed?.messagesSeenAt || '',
+        maintenanceSeenAt: parsed?.maintenanceSeenAt || '',
+        applicationsSeenAt: parsed?.applicationsSeenAt || '',
+        seenPendingPropertyIds: Array.isArray(parsed?.seenPendingPropertyIds)
+          ? parsed.seenPendingPropertyIds.map((item) => String(item))
+          : [],
+        seenFavoriteIds: Array.isArray(parsed?.seenFavoriteIds)
+          ? parsed.seenFavoriteIds.map((item) => String(item))
+          : []
+      });
+    } catch (_error) {
+      setModuleReadState({
+        messagesSeenAt: '',
+        maintenanceSeenAt: '',
+        applicationsSeenAt: '',
+        seenPendingPropertyIds: [],
+        seenFavoriteIds: []
+      });
+    }
+  }, [sidebarReadStateKey]);
+
+  useEffect(() => {
+    try {
+      localStorage.setItem(sidebarReadStateKey, JSON.stringify(moduleReadState));
+    } catch (_error) {
+      // Ignore storage write errors.
+    }
+  }, [moduleReadState, sidebarReadStateKey]);
+
+  useEffect(() => {
+    const path = String(location.pathname || '');
+    const nowISO = new Date().toISOString();
+
+    if (path.startsWith('/dashboard/rent/messages')) {
+      setModuleReadState((prev) => (prev.messagesSeenAt === nowISO ? prev : { ...prev, messagesSeenAt: nowISO }));
+      return;
+    }
+
+    if (path.startsWith('/dashboard/rent/maintenance')) {
+      setModuleReadState((prev) => (prev.maintenanceSeenAt === nowISO ? prev : { ...prev, maintenanceSeenAt: nowISO }));
+      return;
+    }
+
+    if (path.startsWith('/dashboard/rent/applications')) {
+      setModuleReadState((prev) => (prev.applicationsSeenAt === nowISO ? prev : { ...prev, applicationsSeenAt: nowISO }));
+      return;
+    }
+
+    if (path.startsWith('/dashboard/rent/my-properties')) {
+      const pendingIds = properties
+        .filter((property) => String(property?.tenancyStatus || '').toUpperCase() === 'PENDING_MOVE_IN')
+        .map((property) => String(property?.propertyId || ''))
+        .filter(Boolean)
+        .sort();
+      setModuleReadState((prev) =>
+        sameStringArray(prev.seenPendingPropertyIds || [], pendingIds)
+          ? prev
+          : { ...prev, seenPendingPropertyIds: pendingIds }
+      );
+      return;
+    }
+
+    if (path.startsWith('/dashboard/rent/favorites')) {
+      const currentFavoriteIds = (favorites || [])
+        .map((item) => String(item))
+        .filter(Boolean)
+        .sort();
+      setModuleReadState((prev) =>
+        sameStringArray(prev.seenFavoriteIds || [], currentFavoriteIds)
+          ? prev
+          : { ...prev, seenFavoriteIds: currentFavoriteIds }
+      );
+    }
+  }, [location.pathname, properties, favorites]);
+
   const navBadges = useMemo(() => {
-    const activeApplicationCount = applications.filter((app) =>
+    const activeApplications = applications.filter((app) =>
       ['INSPECTION_SCHEDULED', 'INSPECTION_VERIFIED', 'APPLICATION_STARTED', 'APPLICATION_SUBMITTED', 'UNDER_REVIEW']
         .includes(String(app?.status || '').toUpperCase())
-    ).length;
-
-    const unreadMessages = threads.reduce(
-      (sum, thread) => sum + Number(thread?.unreadCount || 0),
-      0
     );
+
+    const unreadMessages = threads.reduce((sum, thread) => {
+      const unreadCount = Number(thread?.unreadCount || 0);
+      if (unreadCount <= 0) return sum;
+      const lastMessageAt =
+        thread?.lastUpdatedAt ||
+        (Array.isArray(thread?.messages) && thread.messages.length
+          ? thread.messages[thread.messages.length - 1]?.createdAt
+          : '') ||
+        '';
+      const isNewSinceSeen = getIsoMs(lastMessageAt) > getIsoMs(moduleReadState?.messagesSeenAt);
+      return isNewSinceSeen ? sum + unreadCount : sum;
+    }, 0);
 
     const openMaintenance = tickets.filter((ticket) => {
       const status = String(ticket?.status || '').toUpperCase();
-      return status !== 'COMPLETED' && status !== 'CANCELLED';
+      if (status === 'COMPLETED' || status === 'CANCELLED') return false;
+      const latestUpdateAt = Array.isArray(ticket?.updates)
+        ? ticket.updates.reduce((latest, update) => {
+            const candidate = update?.at || '';
+            return getIsoMs(candidate) > getIsoMs(latest) ? candidate : latest;
+          }, '')
+        : '';
+      const eventAt = latestUpdateAt || ticket?.updatedAt || ticket?.requestedAt || ticket?.createdAt || '';
+      return getIsoMs(eventAt) > getIsoMs(moduleReadState?.maintenanceSeenAt);
     }).length;
 
+    const seenPendingSet = new Set((moduleReadState?.seenPendingPropertyIds || []).map((id) => String(id)));
     const pendingMoveIn = properties.filter(
       (property) => String(property?.tenancyStatus || '').toUpperCase() === 'PENDING_MOVE_IN'
-    ).length;
+    ).filter((property) => !seenPendingSet.has(String(property?.propertyId || ''))).length;
+
+    const activeApplicationCount = activeApplications.filter((application) => {
+      const eventAt = application?.updatedAtISO || application?.createdAtISO || application?.bookingDateISO || '';
+      return getIsoMs(eventAt) > getIsoMs(moduleReadState?.applicationsSeenAt);
+    }).length;
+
+    const seenFavoritesSet = new Set((moduleReadState?.seenFavoriteIds || []).map((id) => String(id)));
+    const favoritesCount = (favorites || [])
+      .map((item) => String(item))
+      .filter(Boolean)
+      .filter((id) => !seenFavoritesSet.has(id))
+      .length;
 
     return {
-      '/dashboard/rent/favorites': Number(favorites?.length || 0),
+      '/dashboard/rent/favorites': favoritesCount,
       '/dashboard/rent/applications': activeApplicationCount,
       '/dashboard/rent/my-properties': pendingMoveIn,
       '/dashboard/rent/maintenance': openMaintenance,
       '/dashboard/rent/messages': unreadMessages
     };
-  }, [applications, favorites, properties, threads, tickets]);
+  }, [applications, favorites, properties, threads, tickets, moduleReadState]);
 
   const getBadgeCount = (path) => Number(navBadges[path] || 0);
   const isExpanded = sidebarState === 'expanded';

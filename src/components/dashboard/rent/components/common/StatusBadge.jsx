@@ -1,4 +1,9 @@
 import React from 'react';
+import {
+  isActiveStatus,
+  isPendingMoveInStatus,
+  normalizeStatus
+} from './tenancyStatus';
 
 const RED_TOKENS = [
   'REJECTED',
@@ -29,22 +34,6 @@ const GREEN_TOKENS = [
   'PAID',
   'RESOLVED'
 ];
-
-const normalizeStatus = (status) => String(status || '').toUpperCase();
-const isPendingMoveInStatus = (status) => {
-  const normalized = normalizeStatus(status);
-  return (
-    normalized.includes('PENDING_MOVE_IN') ||
-    normalized.includes('MOVE_IN_PENDING') ||
-    normalized.includes('PENDING MOVE IN') ||
-    normalized.includes('PENDING MOVE-IN')
-  );
-};
-
-const isActiveStatus = (status) => {
-  const normalized = normalizeStatus(status);
-  return normalized === 'ACTIVE' || normalized.includes(' ACTIVE');
-};
 
 const resolveTone = (status, tone) => {
   if (tone) return tone;

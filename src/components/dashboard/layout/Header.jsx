@@ -164,6 +164,7 @@ const Header = ({ toggleSidebar, isMobile }) => {
   ];
 
   const recentNotifications = useMemo(() => notifications.slice(0, 30), [notifications]);
+  const hasUnreadNotifications = unreadNotificationsCount > 0;
 
   if (!user) return null;
 
@@ -251,13 +252,18 @@ const Header = ({ toggleSidebar, isMobile }) => {
                   e.stopPropagation();
                   setShowDashboardSwitcher(false);
                   setShowUserDropdown(false);
+                  if (hasUnreadNotifications) {
+                    markAllNotificationsRead();
+                  }
                   setShowNotificationsDrawer(true);
                 }}
               >
                 <i className="fas fa-bell"></i>
-                <span className="notification-badge absolute -top-1 -right-1 bg-red-500 text-white text-xs rounded-full min-w-5 h-5 px-1 flex items-center justify-center font-bold">
-                  {unreadNotificationsCount}
-                </span>
+                {hasUnreadNotifications && (
+                  <span className="notification-badge absolute -top-1 -right-1 bg-red-500 text-white text-xs rounded-full min-w-5 h-5 px-1 flex items-center justify-center font-bold">
+                    {unreadNotificationsCount}
+                  </span>
+                )}
               </button>
 
             </div>

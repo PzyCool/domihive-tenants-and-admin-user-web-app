@@ -5,6 +5,13 @@ import PropertyCard from '../components/properties/PropertyCard';
 import UnifiedPanelPage, { UnifiedPanelSection } from '../../../shared/layout/UnifiedPanelPage';
 import { Building2, Clock3, Wallet } from 'lucide-react';
 import { useUnitCardView } from '../contexts/UnitCardViewContext';
+import {
+  TenantPageEmptyState,
+  TenantPageFilterBar,
+  TenantPageResultsCount,
+  TenantPageSearchInput,
+  TenantPageSelect
+} from '../components/common/TenantPageControls';
 
 const MyProperties = () => {
   const navigate = useNavigate();
@@ -101,51 +108,48 @@ const MyProperties = () => {
         }
       ]}
       filterBar={
-        <div className="flex flex-col gap-3 md:flex-row md:items-center md:justify-between">
-          <div className="relative w-full md:max-w-md">
-            <i className="fas fa-search absolute left-3 top-1/2 -translate-y-1/2 text-[var(--text-muted,#64748b)] text-sm"></i>
-            <input
+        <TenantPageFilterBar
+          left={(
+            <TenantPageSearchInput
               value={search}
               onChange={(e) => setSearch(e.target.value)}
               placeholder="Search property, unit, location..."
-              className="w-full pl-9 pr-3 py-2.5 rounded-md border border-[var(--border-color,#e2e8f0)] bg-transparent text-sm text-[var(--text-color,#0e1f42)]"
             />
-          </div>
-          <div className="flex flex-wrap md:flex-nowrap items-center gap-3">
-            <select
-              value={statusFilter}
-              onChange={(e) => setStatusFilter(e.target.value)}
-              className="h-11 px-3 rounded-md border border-[var(--border-color,#e2e8f0)] bg-transparent text-sm text-[var(--text-color,#0e1f42)] min-w-[155px]"
-            >
+          )}
+          right={(
+            <>
+              <TenantPageSelect
+                value={statusFilter}
+                onChange={(e) => setStatusFilter(e.target.value)}
+                minWidth={155}
+              >
               <option value="all">All Status</option>
               <option value="active">Currently Active</option>
               <option value="pending">Pending Move-in</option>
               <option value="ended">Ended</option>
-            </select>
-            <select
-              value={leaseFilter}
-              onChange={(e) => setLeaseFilter(e.target.value)}
-              className="h-11 px-3 rounded-md border border-[var(--border-color,#e2e8f0)] bg-transparent text-sm text-[var(--text-color,#0e1f42)] min-w-[185px]"
-            >
+              </TenantPageSelect>
+              <TenantPageSelect
+                value={leaseFilter}
+                onChange={(e) => setLeaseFilter(e.target.value)}
+                minWidth={185}
+              >
               <option value="all">All Lease Window</option>
               <option value="endingSoon">Ending Soon (60 days)</option>
-            </select>
-            <div className="h-11 inline-flex items-center text-sm text-[var(--text-muted,#64748b)] whitespace-nowrap">
-              Showing <span className="font-semibold text-[var(--text-color,#0e1f42)]">{visibleProperties.length}</span> properties
-            </div>
-          </div>
-        </div>
+              </TenantPageSelect>
+              <TenantPageResultsCount value={visibleProperties.length} label="properties" />
+            </>
+          )}
+        />
       }
     >
       <UnifiedPanelSection unstyled className="pt-1">
         <div className={isGrid ? 'grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-4' : 'grid gap-4'}>
           {visibleProperties.length === 0 ? (
-            <div className="bg-white border border-[#e2e8f0] rounded-2xl p-6 text-center">
-              <p className="text-base font-semibold text-[#0e1f42]">No active tenancy yet</p>
-              <p className="text-sm text-[#64748b] mt-1">
-                Complete inspection, submit application, and wait for approval to see your property here.
-              </p>
-            </div>
+            <TenantPageEmptyState
+              className="rounded-2xl p-6 text-center"
+              title="No active tenancy yet"
+              description="Complete inspection, submit application, and wait for approval to see your property here."
+            />
           ) : (
             visibleProperties.map((property) => (
               <PropertyCard
