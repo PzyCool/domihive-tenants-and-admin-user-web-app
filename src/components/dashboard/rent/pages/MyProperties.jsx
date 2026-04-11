@@ -12,6 +12,11 @@ import {
   TenantPageSearchInput,
   TenantPageSelect
 } from '../components/common/TenantPageControls';
+import {
+  filterPropertiesByTenancyAndSearch,
+  LEASE_WINDOW_FILTER_OPTIONS,
+  MY_PROPERTIES_STATUS_FILTER_OPTIONS
+} from '../components/common/tenantFilters';
 
 const MyProperties = () => {
   const navigate = useNavigate();
@@ -22,20 +27,10 @@ const MyProperties = () => {
   const [search, setSearch] = React.useState('');
 
   const visibleProperties = React.useMemo(() => {
-    let list = [...properties];
-
-    if (search.trim()) {
-      const q = search.toLowerCase();
-      list = list.filter((p) =>
-        `${p.name || ''} ${p.location || ''} ${p.unitCode || ''} ${p.unitType || ''}`.toLowerCase().includes(q)
-      );
-    }
-
-    list = list.filter((p) => {
-      if (statusFilter === 'active') return p.tenancyStatus === 'ACTIVE';
-      if (statusFilter === 'ended') return p.tenancyStatus === 'ENDED';
-      if (statusFilter === 'pending') return p.tenancyStatus === 'PENDING_MOVE_IN';
-      return true;
+    let list = filterPropertiesByTenancyAndSearch(properties, {
+      tenancyFilter: statusFilter,
+      search,
+      searchFields: ['name', 'location', 'unitCode', 'unitType']
     });
 
     if (leaseFilter === 'endingSoon') {
@@ -123,18 +118,22 @@ const MyProperties = () => {
                 onChange={(e) => setStatusFilter(e.target.value)}
                 minWidth={155}
               >
-              <option value="all">All Status</option>
-              <option value="active">Currently Active</option>
-              <option value="pending">Pending Move-in</option>
-              <option value="ended">Ended</option>
+              {MY_PROPERTIES_STATUS_FILTER_OPTIONS.map((option) => (
+                <option key={option.value} value={option.value}>
+                  {option.label}
+                </option>
+              ))}
               </TenantPageSelect>
               <TenantPageSelect
                 value={leaseFilter}
                 onChange={(e) => setLeaseFilter(e.target.value)}
                 minWidth={185}
               >
-              <option value="all">All Lease Window</option>
-              <option value="endingSoon">Ending Soon (60 days)</option>
+              {LEASE_WINDOW_FILTER_OPTIONS.map((option) => (
+                <option key={option.value} value={option.value}>
+                  {option.label}
+                </option>
+              ))}
               </TenantPageSelect>
               <TenantPageResultsCount value={visibleProperties.length} label="properties" />
             </>

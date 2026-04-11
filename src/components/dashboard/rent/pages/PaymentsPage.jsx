@@ -16,6 +16,10 @@ import {
 } from '../components/common/TenantPageControls';
 import TenantCardActionButton from '../components/common/TenantCardActionButton';
 import { getTenancyStatusLabel } from '../components/common/tenancyStatus';
+import {
+  filterPropertiesByTenancyAndSearch,
+  TENANCY_FILTER_OPTIONS
+} from '../components/common/tenantFilters';
 
 const PaymentsPage = () => {
   const navigate = useNavigate();
@@ -27,20 +31,10 @@ const PaymentsPage = () => {
   const [tenancyFilter, setTenancyFilter] = useState('all');
 
   const filteredProperties = useMemo(() => {
-    let list = [...properties];
-    if (tenancyFilter === 'active') list = list.filter((p) => p.tenancyStatus === 'ACTIVE');
-    if (tenancyFilter === 'pending') list = list.filter((p) => p.tenancyStatus === 'PENDING_MOVE_IN');
-    if (tenancyFilter === 'ended') list = list.filter((p) => p.tenancyStatus === 'ENDED');
-
-    if (propertySearch.trim()) {
-      const q = propertySearch.toLowerCase();
-      list = list.filter((p) =>
-        `${p.name || ''} ${p.location || ''} ${p.description || ''} ${p.unitCode || ''}`
-          .toLowerCase()
-          .includes(q)
-      );
-    }
-    return list;
+    return filterPropertiesByTenancyAndSearch(properties, {
+      tenancyFilter,
+      search: propertySearch
+    });
   }, [properties, tenancyFilter, propertySearch]);
 
   const stats = useMemo(() => {
@@ -98,10 +92,11 @@ const PaymentsPage = () => {
                 onChange={(e) => setTenancyFilter(e.target.value)}
                 minWidth={175}
               >
-              <option value="all">All Status</option>
-              <option value="active">Active</option>
-              <option value="pending">Pending Move-in</option>
-              <option value="ended">Ended</option>
+              {TENANCY_FILTER_OPTIONS.map((option) => (
+                <option key={option.value} value={option.value}>
+                  {option.label}
+                </option>
+              ))}
               </TenantPageSelect>
               <TenantPageResultsCount value={filteredProperties.length} />
             </>

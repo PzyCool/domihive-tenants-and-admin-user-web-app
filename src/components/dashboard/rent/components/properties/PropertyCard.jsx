@@ -1,12 +1,7 @@
-﻿import React from 'react';
+import React from 'react';
 import TenantUnitCard from '../common/TenantUnitCard';
 import StatusBadge from '../common/StatusBadge';
-
-const statusLabel = {
-  PENDING_MOVE_IN: 'Pending Move-in',
-  ACTIVE: 'Active',
-  ENDED: 'Ended'
-};
+import { getTenancyStatusLabel } from '../common/tenancyStatus';
 
 const quickActionsForStatus = (status) => {
   if (status === 'PENDING_MOVE_IN') {
@@ -34,7 +29,7 @@ const PropertyCard = ({ property, onAction, viewType = 'list' }) => {
     property.property?.description ||
     'No unit description available yet.';
   const nextPaymentText = property.nextPayment?.status
-    ? `${property.nextPayment?.dueDate || 'N/A'} • ${property.nextPayment.status}`
+    ? `${property.nextPayment?.dueDate || 'N/A'} � ${property.nextPayment.status}`
     : property.nextPayment?.dueDate || 'N/A';
   const leaseText = `${property.leaseStart || 'N/A'} - ${property.leaseEnd || 'N/A'}`;
 
@@ -66,7 +61,7 @@ const PropertyCard = ({ property, onAction, viewType = 'list' }) => {
       badge={
         <StatusBadge
           status={property.tenancyStatus}
-          label={statusLabel[property.tenancyStatus] || property.tenancyStatus}
+          label={getTenancyStatusLabel(property.tenancyStatus, 'Ended')}
         />
       }
       actions={
@@ -87,3 +82,4 @@ const PropertyCard = ({ property, onAction, viewType = 'list' }) => {
 };
 
 export default PropertyCard;
+

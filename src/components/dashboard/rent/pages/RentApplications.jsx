@@ -12,6 +12,10 @@ import {
   TenantPageSearchInput,
   TenantPageSelect
 } from '../components/common/TenantPageControls';
+import {
+  APPLICATION_STATUS_FILTER_OPTIONS,
+  SORT_ORDER_OPTIONS
+} from '../components/common/tenantFilters';
 
 const ACTIVE_APPLICATION_STATUSES = [
   'INSPECTION_SCHEDULED',
@@ -180,18 +184,22 @@ const RentApplications = () => {
               onChange={(e) => setStatusFilter(e.target.value)}
               minWidth={155}
             >
-              <option value="active">Active</option>
-              <option value="approved">Approved</option>
-              <option value="rejected">Rejected</option>
-              <option value="cancelled">Cancelled</option>
+              {APPLICATION_STATUS_FILTER_OPTIONS.map((option) => (
+                <option key={option.value} value={option.value}>
+                  {option.label}
+                </option>
+              ))}
             </TenantPageSelect>
             <TenantPageSelect
               value={sortBy}
               onChange={(e) => setSortBy(e.target.value)}
               minWidth={155}
             >
-              <option value="newest">Sort: Newest</option>
-              <option value="oldest">Sort: Oldest</option>
+              {SORT_ORDER_OPTIONS.map((option) => (
+                <option key={option.value} value={option.value}>
+                  {option.label}
+                </option>
+              ))}
             </TenantPageSelect>
             <TenantPageResultsCount value={filteredApplications.length} label="applications" className="whitespace-nowrap" />
             </>

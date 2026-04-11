@@ -5,6 +5,7 @@ import { useMessages } from '../contexts/MessagesContext';
 import { useProperties } from '../contexts/PropertiesContext';
 import { formatDateDDMMYY } from '../../../shared/utils/dateFormat';
 import StatusBadge from '../components/common/StatusBadge';
+import { MESSAGE_THREAD_STATUS_FILTER_OPTIONS } from '../components/common/tenantFilters';
 
 const getStatusLabel = (status) => {
   const normalized = String(status || 'PENDING_CHAT').toUpperCase();
@@ -205,11 +206,11 @@ const MessageComposePage = () => {
                   backgroundColor: 'transparent'
                 }}
               >
-                <option value="all">All Status</option>
-                <option value="open">Open</option>
-                <option value="pending">Pending Chat</option>
-                <option value="ended">Ended Chat</option>
-                <option value="resolved">Resolved</option>
+                {MESSAGE_THREAD_STATUS_FILTER_OPTIONS.map((option) => (
+                  <option key={option.value} value={option.value}>
+                    {option.label}
+                  </option>
+                ))}
               </select>
 
               <div className="space-y-2 flex-1 min-h-0 overflow-auto pr-1">
